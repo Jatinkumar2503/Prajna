@@ -1,15 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prajna -AI Driven Nuclear safety system </title>
-    <script> src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"</script>
-    <!-- <link rel="stylesheet" href="style.css"/> -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRAJNA — AI Nuclear Safety System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <div id="alet-banner"></div>
-    
+
+<div id="alert-banner"></div>
+
 <div id="app">
   <!-- HEADER -->
   <header id="hdr">
@@ -17,7 +19,7 @@
       <div class="hlogo-icon">⚛</div>
       <div>
         <h1>PRAJNA</h1>
-        <p>AI-DRIVEN PREDICTIVE NUCLEAR SAFETY · QUANTUM CLASHERS · DCRUST · HACKRUST 1.0</p>
+        <p>AI-DRIVEN PREDICTIVE NUCLEAR SAFETY</p>
       </div>
     </div>
     <div class="hmid">
@@ -34,6 +36,7 @@
       <button class="btn btn-a" onclick="APP.reset()">↺ RESET</button>
     </div>
   </header>
+
   <!-- MAIN -->
   <main id="main">
     <!-- LEFT SENSORS -->
@@ -48,9 +51,8 @@
         <div class="smeta"><span id="slo-temperature">WARN: 290</span><span id="shi-temperature">CRIT: 350</span></div>
         <div class="spred" id="sp-temperature"></div>
       </div>
+
       <!-- Coolant -->
-
-
       <div class="sblk">
         <div class="slbl">💧 COOLANT FLOW RATE<span class="strend" id="tr-coolantFlow">→</span></div>
         <div class="srow"><span class="sval n" id="sv-coolantFlow">78.0</span><span class="sunit">kg/s</span></div>
@@ -59,12 +61,8 @@
         <div class="spred" id="sp-coolantFlow"></div>
       </div>
 
-
- <!-- Neutron Flux -->
-
-
+      <!-- Neutron Flux -->
       <div class="sblk">
-
         <div class="slbl">⚡ NEUTRON FLUX<span class="strend" id="tr-neutronFlux">→</span></div>
         <div class="srow"><span class="sval n" id="sv-neutronFlux">2.320</span><span class="sunit">×10¹³n/cm²s</span></div>
         <div class="sbarw"><div class="sbar bn" id="sb-neutronFlux" style="width:42%"></div></div>
@@ -72,11 +70,7 @@
         <div class="spred" id="sp-neutronFlux"></div>
       </div>
 
-
-       <!-- Radiation -->
-
-
-
+      <!-- Radiation -->
       <div class="sblk">
         <div class="slbl">☢ RADIATION LEVEL<span class="strend" id="tr-radiation">→</span></div>
         <div class="srow"><span class="sval n" id="sv-radiation">0.420</span><span class="sunit">mSv/h</span></div>
@@ -85,34 +79,34 @@
         <div class="spred" id="sp-radiation"></div>
       </div>
 
+      <!-- Reactor Parameters -->
+      <div class="sblk">
+        <div class="slbl">⚙ REACTOR PARAMETERS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:5px">
+          <div class="pbox"><div class="pblbl">POWER OUTPUT</div><div class="pbval" id="pwr" style="color:var(--cyan)">92.0</div><div class="pbunit">% RATED</div></div>
+          <div class="pbox"><div class="pblbl">CTRL ROD</div><div class="pbval" id="rod" style="color:var(--amber)">68</div><div class="pbunit">% INSERTED</div></div>
+        </div>
+      </div>
+    </aside>
 
-
-      <!-- CENTER -->
-
-
+    <!-- CENTER -->
     <section id="pcenter">
       <div id="ptwin">
         <div class="phdr" style="position:absolute;top:0;left:0;right:0;z-index:10;background:rgba(2,4,8,0.88)">
           <span class="ptitle">⬡ DIGITAL TWIN — 3D REACTOR MODEL</span>
           <span style="font-family:var(--mono);font-size:8px;color:var(--grey)">DRAG TO ROTATE · SCROLL TO ZOOM</span>
         </div>
-
-
         <div id="twinc"><canvas id="rcanvas"></canvas></div>
         <div class="toverlay">
           <div class="tbadge">⚛ PWR REACTOR TYPE III</div>
           <div class="tbadge" id="pwr-badge">PWR 92.0%</div>
           <div class="tbadge" id="rod-badge">ROD 68%</div>
         </div>
-
-
         <div class="tbottom">
           <div class="tbadge" style="color:var(--green)">DIGITAL TWIN ACTIVE</div>
           <div class="tbadge" id="scen-badge">SCENARIO: NONE</div>
         </div>
-
       </div>
-
 
       <div id="pcharts">
         <div class="phdr"><span class="ptitle">📈 REAL-TIME TREND CHARTS</span><span style="font-family:var(--mono);font-size:8px;color:var(--grey)">60s WINDOW</span></div>
@@ -125,10 +119,7 @@
       </div>
     </section>
 
-
     <!-- RIGHT PANEL -->
-
-
     <aside id="pright">
       <div id="airisk">
         <div class="rtitle">🤖 PRAJNA AI · RISK ASSESSMENT</div>
@@ -143,8 +134,6 @@
             <div style="margin-top:5px;font-family:var(--mono);font-size:8px;color:var(--grey)">PINN+LSTM+GNN</div>
           </div>
         </div>
-
-
         <div class="prow"><span>PINN Thermal</span><span id="pinndev" style="color:var(--cyan-dim)">—</span></div>
         <div class="prow"><span>Cross-param</span><span id="xscore" style="color:var(--cyan-dim)">—</span></div>
       </div>
@@ -168,17 +157,19 @@
   </main>
 
   <!-- FOOTER -->
-
-  
   <footer id="ftr">
-    <div class="fi"><div class="fled"></div><span>PRAJNA v2.0 · QUANTUM CLASHERS · DCRUST</span></div>
-    <div class="fi"><span>HACKRUST 1.0 · NUCLEAR ENERGY + AI + NATIONAL SECURITY</span></div>
+    <div class="fi"><div class="fled"></div><span>PRAJNA</span></div>
+    <div class="fi"><span>NUCLEAR ENERGY + AI + NATIONAL SECURITY</span></div>
     <div class="fi"><span>MODEL: PINN + LSTM + GNN ENSEMBLE</span><div class="fled" style="background:var(--amber);box-shadow:0 0 5px var(--amber)"></div></div>
   </footer>
 </div>
 
-
-
-    
+<!-- Scripts loaded in dependency order -->
+<script src="simulation.js"></script>
+<script src="ai_model.js"></script>
+<script src="audio.js"></script>
+<script src="ui.js"></script>
+<script src="simulation3d.js"></script>
+<script src="app.js"></script> 
 </body>
 </html>
