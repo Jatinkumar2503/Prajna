@@ -420,7 +420,7 @@ body::after {
     pointer-events: none; }
 
 
-#pcharts  { height: 190px; 
+#pcharts  { height: 280px; 
     background: var(--panel);
      border-top: 1px solid var(--border);
       display: flex; 
@@ -713,3 +713,4 @@ body::after {
 
 
 
+ 
