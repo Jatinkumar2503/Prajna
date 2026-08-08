@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 title PRAJNA 125M PINN Model Trainer
 echo ======================================================================
 echo   PRAJNA NUCLEAR INTELLIGENCE — 125M PARAMETER PINN TRAINING ENGINE

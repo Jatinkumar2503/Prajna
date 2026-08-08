@@ -1,4 +1,6 @@
 # PRAJNA 125M PINN Model Trainer (PowerShell)
+Set-Location $PSScriptRoot
+
 Write-Host "======================================================================" -ForegroundColor Cyan
 Write-Host "  PRAJNA NUCLEAR INTELLIGENCE — 125M PARAMETER PINN TRAINING ENGINE" -ForegroundColor Green
 Write-Host "======================================================================" -ForegroundColor Cyan
