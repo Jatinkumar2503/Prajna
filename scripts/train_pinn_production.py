@@ -162,7 +162,7 @@ def run_production_training(scale: str = "efficient_125m",
     
     # Cosine Annealing Learning Rate Scheduler
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
-    scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     
     # Checkpoint directory
     ckpt_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "checkpoints"))
@@ -186,7 +186,8 @@ def run_production_training(scale: str = "efficient_125m",
             batch_x = batch_x.to(device)
             optimizer.zero_grad()
             
-            with torch.cuda.amp.autocast(enabled=use_amp):
+            amp_device = "cuda" if device.type == "cuda" else "cpu"
+            with torch.amp.autocast(amp_device, enabled=use_amp):
                 outputs = model(batch_x)
                 physics_preds = outputs["physics_trajectories"]
                 
