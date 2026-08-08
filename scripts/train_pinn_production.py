@@ -14,10 +14,33 @@ import sys
 import time
 import math
 import argparse
+import ctypes
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader, random_split
+
+# Windows API to prevent OS from sleeping during computation
+ES_CONTINUOUS = 0x80000000
+ES_SYSTEM_REQUIRED = 0x00000001
+
+def prevent_windows_sleep():
+    """Tells Windows OS kernel that a long-running computation is active and to prevent sleep."""
+    try:
+        if sys.platform == "win32":
+            ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+            print("[+] Windows Power Keep-Awake: ACTIVATED (System will not sleep while training).")
+    except Exception:
+        pass
+
+def allow_windows_sleep():
+    """Restores default Windows sleep behavior after training completes."""
+    try:
+        if sys.platform == "win32":
+            ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS)
+            print("[+] Windows Power: Restored default power profile.")
+    except Exception:
+        pass
 
 # Ensure root package is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -99,6 +122,7 @@ def run_production_training(scale: str = "efficient_125m",
     """
     Main training execution function.
     """
+    prevent_windows_sleep()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("=" * 80)
     print(f"  PRAJNA PRODUCTION PINN TRAINER — Model Scale: {scale.upper()}")
