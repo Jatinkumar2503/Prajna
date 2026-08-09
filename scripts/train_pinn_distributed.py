@@ -33,12 +33,13 @@ from prajna_core.models.pinn_foundation import PrajnaFoundationPINN
 from scripts.train_pinn_production import prevent_windows_sleep, allow_windows_sleep, generate_multi_physics_dataset
 
 
-def run_distributed_or_scaled_training(scale: str = "advanced_350m",
-                                       epochs: int = 30,
-                                       batch_size: int = 16,
+def run_distributed_or_scaled_training(scale: str = "foundation_1b",
+                                       epochs: int = 25,
+                                       batch_size: int = 4,
+                                       grad_accum_steps: int = 4,
                                        lr: float = 3e-4,
                                        gradient_checkpointing: bool = True,
-                                       samples: int = 5000):
+                                       samples: int = 4000):
     """
     Main training execution function for multi-scale models.
     """
@@ -46,14 +47,15 @@ def run_distributed_or_scaled_training(scale: str = "advanced_350m",
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("=" * 80)
     print(f"  PRAJNA MULTI-SCALE PINN TRAINER — ACTIVE SCALE: {scale.upper()}")
-    print(f"  Target Epochs: {epochs} | Batch Size: {batch_size} | LR: {lr:.2e}")
-    print(f"  Gradient Checkpointing: {'ENABLED' if gradient_checkpointing else 'DISABLED'}")
+    print(f"  Target Epochs: {epochs} | Micro-Batch: {batch_size} | Grad Accum Steps: {grad_accum_steps}")
+    print(f"  Effective Batch Size: {batch_size * grad_accum_steps} | Learning Rate: {lr:.2e}")
+    print(f"  Activation Checkpointing: {'ENABLED' if gradient_checkpointing else 'DISABLED'}")
     print(f"  Hardware Compute Device: {device}")
     
     if device.type == "cuda":
         gpu_name = torch.cuda.get_device_name(0)
         vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-        print(f"  GPU Engine: {gpu_name} (Total VRAM: {vram_gb:.2f} GB)")
+        print(f"  NVIDIA GPU Engine: {gpu_name} (Total VRAM: {vram_gb:.2f} GB)")
         use_amp = True
     else:
         num_cpus = torch.get_num_threads()
@@ -109,10 +111,10 @@ def run_distributed_or_scaled_training(scale: str = "advanced_350m",
         train_loss = 0.0
         train_energy = 0.0
         batches = 0
+        optimizer.zero_grad()
         
-        for batch_x, _ in train_loader:
+        for step, (batch_x, _) in enumerate(train_loader):
             batch_x = batch_x.to(device)
-            optimizer.zero_grad()
             
             amp_device = "cuda" if device.type == "cuda" else "cpu"
             with torch.amp.autocast(amp_device, enabled=use_amp):
@@ -139,15 +141,19 @@ def run_distributed_or_scaled_training(scale: str = "advanced_350m",
                     measured_flux=measured_flux,
                     measured_temp=measured_temp
                 )
-                total_loss = loss_dict["total_loss"]
+                raw_loss = loss_dict["total_loss"]
+                scaled_loss = raw_loss / grad_accum_steps
                 
-            scaler.scale(total_loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            scaler.step(optimizer)
-            scaler.update()
+            scaler.scale(scaled_loss).backward()
             
-            train_loss += total_loss.item()
+            if (step + 1) % grad_accum_steps == 0 or (step + 1) == len(train_loader):
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
+            
+            train_loss += raw_loss.item()
             train_energy += loss_dict["energy_loss"].item()
             batches += 1
             
@@ -214,11 +220,12 @@ def run_distributed_or_scaled_training(scale: str = "advanced_350m",
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Prajna Scaled & Distributed PINN Training Engine")
-    parser.add_argument("--scale", type=str, default="advanced_350m",
-                        choices=["test_4m", "efficient_125m", "advanced_350m", "intermediate_2.25b", "production_3b"],
+    parser.add_argument("--scale", type=str, default="foundation_1b",
+                        choices=["test_4m", "efficient_125m", "advanced_350m", "foundation_1b", "intermediate_2.25b", "production_3b"],
                         help="Model parameter scale")
-    parser.add_argument("--epochs", type=int, default=30, help="Epoch count")
-    parser.add_argument("--batch_size", type=int, default=16, help="Batch size")
+    parser.add_argument("--epochs", type=int, default=25, help="Epoch count")
+    parser.add_argument("--batch_size", type=int, default=4, help="Micro-batch size")
+    parser.add_argument("--grad_accum", type=int, default=4, help="Gradient accumulation steps")
     parser.add_argument("--lr", type=float, default=3e-4, help="Learning rate")
     parser.add_argument("--samples", type=int, default=4000, help="Dataset samples")
     parser.add_argument("--no_checkpointing", action="store_true", help="Disable activation gradient checkpointing")
@@ -228,6 +235,7 @@ if __name__ == "__main__":
         scale=args.scale,
         epochs=args.epochs,
         batch_size=args.batch_size,
+        grad_accum_steps=args.grad_accum,
         lr=args.lr,
         gradient_checkpointing=not args.no_checkpointing,
         samples=args.samples

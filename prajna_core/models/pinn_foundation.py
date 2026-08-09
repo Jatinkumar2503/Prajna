@@ -105,6 +105,7 @@ class PrajnaFoundationPINN(nn.Module):
     - test_4m:          ~4.25M parameters
     - efficient_125m:   ~125M parameters
     - advanced_350m:    ~350M parameters
+    - foundation_1b:    ~1.00B parameters (1,000 Million)
     - intermediate_2.25b: ~2.25B parameters (2,250 Million)
     - production_3b:    ~3.05B parameters
     """
@@ -127,6 +128,12 @@ class PrajnaFoundationPINN(nn.Module):
             num_layers = custom_layers or 30
             fno_width = 448
             eop_hidden = 1536
+        elif scale == "foundation_1b":
+            # 1.0 Billion Parameter Foundation Model Scale
+            d_model = custom_d_model or 2048
+            num_layers = custom_layers or 28
+            fno_width = 384
+            eop_hidden = 1024
         elif scale == "advanced_350m":
             d_model = custom_d_model or 1024
             num_layers = custom_layers or 24
