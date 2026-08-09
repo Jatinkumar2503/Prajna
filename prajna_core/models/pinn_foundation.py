@@ -101,13 +101,19 @@ class FourierPhysicsOperatorHead(nn.Module):
 class PrajnaFoundationPINN(nn.Module):
     """
     PRAJNA Multi-Scale Physics-Informed Neural Network.
-    Supports scaling from 4M functional test up to 3B production foundation models.
+    Supports scaling from 4M functional test up to 3B production foundation models:
+    - test_4m:          ~4.25M parameters
+    - efficient_125m:   ~125M parameters
+    - advanced_350m:    ~350M parameters
+    - intermediate_2.25b: ~2.25B parameters (2,250 Million)
+    - production_3b:    ~3.05B parameters
     """
     def __init__(self,
                  num_channels: int = 16,
                  scale: str = "efficient_125m",
                  custom_d_model: Optional[int] = None,
-                 custom_layers: Optional[int] = None):
+                 custom_layers: Optional[int] = None,
+                 gradient_checkpointing: bool = False):
         super().__init__()
         
         # Determine architectural configuration based on scale
@@ -116,6 +122,11 @@ class PrajnaFoundationPINN(nn.Module):
             num_layers = custom_layers or 36
             fno_width = 512
             eop_hidden = 2048
+        elif scale == "intermediate_2.25b":
+            d_model = custom_d_model or 2560
+            num_layers = custom_layers or 30
+            fno_width = 448
+            eop_hidden = 1536
         elif scale == "advanced_350m":
             d_model = custom_d_model or 1024
             num_layers = custom_layers or 24
@@ -136,6 +147,7 @@ class PrajnaFoundationPINN(nn.Module):
         self.d_model = d_model
         self.num_layers = num_layers
         self.scale = scale
+        self.gradient_checkpointing = gradient_checkpointing
         
         # 1. Continuous Telemetry Tokenizer
         self.input_embed = nn.Linear(num_channels, d_model)
@@ -168,13 +180,31 @@ class PrajnaFoundationPINN(nn.Module):
     def count_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
+    def get_memory_footprint(self) -> Dict[str, float]:
+        """Calculates estimated static parameter memory across precision formats."""
+        param_count = self.count_parameters()
+        fp32_mb = (param_count * 4) / (1024 ** 2)
+        fp16_mb = (param_count * 2) / (1024 ** 2)
+        int8_mb = (param_count * 1) / (1024 ** 2)
+        return {
+            "parameters": param_count,
+            "fp32_megabytes": round(fp32_mb, 2),
+            "fp16_megabytes": round(fp16_mb, 2),
+            "int8_megabytes": round(int8_mb, 2)
+        }
+
     def forward(self, telemetry_sequence: torch.Tensor) -> Dict[str, torch.Tensor]:
         batch_size, seq_len, _ = telemetry_sequence.shape
         x = self.input_embed(telemetry_sequence) + self.pos_embed[:, :seq_len, :]
         
-        # Temporal forward pass
-        for layer in self.temporal_layers:
-            x = layer(x)
+        # Temporal forward pass with optional activation checkpointing
+        if self.gradient_checkpointing and self.training:
+            import torch.utils.checkpoint as cp
+            for layer in self.temporal_layers:
+                x = cp.checkpoint(layer, x, use_reentrant=False)
+        else:
+            for layer in self.temporal_layers:
+                x = layer(x)
             
         latest_state = x[:, -1, :]  # Instantaneous plant state
         
