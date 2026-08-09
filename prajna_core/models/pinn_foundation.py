@@ -71,15 +71,25 @@ class FourierPhysicsOperatorHead(nn.Module):
         # Real FFT along temporal dimension
         x_ft = torch.fft.rfft(x_proj, dim=-1)
         
-        # Multiply active Fourier modes
-        out_ft = torch.zeros_like(x_ft)
+        # Multiply active Fourier modes via real/imaginary decomposition (ONNX compliance)
         modes_to_take = min(self.modes, x_ft.shape[-1])
-        out_ft[:, :, :modes_to_take] = torch.einsum(
-            "bix,iox->box",
-            x_ft[:, :, :modes_to_take],
-            self.weights1[:, :, :modes_to_take]
-        )
+        x_ft_sub = x_ft[:, :, :modes_to_take]
+        w_sub = self.weights1[:, :, :modes_to_take]
         
+        x_real, x_imag = x_ft_sub.real, x_ft_sub.imag
+        w_real, w_imag = w_sub.real, w_sub.imag
+        
+        out_real = torch.einsum("bix,iox->box", x_real, w_real) - torch.einsum("bix,iox->box", x_imag, w_imag)
+        out_imag = torch.einsum("bix,iox->box", x_real, w_imag) + torch.einsum("bix,iox->box", x_imag, w_real)
+        
+        pad_size = x_ft.shape[-1] - modes_to_take
+        if pad_size > 0:
+            zeros_pad = torch.zeros(batch, self.width, pad_size, dtype=torch.float32, device=x.device)
+            out_real = torch.cat([out_real, zeros_pad], dim=-1)
+            out_imag = torch.cat([out_imag, zeros_pad], dim=-1)
+            
+        out_ft = torch.complex(out_real, out_imag)
+            
         # Inverse Real FFT
         x_fourier = torch.fft.irfft(out_ft, n=seq_len, dim=-1)
         x_fourier = x_fourier + self.w0(x_proj)
