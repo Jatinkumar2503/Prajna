@@ -33,6 +33,9 @@ from prajna_core.models.pinn_foundation import PrajnaFoundationPINN
 from scripts.train_pinn_production import prevent_windows_sleep, allow_windows_sleep, generate_multi_physics_dataset
 
 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
+
 def run_distributed_or_scaled_training(scale: str = "foundation_1b",
                                        epochs: int = 25,
                                        batch_size: int = 4,
@@ -56,6 +59,7 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
         gpu_name = torch.cuda.get_device_name(0)
         vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         print(f"  NVIDIA GPU Engine: {gpu_name} (Total VRAM: {vram_gb:.2f} GB)")
+        torch.cuda.empty_cache()
         use_amp = True
     else:
         num_cpus = torch.get_num_threads()
@@ -111,7 +115,7 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
         train_loss = 0.0
         train_energy = 0.0
         batches = 0
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         
         for step, (batch_x, _) in enumerate(train_loader):
             batch_x = batch_x.to(device)
@@ -151,11 +155,18 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 scaler.step(optimizer)
                 scaler.update()
-                optimizer.zero_grad()
+                optimizer.zero_grad(set_to_none=True)
             
             train_loss += raw_loss.item()
             train_energy += loss_dict["energy_loss"].item()
             batches += 1
+            
+            if (step + 1) % 50 == 0 or (step + 1) == len(train_loader):
+                vram_used = torch.cuda.memory_allocated() / (1024**2) if device.type == "cuda" else 0
+                pct = ((step + 1) / len(train_loader)) * 100
+                sys.stdout.write(f"\r  -> [Epoch {epoch:02d}/{epochs:02d}] Progress: {pct:5.1f}% | Batch [{step+1:04d}/{len(train_loader):04d}] | Loss: {raw_loss.item():.4f} | VRAM: {vram_used:.0f}MB")
+                sys.stdout.flush()
+        print()
             
         scheduler.step()
         epoch_dur = time.time() - epoch_start
