@@ -121,10 +121,21 @@ var AI = (function () {
     // Cross-parameter GNN score
     var cs = gnnScore();
 
-    // PINN: physics-informed thermal deviation
+    // PINN Neural Inference Runtime Integration
+    var pinnResult = null;
+    if (typeof window !== 'undefined' && window.pinnEngine) {
+      pinnResult = window.pinnEngine.predict(reading);
+    } else if (typeof pinnEngine !== 'undefined') {
+      pinnResult = pinnEngine.predict(reading);
+    }
+
+    // Physics-informed thermal deviation
     var edt     = (v.neutronFlux / 2.3) * 285 - 285;
     var cc      = (v.coolantFlow / 78)  * 285;
     var pinnDev = Math.abs(v.temperature - (285 + edt - (cc - 285) * 0.3));
+    if (pinnResult && pinnResult.physicsResiduals) {
+      pinnDev = Math.max(pinnDev, pinnResult.physicsResiduals.energyBalanceLoss * 50.0);
+    }
 
     // Composite risk score
     var maxI = Math.max(ind.temperature, ind.coolantFlow, ind.neutronFlux, ind.radiation);
@@ -159,7 +170,11 @@ var AI = (function () {
       classification:    cls,
       confidence:        +Math.min(0.999, Math.max(0.70, conf)).toFixed(3),
       frameCount:        ms.frameCount,
-      trends:            trends
+      trends:            trends,
+      pinnForecast:      pinnResult ? pinnResult.forecast : null,
+      timeToThreshold:   pinnResult ? pinnResult.timeToThreshold : null,
+      eopGuidance:       pinnResult ? pinnResult.eopGuidance : null,
+      physicsResiduals:  pinnResult ? pinnResult.physicsResiduals : null
     };
     ms.history = (ms.history || []).concat([{ t: reading.time, risk: risk }]).slice(-60);
     return ms;
