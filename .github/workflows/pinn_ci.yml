@@ -1,0 +1,33 @@
+name: PRAJNA PINN Foundation CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-pinn-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch numpy onnx onnxruntime
+
+      - name: Run PINN Multi-Scale Integration Tests
+        run: |
+          python tests/test_pinn_pipeline.py
+
+      - name: Verify Export & Model Scales
+        run: |
+          python -c "from prajna_core.models.pinn_foundation import PrajnaFoundationPINN; m = PrajnaFoundationPINN(scale='test_4m'); print('4M Scale Verified:', m.get_memory_footprint()['parameters'])"
