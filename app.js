@@ -83,7 +83,7 @@ var APP = {
       stxt('stext', _aiState.classification);
 
       /* 10. Feed the 3D digital twin */
-      if (_three) _three.update(r);
+      if (_three) _three.update(r, _aiState);
 
     }, 1000);
   },

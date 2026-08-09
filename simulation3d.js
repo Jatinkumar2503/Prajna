@@ -237,15 +237,25 @@ function initThree() {
 
   /* ---- Public update interface ---------------------------- */
   return {
-    update: function (r) {
+    update: function (r, aiState) {
       rs = {
         temperature:   r.temperature.value,
         coolantFlow:   r.coolantFlow.value,
         neutronFlux:   r.neutronFlux.value,
         radiation:     r.radiation.value,
         reactorPower:  r.reactorPower,
-        controlRodPos: r.controlRodPos
+        controlRodPos: r.controlRodPos,
+        pinnForecast:  aiState && aiState.pinnForecast ? aiState.pinnForecast : null,
+        timeToThreshold: aiState && aiState.timeToThreshold ? aiState.timeToThreshold : null
       };
+
+      // If PINN forecasts temperature excursion, add forward thermal glow to rods
+      if (rs.pinnForecast && rs.pinnForecast.temperature10s > 310.0) {
+        var predictedTf = Math.min(1.0, (rs.pinnForecast.temperature10s - 280.0) / 80.0);
+        for (var k = 0; k < fuelRods.length; k++) {
+          fuelRods[k].material.color.setRGB(predictedTf, 1.0 - predictedTf * 0.9, 0.1);
+        }
+      }
     }
   };
 }
