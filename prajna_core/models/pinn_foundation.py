@@ -58,8 +58,9 @@ class FourierPhysicsOperatorHead(nn.Module):
         self.width = width
         self.fc0 = nn.Linear(d_model, self.width)
         
-        # Complex weights for Fourier modes
-        self.weights1 = nn.Parameter(torch.rand(self.width, self.width, self.modes, dtype=torch.cfloat) * 0.02)
+        # Real and imaginary weights for Fourier modes (Full CUDA AMP GradScaler compatibility)
+        self.weights_real = nn.Parameter(torch.rand(self.width, self.width, self.modes) * 0.02)
+        self.weights_imag = nn.Parameter(torch.rand(self.width, self.width, self.modes) * 0.02)
         self.w0 = nn.Conv1d(self.width, self.width, 1)
         self.fc1 = nn.Linear(self.width, 128)
         self.fc2 = nn.Linear(128, 8)  # Outputs predicted physics quantities
@@ -67,17 +68,18 @@ class FourierPhysicsOperatorHead(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch, seq_len, _ = x.shape
         x_proj = self.fc0(x).transpose(1, 2)  # [Batch, width, SeqLen]
+        orig_dtype = x_proj.dtype
+        x_proj_f32 = x_proj.float()
         
-        # Real FFT along temporal dimension
-        x_ft = torch.fft.rfft(x_proj, dim=-1)
+        # Real FFT along temporal dimension in Float32 (cuFFT requirement for arbitrary sequence length)
+        x_ft = torch.fft.rfft(x_proj_f32, dim=-1)
         
-        # Multiply active Fourier modes via real/imaginary decomposition (ONNX compliance)
+        # Multiply active Fourier modes via real/imaginary decomposition (ONNX/AMP compliance)
         modes_to_take = min(self.modes, x_ft.shape[-1])
         x_ft_sub = x_ft[:, :, :modes_to_take]
-        w_sub = self.weights1[:, :, :modes_to_take]
         
         x_real, x_imag = x_ft_sub.real, x_ft_sub.imag
-        w_real, w_imag = w_sub.real, w_sub.imag
+        w_real, w_imag = self.weights_real[:, :, :modes_to_take], self.weights_imag[:, :, :modes_to_take]
         
         out_real = torch.einsum("bix,iox->box", x_real, w_real) - torch.einsum("bix,iox->box", x_imag, w_imag)
         out_imag = torch.einsum("bix,iox->box", x_real, w_imag) + torch.einsum("bix,iox->box", x_imag, w_real)
@@ -91,7 +93,7 @@ class FourierPhysicsOperatorHead(nn.Module):
         out_ft = torch.complex(out_real, out_imag)
             
         # Inverse Real FFT
-        x_fourier = torch.fft.irfft(out_ft, n=seq_len, dim=-1)
+        x_fourier = torch.fft.irfft(out_ft, n=seq_len, dim=-1).to(orig_dtype)
         x_fourier = x_fourier + self.w0(x_proj)
         
         x_out = F.gelu(x_fourier.transpose(1, 2))
