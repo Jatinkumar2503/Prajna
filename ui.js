@@ -146,6 +146,32 @@ function updateAI(ai) {
   stxt('rconf',   'CONFIDENCE: ' + (ai.confidence * 100).toFixed(1) + '%');
   stxt('pinndev', 'PINN Δ: '    + ai.pinnDeviation + '°C');
   stxt('xscore',  'Cross: '     + (ai.crossAnomalyScore * 100).toFixed(1) + '%');
+
+  // PINN Neural Forecast & IAEA EOP Action Display
+  if (ai.pinnForecast) {
+    var pForecastEl = gel('pinn-forecast-text');
+    if (pForecastEl) {
+      pForecastEl.textContent = 'T+10s Forecast: Core ' + ai.pinnForecast.temperature10s + '°C | Flow ' + ai.pinnForecast.coolantFlow10s + ' kg/s';
+    }
+  }
+  if (ai.eopGuidance) {
+    var eopEl = gel('eop-guidance-badge');
+    if (eopEl) {
+      eopEl.textContent = ai.eopGuidance.eopCode + ' (' + ai.eopGuidance.confidencePct + '%)';
+      eopEl.title = ai.eopGuidance.eopTitle;
+      eopEl.className = 'eop-badge ' + (ai.eopGuidance.priority === 'CRITICAL' ? 'crit' : 'norm');
+    }
+  }
+  if (ai.timeToThreshold && ai.timeToThreshold.criticalTTL !== null) {
+    var ttlBadge = gel('ttl-countdown-badge');
+    if (ttlBadge) {
+      ttlBadge.textContent = '⏱ TTL: ' + ai.timeToThreshold.criticalTTL + 's';
+      ttlBadge.style.display = 'inline-block';
+    }
+  } else {
+    var ttlBadge2 = gel('ttl-countdown-badge');
+    if (ttlBadge2) ttlBadge2.style.display = 'none';
+  }
 }
 
 /* ---- Top alert banner ------------------------------------ */

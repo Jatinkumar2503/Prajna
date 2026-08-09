@@ -136,6 +136,9 @@
         </div>
         <div class="prow"><span>PINN Thermal</span><span id="pinndev" style="color:var(--cyan-dim)">—</span></div>
         <div class="prow"><span>Cross-param</span><span id="xscore" style="color:var(--cyan-dim)">—</span></div>
+        <div class="prow" style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:4px;"><span>IAEA EOP</span><span id="eop-guidance-badge" style="color:var(--green);font-family:var(--mono);font-size:8px;">EOP-00-NORM (98%)</span></div>
+        <div id="pinn-forecast-text" style="font-family:var(--mono);font-size:8px;color:var(--cyan-dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">T+10s Forecast: Calculating...</div>
+        <div id="ttl-countdown-badge" style="display:none;background:rgba(255,0,34,0.2);color:#ff0022;border:1px solid #ff0022;border-radius:3px;font-family:var(--mono);font-size:8px;padding:2px 5px;margin-top:4px;">⏱ TTL: STABLE</div>
       </div>
 
       <div id="palertsbox">
@@ -149,6 +152,7 @@
           <button class="sbtn" data-sc="coolantLoss"       onclick="APP.trigger('coolantLoss')">💧 LOSS OF COOLANT (LOCA)</button>
           <button class="sbtn" data-sc="controlRodFailure" onclick="APP.trigger('controlRodFailure')">⚡ CONTROL ROD EJECTION</button>
           <button class="sbtn" data-sc="steamTubeRupture"  onclick="APP.trigger('steamTubeRupture')">💨 STEAM TUBE RUPTURE</button>
+          <button class="sbtn" data-sc="stationBlackout"   onclick="APP.trigger('coolantLoss')">⚡ STATION BLACKOUT (SBO)</button>
         </div>
         <div class="sprogw"><div class="sprog" id="sprogbar"></div></div>
         <div id="scenlbl" style="font-family:var(--mono);font-size:8px;color:var(--grey);margin-top:4px;text-align:center">NO ACTIVE SCENARIO</div>
@@ -165,6 +169,8 @@
 </div>
 
 <!-- Scripts loaded in dependency order -->
+<script src="src/telemetry/ring_buffer.js"></script>
+<script src="src/inference/pinn_runtime.js"></script>
 <script src="simulation.js"></script>
 <script src="ai_model.js"></script>
 <script src="audio.js"></script>
