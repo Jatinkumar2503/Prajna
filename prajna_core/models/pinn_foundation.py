@@ -131,9 +131,9 @@ class PrajnaFoundationPINN(nn.Module):
             fno_width = 448
             eop_hidden = 1536
         elif scale == "foundation_1b":
-            # 1.0 Billion Parameter Foundation Model Scale
-            d_model = custom_d_model or 2048
-            num_layers = custom_layers or 28
+            # High-Capacity Foundation Model Scale optimized for 6GB VRAM GPUs
+            d_model = custom_d_model or 1536
+            num_layers = custom_layers or 18
             fno_width = 384
             eop_hidden = 1024
         elif scale == "advanced_350m":

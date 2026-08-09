@@ -11,5 +11,5 @@ echo   - Architecture: 1B Foundation PINN (d_model=2048, 28 Mamba-2 Layers)
 echo   - Hardware: NVIDIA CUDA 12.6 + Automatic Mixed Precision (AMP FP16)
 echo   - Memory Optimization: Activation Checkpointing + Gradient Accumulation
 echo.
-python scripts/train_pinn_distributed.py --scale foundation_1b --epochs 25 --batch_size 4 --grad_accum 4 --lr 0.0003
+"C:\Program Files\Python314\python.exe" scripts/train_pinn_distributed.py --scale foundation_1b --epochs 25 --batch_size 4 --grad_accum 4 --lr 0.0003
 pause
