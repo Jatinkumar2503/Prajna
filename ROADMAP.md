@@ -28,18 +28,30 @@
 
 ## 📅 Master Project Timeline Overview
 
-| Phase | Title | Primary Tech Stack | Timeline |
-| :--- | :--- | :--- | :--- |
-| **Phase 1** | Multi-Physics Mathematical Core & Differentiable Equation Library | Python, PyTorch Autograd, SymPy | Months 1–2 |
-| **Phase 2** | Ultra-Low Latency JavaScript / WebAssembly & V8 Telemetry Engine | JavaScript (ES6+), C++, Wasm, WebGL | Months 2–4 |
-| **Phase 3** | Real-World Nuclear Reactor Data Ingestion & Declassification Pipeline | Python, TimescaleDB, C++, OPC-UA | Months 3–5 |
-| **Phase 4** | High-Fidelity Synthetic Transient & Multi-Physics Dataset Generation | Python, C++, HDF5, RELAP5/SIMULATE-3 | Months 4–6 |
-| **Phase 5** | 3-Billion Parameter PINN & Foundation Model Architecture | PyTorch, DeepSpeed ZeRO-3, CUDA | Months 6–9 |
-| **Phase 6** | Multi-Objective Training, Autograd Physics Loss & Optimization | Multi-GPU Cluster (H100/A100), DeepXDE | Months 8–11 |
-| **Phase 7** | Real-Time Inference Acceleration, Quantization & JS Bindings | TensorRT 10, ONNX, C++ Node-API, Jetson | Months 10–13 |
-| **Phase 8** | Explainable AI (XAI), Physics-Grounded SHAP & EOP Decision Support | Python, SHAP, JavaScript, Canvas | Months 12–15 |
-| **Phase 9** | Air-Gapped Cybersecurity, Hardware Isolation & Zero-Actuation Design | PREEMPT_RT Linux, TPM 2.0, HSM, Rust | Months 14–17 |
-| **Phase 10**| Global Patent Portfolio, Regulatory V&V & Mission 2047 Deployment | Legal, IAEA SRS-91, AERB/SG/D-25 | Months 16–24 |
+| Phase | Title | Primary Tech Stack | Timeline | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 1** | Multi-Physics Mathematical Core & Differentiable Equation Library | Python, PyTorch Autograd, SymPy | Months 1–2 | ✅ Completed |
+| **Phase 2** | Ultra-Low Latency JavaScript / WebAssembly & V8 Telemetry Engine | JavaScript (ES6+), C++, Wasm, WebGL | Months 2–4 | ✅ Completed |
+| **Phase 3** | Real-World Nuclear Reactor Data Ingestion & Declassification Pipeline | Python, TimescaleDB, C++, OPC-UA | Months 3–5 | 🚀 Active |
+| **Phase 4** | High-Fidelity Synthetic Transient & Multi-Physics Dataset Generation | Python, C++, HDF5, RELAP5/SIMULATE-3 | Months 4–6 | 🚀 Active |
+| **Phase 5** | Multi-Scale PINN Foundation Model (125M → 350M → 2.25B → 3B) | PyTorch, Mamba-2, FNO, DeepSpeed, CUDA | Months 6–9 | 🚀 Milestone 125M Validated |
+| **Phase 6** | Multi-Objective Training, Autograd Physics Loss & Optimization | Multi-GPU Cluster (H100/A100), DeepXDE | Months 8–11 | 🚀 Milestone 125M Trained |
+| **Phase 7** | Real-Time Inference Acceleration, Quantization & JS Bindings | ONNX Runtime, TensorRT 10, INT8 PTQ, Wasm | Months 10–13 | ⚡ In Progress |
+| **Phase 8** | Explainable AI (XAI), Physics-Grounded SHAP & EOP Decision Support | Python, SHAP, JavaScript, Canvas | Months 12–15 | ⚡ In Progress |
+| **Phase 9** | Air-Gapped Cybersecurity, Hardware Isolation & Zero-Actuation Design | PREEMPT_RT Linux, TPM 2.0, HSM, Rust | Months 14–17 | 🛡️ Planned |
+| **Phase 10**| Global Patent Portfolio, Regulatory V&V & Mission 2047 Deployment | Legal, IAEA SRS-91, AERB/SG/D-25 | Months 16–24 | 🏛️ Planned |
+
+---
+
+## 🧬 Multi-Scale PINN Foundation Model Progression Matrix
+
+| Architecture Scale | Trainable Parameters | Backbone Configuration | Memory Footprint (FP16 / INT8) | Target Hardware / Environment | Status & Milestone |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **`test_4m`** | ~4.25 Million | $d_{\text{model}}=256$, 4 Layers, FNO Width 128 | 17 MB / 4.3 MB | CI/CD Pipeline & Functional Unit Tests | ✅ Verified |
+| **`efficient_125m`** | **~125 Million** | $d_{\text{model}}=768$, 16 Layers, FNO Width 256 | 243 MB / 61 MB | RTX 3050 (6GB) / Edge Server / CPU | 🏆 **Trained & Converged (6.1h, Val Loss 0.0045, $\mathcal{L}_{\text{energy}} = 0.0006$)** |
+| **`advanced_350m`** | ~350 Million | $d_{\text{model}}=1024$, 24 Layers, FNO Width 384 | 700 MB / 175 MB | Single High-End GPU (RTX 4080/4090, A10) | 🚀 Architectural Definition Complete |
+| **`intermediate_2.25b`** | **~2,250 Million (2.25B)** | $d_{\text{model}}=2560$, 30 Layers, FNO Width 448 | 4.5 GB / 1.13 GB | Multi-GPU Server (4× A100/H100, FSDP/ZeRO-3) | 🚀 Progressive Scaling Milestone |
+| **`production_3b`** | ~3,050 Million (3.05B) | $d_{\text{model}}=3072$, 36 Layers, FNO Width 512 | 6.1 GB / 1.52 GB | Multi-Node Supercomputer Cluster | 🎯 Full Foundation Model |
 
 ---
 
