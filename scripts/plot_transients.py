@@ -17,12 +17,13 @@ from prajna_core.models.pinn_foundation import PrajnaFoundationPINN
 from scripts.evaluate_pinn import generate_evaluation_dataset, SCENARIO_NAMES, CHANNEL_NAMES
 
 
-def render_ascii_sparkline(values, width=40):
-    """Renders a simple ASCII curve representation."""
-    ticks = [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+def render_ascii_sparkline(values, width=14):
+    """Renders a simple ASCII/Unicode curve representation."""
+    # Use standard ASCII characters safe for all Windows code pages
+    ticks = [".", "_", "-", "=", "+", "*", "#", "@"]
     min_v, max_v = min(values), max(values)
     if max_v - min_v < 1e-6:
-        return "".join([ticks[3] for _ in range(width)])
+        return "".join(["-" for _ in range(width)])
     
     # Resample to width
     indices = np.linspace(0, len(values) - 1, width).astype(int)
