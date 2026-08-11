@@ -26,7 +26,7 @@ class TestPrajnaPINNPipeline(unittest.TestCase):
         model = PrajnaFoundationPINN(num_channels=16, scale="test_4m")
         dummy = torch.randn(2, 30, 16)
         out = model(dummy)
-        self.assertEqual(out["physics_trajectories"].shape, (2, 30, 8))
+        self.assertEqual(out["physics_trajectories"].shape, (2, 30, 16))
         self.assertEqual(out["time_to_threshold"].shape, (2, 16))
         self.assertEqual(out["eop_logits"].shape, (2, 64))
         self.assertEqual(out["latent_representation"].shape, (2, 256))
@@ -40,28 +40,21 @@ class TestPrajnaPINNPipeline(unittest.TestCase):
 
     def test_03_physics_loss_computation(self):
         loss_fn = PrajnaPhysicsLoss()
-        pred_flux = torch.ones(2, 20, 1) * 2.32
-        pred_power = torch.ones(2, 20, 1) * 91.5
-        pred_temp = torch.ones(2, 20, 1) * 285.0
-        mass_flow = torch.ones(2, 20, 1) * 78.0
-        inlet_temp = torch.ones(2, 20, 1) * 257.0
-        reactivity = torch.zeros(2, 20, 1)
-        measured_flux = torch.ones(2, 20, 1) * 2.32
-        measured_temp = torch.ones(2, 20, 1) * 285.0
+        pred_physics = torch.ones(2, 20, 16) * 10.0
+        target_physics = torch.ones(2, 20, 16) * 10.0
+        eop_logits = torch.randn(2, 64)
+        target_eop = torch.tensor([0, 1], dtype=torch.long)
 
         losses = loss_fn(
-            pred_flux=pred_flux,
-            pred_power=pred_power,
-            pred_temp=pred_temp,
-            mass_flow=mass_flow,
-            inlet_temp=inlet_temp,
-            reactivity=reactivity,
-            measured_flux=measured_flux,
-            measured_temp=measured_temp
+            pred_physics=pred_physics,
+            target_physics=target_physics,
+            eop_logits=eop_logits,
+            target_eop=target_eop
         )
         self.assertIn("total_loss", losses)
         self.assertIn("energy_loss", losses)
         self.assertIn("dnbr_penalty", losses)
+        self.assertIn("eop_loss", losses)
         self.assertTrue(torch.isfinite(losses["total_loss"]))
 
     def test_04_onnx_runtime_parity(self):

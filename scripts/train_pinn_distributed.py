@@ -94,7 +94,7 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
     print(f"    - INT8 Memory Weight: {mem_profile['int8_megabytes']} MB")
     
     # 3. Physics Loss and Optimizer
-    physics_loss_fn = PrajnaPhysicsLoss(lambda_pke=1.2, lambda_energy=1.0, lambda_dnbr=0.8).to(device)
+    physics_loss_fn = PrajnaPhysicsLoss().to(device)
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
@@ -117,33 +117,21 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
         batches = 0
         optimizer.zero_grad(set_to_none=True)
         
-        for step, (batch_x, _) in enumerate(train_loader):
+        for step, (batch_x, batch_y) in enumerate(train_loader):
             batch_x = batch_x.to(device)
+            batch_y = batch_y.to(device)
             
             amp_device = "cuda" if device.type == "cuda" else "cpu"
             with torch.amp.autocast(amp_device, enabled=use_amp):
                 outputs = model(batch_x)
                 physics_preds = outputs["physics_trajectories"]
-                
-                pred_temp = physics_preds[:, :, 0:1]
-                pred_flux = physics_preds[:, :, 2:3]
-                pred_power = physics_preds[:, :, 5:6] if physics_preds.shape[-1] > 5 else pred_flux * 39.5
-                
-                measured_temp = batch_x[:, :, 0:1]
-                measured_flow = batch_x[:, :, 1:2]
-                measured_flux = batch_x[:, :, 2:3]
-                inlet_temp = measured_temp - 28.0
-                reactivity = (measured_flux - 2.32) * 0.0012
+                eop_logits = outputs["eop_logits"]
                 
                 loss_dict = physics_loss_fn(
-                    pred_flux=pred_flux,
-                    pred_power=pred_power,
-                    pred_temp=pred_temp,
-                    mass_flow=measured_flow,
-                    inlet_temp=inlet_temp,
-                    reactivity=reactivity,
-                    measured_flux=measured_flux,
-                    measured_temp=measured_temp
+                    pred_physics=physics_preds,
+                    target_physics=batch_x,
+                    eop_logits=eop_logits,
+                    target_eop=batch_y
                 )
                 raw_loss = loss_dict["total_loss"]
                 scaled_loss = raw_loss / grad_accum_steps
@@ -177,33 +165,32 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
         # Validation
         model.eval()
         val_loss = 0.0
+        val_eop_correct = 0
+        val_total = 0
         val_batches = 0
         
         with torch.no_grad():
-            for val_x, _ in val_loader:
+            for val_x, val_y in val_loader:
                 val_x = val_x.to(device)
+                val_y = val_y.to(device)
                 val_out = model(val_x)
-                val_preds = val_out["physics_trajectories"]
                 
-                val_pred_temp = val_preds[:, :, 0:1]
-                val_pred_flux = val_preds[:, :, 2:3]
-                val_pred_power = val_preds[:, :, 5:6] if val_preds.shape[-1] > 5 else val_pred_flux * 39.5
+                v_loss_dict = physics_loss_fn(
+                    pred_physics=val_out["physics_trajectories"],
+                    target_physics=val_x,
+                    eop_logits=val_out["eop_logits"],
+                    target_eop=val_y
+                )
                 
-                v_loss = physics_loss_fn(
-                    pred_flux=val_pred_flux,
-                    pred_power=val_pred_power,
-                    pred_temp=val_pred_temp,
-                    mass_flow=val_x[:, :, 1:2],
-                    inlet_temp=val_x[:, :, 0:1] - 28.0,
-                    reactivity=(val_x[:, :, 2:3] - 2.32) * 0.0012,
-                    measured_flux=val_x[:, :, 2:3],
-                    measured_temp=val_x[:, :, 0:1]
-                )["total_loss"].item()
+                val_preds = torch.argmax(val_out["eop_logits"], dim=-1)
+                val_eop_correct += (val_preds == val_y).sum().item()
+                val_total += val_x.size(0)
                 
-                val_loss += v_loss
+                val_loss += v_loss_dict["total_loss"].item()
                 val_batches += 1
                 
         avg_val_loss = val_loss / val_batches
+        eop_acc = (val_eop_correct / val_total) * 100.0
         
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
@@ -212,14 +199,15 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
                 "scale": scale,
                 "param_count": mem_profile["parameters"],
                 "model_state_dict": model.state_dict(),
-                "val_loss": best_val_loss
+                "val_loss": best_val_loss,
+                "eop_accuracy": eop_acc
             }, best_ckpt_path)
-            status_tag = "[BEST CHECKPOINT SAVED]"
+            status_tag = f"[BEST SAVED | EOP: {eop_acc:.1f}%]"
         else:
-            status_tag = ""
+            status_tag = f"[EOP: {eop_acc:.1f}%]"
             
         current_lr = scheduler.get_last_lr()[0]
-        print(f"Epoch [{epoch:03d}/{epochs:03d}] | Train Loss: {avg_train_loss:.4f} | Energy Loss: {avg_energy_loss:.4f} | Val Loss: {avg_val_loss:.4f} | LR: {current_lr:.2e} | {epoch_dur:.1f}s/epoch {status_tag}")
+        print(f"Epoch [{epoch:02d}/{epochs:02d}] | Train Loss: {avg_train_loss:.4f} | Energy Loss: {avg_energy_loss:.4f} | Val Loss: {avg_val_loss:.4f} | EOP Acc: {eop_acc:.1f}% | LR: {current_lr:.2e} | {epoch_dur:.1f}s {status_tag}")
         
     total_elapsed = (time.time() - start_time) / 3600.0
     print("\n" + "=" * 80)
@@ -231,8 +219,8 @@ def run_distributed_or_scaled_training(scale: str = "foundation_1b",
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Prajna Scaled & Distributed PINN Training Engine")
-    parser.add_argument("--scale", type=str, default="foundation_1b",
-                        choices=["test_4m", "efficient_125m", "advanced_350m", "foundation_1b", "intermediate_2.25b", "production_3b"],
+    parser.add_argument("--scale", type=str, default="full_1b",
+                        choices=["test_4m", "efficient_125m", "advanced_350m", "foundation_1b", "full_1b", "intermediate_2.25b", "production_3b"],
                         help="Model parameter scale")
     parser.add_argument("--epochs", type=int, default=25, help="Epoch count")
     parser.add_argument("--batch_size", type=int, default=4, help="Micro-batch size")
