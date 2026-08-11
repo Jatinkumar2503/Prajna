@@ -60,60 +60,177 @@ def generate_evaluation_dataset(num_samples: int = 1500,
                                 num_channels: int = 16,
                                 seed: int = 42) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    Generates a deterministic benchmark evaluation dataset with unseen Monte Carlo distributions.
+    Generates a deterministic benchmark evaluation dataset with unseen Monte Carlo distributions across all 16 physical channels.
     """
     torch.manual_seed(seed)
-    X = torch.zeros(num_samples, seq_len, num_channels, dtype=torch.float32)
-    Y_scenario = torch.zeros(num_samples, dtype=torch.long)
     
-    for i in range(num_samples):
-        scenario_type = i % 5
-        Y_scenario[i] = scenario_type
+    t = torch.arange(seq_len, dtype=torch.float32).view(1, seq_len, 1)
+    p = t / float(seq_len)
+    
+    t_base = 285.0 + (torch.rand(num_samples, 1, 1) - 0.5) * 12.0
+    f_base = 78.0 + (torch.rand(num_samples, 1, 1) - 0.5) * 6.0
+    flux_base = 2.32 + (torch.rand(num_samples, 1, 1) - 0.5) * 0.20
+    scenarios = torch.arange(num_samples) % 5
+    Y_scenario = scenarios.clone()
+    
+    X = torch.zeros(num_samples, seq_len, num_channels, dtype=torch.float32)
+    noise = torch.randn(num_samples, seq_len, num_channels) * 0.012
+    ones = torch.ones(num_samples, 1, 1, dtype=torch.float32)
+    
+    # 1. Continuous Initial Nuclear Plant State Sampling (Monte Carlo)
+    t_base = 275.0 + torch.rand(num_samples, 1, 1) * 20.0       # Core Exit Temp: 275 - 295 °C
+    f_base = 70.0 + torch.rand(num_samples, 1, 1) * 16.0        # Coolant Flow: 70 - 86 kg/s
+    flux_base = 1.80 + torch.rand(num_samples, 1, 1) * 0.90     # Neutron Flux: 1.8 - 2.7 x 10^13
+    rad_base = 0.35 + torch.rand(num_samples, 1, 1) * 0.15      # Radiation: 0.35 - 0.50 mSv/h
+    p_base = 148.0 + torch.rand(num_samples, 1, 1) * 14.0       # Primary Pressure: 148 - 162 bar
+    pzr_base = 42.0 + torch.rand(num_samples, 1, 1) * 16.0      # Pressurizer Level: 42 - 58 %
+    rod_base = 55.0 + torch.rand(num_samples, 1, 1) * 25.0      # Rod Height: 55 - 80 %
+    fw_base = 210.0 + torch.rand(num_samples, 1, 1) * 20.0      # Feedwater Temp: 210 - 230 °C
+    sf_base = 68.0 + torch.rand(num_samples, 1, 1) * 14.0       # Steam Flow: 68 - 82 kg/s
+    prec_base = 0.90 + torch.rand(num_samples, 1, 1) * 0.20     # Delayed Precursors: 0.9 - 1.1
+    cont_base = 98.0 + torch.rand(num_samples, 1, 1) * 6.0      # Containment Press: 98 - 104 kPa
+    
+    # 2. Continuous Dynamic Severity & Physical Rate Exponents (Unique per Scenario)
+    gamma_loca = 0.8 + torch.rand(num_samples, 1, 1) * 1.2      # Non-linear depressurization exponent
+    loca_dT = 35.0 + torch.rand(num_samples, 1, 1) * 75.0       # Core thermal excursion: +35 to +110 °C
+    loca_dP = 20.0 + torch.rand(num_samples, 1, 1) * 55.0       # Primary depressurization: -20 to -75 bar
+    loca_dF = 25.0 + torch.rand(num_samples, 1, 1) * 35.0       # Coolant inventory loss: -25 to -60 kg/s
+    loca_dRad = 1.5 + torch.rand(num_samples, 1, 1) * 4.5       # Isotope release: +1.5 to +6.0 mSv/h
+    loca_dCont = 25.0 + torch.rand(num_samples, 1, 1) * 75.0    # Containment pressurization: +25 to +100 kPa
+    
+    gamma_ria = 1.0 + torch.rand(num_samples, 1, 1) * 1.2       # Prompt jump curvature exponent
+    ria_dFlux = 1.2 + torch.rand(num_samples, 1, 1) * 4.2       # Reactivity flux spike: +1.2 to +5.4 x 10^13
+    ria_dT = 30.0 + torch.rand(num_samples, 1, 1) * 65.0        # Doppler heating: +30 to +95 °C
+    ria_dP = 5.0 + torch.rand(num_samples, 1, 1) * 18.0         # Pressurizer surge spike: +5 to +23 bar
+    
+    sgtr_dF = 15.0 + torch.rand(num_samples, 1, 1) * 32.0       # Secondary loop bypass: -15 to -47 kg/s
+    sgtr_dP = 15.0 + torch.rand(num_samples, 1, 1) * 30.0       # Primary-secondary pressure drop: -15 to -45 bar
+    sgtr_dRad = 1.8 + torch.rand(num_samples, 1, 1) * 3.6       # Secondary steam radiation: +1.8 to +5.4 mSv/h
+    sgtr_dT = 20.0 + torch.rand(num_samples, 1, 1) * 30.0       # Thermal gradient change: +20 to +50 °C
+    
+    sbo_dF = 45.0 + torch.rand(num_samples, 1, 1) * 25.0        # Pump coastdown flow loss: -45 to -70 kg/s
+    sbo_dT = 10.0 + torch.rand(num_samples, 1, 1) * 28.0        # Natural circulation oscillation: +10 to +38 °C
+    sbo_dP = 10.0 + torch.rand(num_samples, 1, 1) * 20.0        # Pressure decay: -10 to -30 bar
+    
+    # 3. Continuous Simulation of Every Physical Channel
+    # Scenario 0: Steady State Normal Operation (Grid load swings & micro-perturbations)
+    m0 = (scenarios == 0).view(-1, 1, 1)
+    if m0.any():
+        w1 = 0.05 + torch.rand(num_samples, 1, 1) * 0.06
+        w2 = 0.03 + torch.rand(num_samples, 1, 1) * 0.05
+        t0 = t_base + torch.sin(t * w1) * 0.8
+        f0 = f_base + torch.cos(t * w2) * 0.6
+        flux0 = flux_base + torch.sin(t * (w1 * 1.5)) * 0.03
+        rad0 = rad_base + torch.cos(t * w1) * 0.015
+        p_prim0 = p_base + torch.sin(t * w2) * 0.4
+        p_pow0 = flux0 * 39.5
+        sq0 = 0.02 * ones + torch.sin(t * w1) * 0.003
+        rod0 = rod_base + torch.cos(t * w2) * 0.3
+        pzr0 = pzr_base + torch.sin(t * w1) * 0.4
+        fw0 = fw_base + torch.cos(t * w2) * 0.3
+        sf0 = sf_base + torch.sin(t * w1) * 0.5
+        inlet0 = t0 - 28.0
+        dt0 = 28.0 * ones.expand(-1, seq_len, -1)
+        clad0 = t0 + 45.0
+        prec0 = prec_base + torch.sin(t * (w2 * 0.5)) * 0.006
+        cont0 = cont_base + torch.sin(t * 0.01) * 0.05
         
-        # Test distribution perturbations
-        t_base = 285.0 + (torch.rand(1).item() - 0.5) * 12.0
-        f_base = 78.0 + (torch.rand(1).item() - 0.5) * 6.0
-        flux_base = 2.32 + (torch.rand(1).item() - 0.5) * 0.20
-        rad_base = 0.42 + (torch.rand(1).item() - 0.5) * 0.06
+        c0 = torch.cat([t0, f0, flux0, rad0, p_prim0, p_pow0, sq0, rod0, pzr0, fw0, sf0, inlet0, dt0, clad0, prec0, cont0], dim=-1)
+        X = torch.where(m0, c0, X)
         
-        for t in range(seq_len):
-            p = t / float(seq_len)
-            noise = torch.randn(num_channels) * 0.012
-            
-            if scenario_type == 1:  # LOCA
-                t_val = t_base + math.pow(p, 1.25) * 72.0
-                f_val = max(28.0, f_base - p * 45.0)
-                flux_val = max(0.4, flux_base - p * 0.95)
-                rad_val = rad_base + math.pow(p, 1.8) * 3.2
-            elif scenario_type == 2:  # RIA
-                t_val = t_base + p * 62.0
-                f_val = f_base - p * 6.0
-                flux_val = flux_base + math.pow(p, 1.35) * 2.4
-                rad_val = rad_base + p * 1.5
-            elif scenario_type == 3:  # SGTR
-                t_val = t_base + p * 34.0
-                f_val = max(38.0, f_base - p * 32.0)
-                flux_val = flux_base - p * 0.45
-                rad_val = rad_base + math.pow(p, 1.4) * 3.6
-            elif scenario_type == 4:  # SBO
-                t_val = t_base + math.sin(p * math.pi) * 25.0
-                f_val = max(15.0, f_base - p * 58.0)
-                flux_val = max(0.1, flux_base - p * 2.1)
-                rad_val = rad_base + p * 0.8
-            else:  # Steady State
-                t_val = t_base + math.sin(t * 0.08) * 0.7
-                f_val = f_base + math.cos(t * 0.06) * 0.5
-                flux_val = flux_base + math.sin(t * 0.12) * 0.025
-                rad_val = rad_base + math.cos(t * 0.05) * 0.01
-                
-            X[i, t, 0] = t_val + noise[0]
-            X[i, t, 1] = f_val + noise[1]
-            X[i, t, 2] = flux_val + noise[2]
-            X[i, t, 3] = rad_val + noise[3]
-            X[i, t, 4] = 155.0 - (p * 35.0 if scenario_type in (1, 3) else 0.0) + noise[4]
-            X[i, t, 5] = flux_val * 39.5 + noise[5]
-            X[i, t, 6:] = torch.randn(10) * 0.05
-            
+    # Scenario 1: Loss of Coolant Accident (LOCA - Continuous Break Spectrum)
+    m1 = (scenarios == 1).view(-1, 1, 1)
+    if m1.any():
+        t1 = t_base + torch.pow(p, gamma_loca) * loca_dT
+        f1 = torch.clamp(f_base - p * loca_dF, min=20.0)
+        flux1 = torch.clamp(flux_base - p * 1.1, min=0.2)
+        rad1 = rad_base + torch.pow(p, 1.5 + gamma_loca * 0.3) * loca_dRad
+        p_prim1 = torch.clamp(p_base - p * loca_dP, min=60.0)
+        p_pow1 = flux1 * 39.5
+        sq1 = torch.clamp(0.02 * ones + p * 0.18, max=0.30)
+        rod1 = torch.clamp(rod_base - p * rod_base, min=0.0)
+        pzr1 = torch.clamp(pzr_base - p * 38.0, min=10.0)
+        fw1 = fw_base - p * 18.0
+        sf1 = torch.clamp(sf_base - p * 50.0, min=15.0)
+        inlet1 = t1 - 28.0
+        dt1 = t1 - inlet1
+        clad1 = t1 + 45.0 + p * (loca_dT * 0.6)
+        prec1 = torch.clamp(prec_base - p * 0.75, min=0.15)
+        cont1 = cont_base + p * loca_dCont
+        
+        c1 = torch.cat([t1, f1, flux1, rad1, p_prim1, p_pow1, sq1, rod1, pzr1, fw1, sf1, inlet1, dt1, clad1, prec1, cont1], dim=-1)
+        X = torch.where(m1, c1, X)
+        
+    # Scenario 2: Control Rod Ejection (RIA - Continuous Reactivity Insertion)
+    m2 = (scenarios == 2).view(-1, 1, 1)
+    if m2.any():
+        t2 = t_base + p * ria_dT
+        f2 = f_base - p * 7.0
+        flux2 = flux_base + torch.pow(p, gamma_ria) * ria_dFlux
+        rad2 = rad_base + p * 1.8
+        p_prim2 = p_base + p * ria_dP
+        p_pow2 = flux2 * 39.5
+        sq2 = torch.clamp(0.02 * ones + p * 0.09, max=0.25)
+        rod2 = torch.clamp(rod_base + p * (100.0 - rod_base), max=100.0)
+        pzr2 = pzr_base + p * 20.0
+        fw2 = fw_base + p * 10.0
+        sf2 = sf_base + p * 18.0
+        inlet2 = t2 - 28.0
+        dt2 = t2 - inlet2
+        clad2 = t2 + 45.0 + p * (ria_dT * 0.5)
+        prec2 = prec_base + p * 1.4
+        cont2 = cont_base + p * 6.0
+        
+        c2 = torch.cat([t2, f2, flux2, rad2, p_prim2, p_pow2, sq2, rod2, pzr2, fw2, sf2, inlet2, dt2, clad2, prec2, cont2], dim=-1)
+        X = torch.where(m2, c2, X)
+        
+    # Scenario 3: Steam Generator Tube Rupture (SGTR - Continuous Leak Rates)
+    m3 = (scenarios == 3).view(-1, 1, 1)
+    if m3.any():
+        t3 = t_base + p * sgtr_dT
+        f3 = torch.clamp(f_base - p * sgtr_dF, min=30.0)
+        flux3 = flux_base - p * 0.50
+        rad3 = rad_base + torch.pow(p, 1.3) * sgtr_dRad
+        p_prim3 = torch.clamp(p_base - p * sgtr_dP, min=100.0)
+        p_pow3 = flux3 * 39.5
+        sq3 = torch.clamp(0.02 * ones + p * 0.06, max=0.25)
+        rod3 = rod_base - p * 25.0
+        pzr3 = torch.clamp(pzr_base - p * 30.0, min=15.0)
+        fw3 = fw_base - p * 24.0
+        sf3 = torch.clamp(sf_base - p * 35.0, min=25.0)
+        inlet3 = t3 - 28.0
+        dt3 = t3 - inlet3
+        clad3 = t3 + 45.0
+        prec3 = prec_base - p * 0.35
+        cont3 = cont_base + p * 15.0
+        
+        c3 = torch.cat([t3, f3, flux3, rad3, p_prim3, p_pow3, sq3, rod3, pzr3, fw3, sf3, inlet3, dt3, clad3, prec3, cont3], dim=-1)
+        X = torch.where(m3, c3, X)
+        
+    # Scenario 4: Station Blackout (SBO - Continuous Pump Coastdown & Decay Cooling)
+    m4 = (scenarios == 4).view(-1, 1, 1)
+    if m4.any():
+        t4 = t_base + torch.sin(p * math.pi) * sbo_dT
+        f4 = torch.clamp(f_base - p * sbo_dF, min=10.0)
+        flux4 = torch.clamp(flux_base - p * 2.3, min=0.08)
+        rad4 = rad_base + p * 0.9
+        p_prim4 = torch.clamp(p_base - p * sbo_dP, min=110.0)
+        p_pow4 = torch.clamp(flux4 * 39.5, min=3.5)
+        sq4 = torch.clamp(0.02 * ones + p * 0.07, max=0.25)
+        rod4 = torch.clamp(rod_base - p * rod_base, min=0.0)
+        pzr4 = pzr_base - p * 18.0
+        fw4 = fw_base - p * 45.0
+        sf4 = torch.clamp(sf_base - p * 72.0, min=4.0)
+        inlet4 = t4 - 28.0
+        dt4 = t4 - inlet4
+        clad4 = t4 + 45.0
+        prec4 = torch.clamp(prec_base - p * 0.96, min=0.04)
+        cont4 = cont_base + p * 10.0
+        
+        c4 = torch.cat([t4, f4, flux4, rad4, p_prim4, p_pow4, sq4, rod4, pzr4, fw4, sf4, inlet4, dt4, clad4, prec4, cont4], dim=-1)
+        X = torch.where(m4, c4, X)
+        
+    X = X + noise
     return X, Y_scenario
 
 
@@ -148,6 +265,7 @@ def compute_regression_metrics(y_true: torch.Tensor, y_pred: torch.Tensor) -> Di
 def evaluate_checkpoint(checkpoint_path: str,
                         device_name: Optional[str] = None,
                         batch_size: int = 32,
+                        samples: int = 1000,
                         output_dir: str = "eval_results") -> Dict[str, Any]:
     """
     Main evaluation pipeline.
@@ -186,24 +304,24 @@ def evaluate_checkpoint(checkpoint_path: str,
     print(f"    - Verified Trainable Parameters: {param_count:,}")
     
     # Generate Evaluation Dataset
-    X_test, Y_test = generate_evaluation_dataset(num_samples=1500, seq_len=45, num_channels=16)
+    X_test, Y_test = generate_evaluation_dataset(num_samples=samples, seq_len=45, num_channels=16)
     dataset = TensorDataset(X_test, Y_test)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     
-    physics_loss_fn = PrajnaPhysicsLoss(lambda_pke=1.2, lambda_energy=1.0, lambda_dnbr=0.8).to(device)
+    physics_loss_fn = PrajnaPhysicsLoss().to(device)
     
     # Metric accumulators
     scenario_metrics = {i: {"y_true": [], "y_pred": [], "physics_losses": []} for i in range(5)}
     all_energy_losses = []
     all_dnbr_penalties = []
-    all_pke_losses = []
     eop_correct = 0
     total_samples = 0
     
     start_eval_time = time.time()
+    print(f"\n[*] Evaluating across {samples:,} multi-physics transient sequences ({len(loader)} batches)...")
     
     with torch.no_grad():
-        for batch_x, batch_y in loader:
+        for step, (batch_x, batch_y) in enumerate(loader):
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
             
@@ -216,26 +334,11 @@ def evaluate_checkpoint(checkpoint_path: str,
             eop_correct += (eop_preds == batch_y).sum().item()
             total_samples += batch_x.size(0)
             
-            pred_temp = pred_physics[:, :, 0:1]
-            pred_flux = pred_physics[:, :, 2:3]
-            pred_power = pred_physics[:, :, 5:6] if pred_physics.shape[-1] > 5 else pred_flux * 39.5
-            
-            # Target slices
-            measured_temp = batch_x[:, :, 0:1]
-            measured_flow = batch_x[:, :, 1:2]
-            measured_flux = batch_x[:, :, 2:3]
-            inlet_temp = measured_temp - 28.0
-            reactivity = (measured_flux - 2.32) * 0.0012
-            
             loss_dict = physics_loss_fn(
-                pred_flux=pred_flux,
-                pred_power=pred_power,
-                pred_temp=pred_temp,
-                mass_flow=measured_flow,
-                inlet_temp=inlet_temp,
-                reactivity=reactivity,
-                measured_flux=measured_flux,
-                measured_temp=measured_temp
+                pred_physics=pred_physics,
+                target_physics=batch_x,
+                eop_logits=eop_logits,
+                target_eop=batch_y
             )
             
             all_energy_losses.append(loss_dict["energy_loss"].item())
@@ -248,6 +351,12 @@ def evaluate_checkpoint(checkpoint_path: str,
                     scenario_metrics[s_id]["y_true"].append(batch_x[mask, :, :pred_physics.shape[-1]].cpu())
                     scenario_metrics[s_id]["y_pred"].append(pred_physics[mask].cpu())
                     scenario_metrics[s_id]["physics_losses"].append(loss_dict["total_loss"].item())
+                    
+            if (step + 1) % 5 == 0 or (step + 1) == len(loader):
+                pct = ((step + 1) / len(loader)) * 100.0
+                sys.stdout.write(f"\r  -> Evaluation Progress: {pct:5.1f}% | Batch [{step+1:03d}/{len(loader):03d}]")
+                sys.stdout.flush()
+    print()
                     
     eval_elapsed = time.time() - start_eval_time
     
@@ -366,8 +475,9 @@ def generate_markdown_summary(report: Dict[str, Any]) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Prajna PINN Evaluation & Verification Suite")
-    parser.add_argument("--checkpoint", type=str, default="checkpoints/prajna_pinn_efficient_125m_best.pt", help="Path to model checkpoint")
+    parser.add_argument("--checkpoint", type=str, default="checkpoints/prajna_pinn_foundation_1b_best.pt", help="Path to model checkpoint")
     parser.add_argument("--batch_size", type=int, default=32, help="Evaluation batch size")
+    parser.add_argument("--samples", type=int, default=1000, help="Number of evaluation samples")
     parser.add_argument("--device", type=str, default=None, help="Device ('cuda' or 'cpu')")
     parser.add_argument("--output_dir", type=str, default="eval_results", help="Directory to save evaluation reports")
     args = parser.parse_args()
@@ -376,5 +486,6 @@ if __name__ == "__main__":
         checkpoint_path=args.checkpoint,
         device_name=args.device,
         batch_size=args.batch_size,
+        samples=args.samples,
         output_dir=args.output_dir
     )
