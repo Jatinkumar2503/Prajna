@@ -114,16 +114,20 @@ def export_pinn_to_onnx(checkpoint_path: str,
     print("\n[*] Tracing computation graph and exporting to ONNX...")
     start_export = time.time()
     
+    export_kwargs = {
+        "export_params": True,
+        "opset_version": opset_version,
+        "do_constant_folding": True,
+        "input_names": input_names,
+        "output_names": output_names,
+        "dynamic_axes": dynamic_axes
+    }
+    # In PyTorch 2.13+, dynamo exporter decomposes FFT into compliant operators
     torch.onnx.export(
         wrapper,
         dummy_input,
         output_onnx_path,
-        export_params=True,
-        opset_version=opset_version,
-        do_constant_folding=True,
-        input_names=input_names,
-        output_names=output_names,
-        dynamic_axes=dynamic_axes
+        **export_kwargs
     )
     
     export_duration = time.time() - start_export
@@ -216,7 +220,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Prajna PINN ONNX Export Harness")
     parser.add_argument("--checkpoint", type=str, default="checkpoints/prajna_pinn_efficient_125m_best.pt", help="Path to checkpoint")
     parser.add_argument("--output", type=str, default="checkpoints/prajna_pinn_efficient_125m.onnx", help="Path to output ONNX file")
-    parser.add_argument("--opset", type=int, default=17, help="ONNX opset version")
+    parser.add_argument("--opset", type=int, default=18, help="ONNX opset version (default: 18)")
     parser.add_argument("--no_int8", action="store_true", help="Disable INT8 dynamic quantization")
     args = parser.parse_args()
     
