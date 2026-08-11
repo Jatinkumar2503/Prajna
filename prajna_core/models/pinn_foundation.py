@@ -38,7 +38,9 @@ class TemporalMambaBlock(nn.Module):
         res = x
         x_norm = self.norm(x)
         projected = self.in_proj(x_norm)
-        u, v = projected.chunk(2, dim=-1)
+        mid = projected.shape[-1] // 2
+        u = projected[..., :mid]
+        v = projected[..., mid:]
         
         # 1D Depthwise Convolution along time dimension
         u_conv = self.conv1d(u.transpose(1, 2))[:, :, :x.shape[1]].transpose(1, 2)
@@ -52,10 +54,11 @@ class FourierPhysicsOperatorHead(nn.Module):
     Fourier Neural Operator (FNO) Head solving spatio-temporal Point Kinetics
     and primary loop flow fields in the frequency domain.
     """
-    def __init__(self, d_model: int, modes: int = 16, width: int = 256):
+    def __init__(self, d_model: int, modes: int = 16, width: int = 256, out_channels: int = 16):
         super().__init__()
         self.modes = modes
         self.width = width
+        self.out_channels = out_channels
         self.fc0 = nn.Linear(d_model, self.width)
         
         # Real and imaginary weights for Fourier modes (Full CUDA AMP GradScaler compatibility)
@@ -63,7 +66,29 @@ class FourierPhysicsOperatorHead(nn.Module):
         self.weights_imag = nn.Parameter(torch.rand(self.width, self.width, self.modes) * 0.02)
         self.w0 = nn.Conv1d(self.width, self.width, 1)
         self.fc1 = nn.Linear(self.width, 128)
-        self.fc2 = nn.Linear(128, 8)  # Outputs predicted physics quantities
+        self.fc2 = nn.Linear(128, out_channels)  # Outputs full predicted physics telemetry channels
+        
+        # Initialize bias to nominal nuclear plant equilibrium state for zero initial drift
+        nominal_baselines = torch.tensor([
+            285.0,  # 0: Core Temp (°C)
+            78.0,   # 1: Coolant Flow (kg/s)
+            2.32,   # 2: Neutron Flux (x10^13)
+            0.42,   # 3: Radiation (mSv/h)
+            155.0,  # 4: Primary Pressure (bar)
+            91.64,  # 5: Core Power (MWth)
+            0.02,   # 6: Steam Quality (x)
+            68.0,   # 7: Control Rods (%)
+            50.0,   # 8: Pressurizer Level (%)
+            220.0,  # 9: Feedwater Temp (°C)
+            75.0,   # 10: Steam Flow (kg/s)
+            257.0,  # 11: Core Inlet Temp (°C)
+            28.0,   # 12: Core Delta-T (°C)
+            330.0,  # 13: Cladding Temp (°C)
+            1.0,    # 14: Precursor Conc (C)
+            101.3   # 15: Containment Pressure (kPa)
+        ], dtype=torch.float32)
+        if out_channels <= len(nominal_baselines):
+            self.fc2.bias.data.copy_(nominal_baselines[:out_channels])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch, seq_len, _ = x.shape
@@ -130,8 +155,14 @@ class PrajnaFoundationPINN(nn.Module):
             num_layers = custom_layers or 30
             fno_width = 448
             eop_hidden = 1536
+        elif scale in ("full_1b", "foundation_1b_full", "1b_billion"):
+            # Full True 1,000,000,000+ Parameter Foundation Model
+            d_model = custom_d_model or 2048
+            num_layers = custom_layers or 40
+            fno_width = 512
+            eop_hidden = 1536
         elif scale == "foundation_1b":
-            # High-Capacity Foundation Model Scale optimized for 6GB VRAM GPUs
+            # High-Capacity Foundation Model Scale optimized for 6GB VRAM GPUs (~264M parameters)
             d_model = custom_d_model or 1536
             num_layers = custom_layers or 18
             fno_width = 384
@@ -155,6 +186,7 @@ class PrajnaFoundationPINN(nn.Module):
             
         self.d_model = d_model
         self.num_layers = num_layers
+        self.num_channels = num_channels
         self.scale = scale
         self.gradient_checkpointing = gradient_checkpointing
         
@@ -168,7 +200,7 @@ class PrajnaFoundationPINN(nn.Module):
         ])
         
         # 3. Differentiable Physics Operator Head (FNO)
-        self.physics_head = FourierPhysicsOperatorHead(d_model=d_model, width=fno_width)
+        self.physics_head = FourierPhysicsOperatorHead(d_model=d_model, width=fno_width, out_channels=num_channels)
         
         # 4. Multi-Horizon Time-to-Threshold (TTL) Prediction Head
         self.ttl_head = nn.Sequential(
