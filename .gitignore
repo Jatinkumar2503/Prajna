@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Large Model Checkpoint Weights (>100MB binary files)
+checkpoints/*.pt
+checkpoints/*.onnx.data
+!checkpoints/*.onnx
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
