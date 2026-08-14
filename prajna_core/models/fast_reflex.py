@@ -19,3 +19,17 @@ class PrajnaFastReflex(nn.Module):
         self.num_eop_classes = num_eop_classes
         
         self.input_proj = nn.Linear(num_channels, hidden_dim)
+        
+        # 4-Layer SIMD-aligned Residual MLPs
+        self.block1 = nn.Sequential(
+            nn.LayerNorm(hidden_dim),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, hidden_dim)
+        )
+        self.block2 = nn.Sequential(
+            nn.LayerNorm(hidden_dim),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, hidden_dim)
+        )
