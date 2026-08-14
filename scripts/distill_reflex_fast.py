@@ -16,17 +16,23 @@ from prajna_core.models.pinn_foundation import PrajnaFoundationPINN
 from prajna_core.models.fast_reflex import PrajnaFastReflex
 
 class DistillationLoss(nn.Module):
-    def __init__(self, temperature: float = 3.0, alpha_kd: float = 0.6, alpha_ce: float = 0.4):
+    def __init__(self, temperature: float = 3.0, alpha_kd: float = 0.6, alpha_ce: float = 0.4, alpha_ttl: float = 0.2):
         super().__init__()
         self.temperature = temperature
         self.alpha_kd = alpha_kd
         self.alpha_ce = alpha_ce
+        self.alpha_ttl = alpha_ttl
         self.kl_div = nn.KLDivLoss(reduction="batchmean")
         self.ce_loss = nn.CrossEntropyLoss()
+        self.mse_loss = nn.MSELoss()
 
-    def forward(self, student_logits, teacher_logits, targets):
+    def forward(self, student_logits, teacher_logits, targets, student_ttl=None, teacher_ttl=None):
         soft_targets = F.softmax(teacher_logits / self.temperature, dim=-1)
         soft_student = F.log_softmax(student_logits / self.temperature, dim=-1)
         loss_kd = self.kl_div(soft_student, soft_targets) * (self.temperature ** 2)
         loss_ce = self.ce_loss(student_logits, targets)
-        return self.alpha_kd * loss_kd + self.alpha_ce * loss_ce
+        loss = self.alpha_kd * loss_kd + self.alpha_ce * loss_ce
+        if student_ttl is not None and teacher_ttl is not None:
+            loss_ttl = self.mse_loss(student_ttl, teacher_ttl)
+            loss += self.alpha_ttl * loss_ttl
+        return loss
