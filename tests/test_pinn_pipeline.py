@@ -73,5 +73,21 @@ class TestPrajnaPINNPipeline(unittest.TestCase):
         self.assertEqual(outputs[2].shape, (1, 64))    # eop_logits
 
 
+    def test_05_fast_reflex_model(self):
+        from prajna_core.models.fast_reflex import PrajnaFastReflex
+        model = PrajnaFastReflex(num_channels=16, hidden_dim=96, num_eop_classes=64)
+        dummy_seq = torch.randn(2, 45, 16)
+        out_seq = model(dummy_seq)
+        self.assertEqual(out_seq["eop_logits"].shape, (2, 64))
+        self.assertEqual(out_seq["time_to_threshold"].shape, (2, 16))
+        self.assertEqual(out_seq["scram_probability"].shape, (2, 1))
+
+        dummy_single = torch.randn(2, 16)
+        out_single = model(dummy_single)
+        self.assertEqual(out_single["eop_logits"].shape, (2, 64))
+        self.assertEqual(out_single["scram_probability"].shape, (2, 1))
+        self.assertLess(model.count_parameters(), 50_000)
+
+
 if __name__ == "__main__":
     unittest.main()
