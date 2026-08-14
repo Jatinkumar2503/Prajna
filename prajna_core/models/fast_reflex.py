@@ -33,3 +33,15 @@ class PrajnaFastReflex(nn.Module):
             nn.SiLU(),
             nn.Linear(hidden_dim, hidden_dim)
         )
+        
+        self.ln_out = nn.LayerNorm(hidden_dim)
+        
+        # Multi-Head Microsecond Outputs
+        self.eop_head = nn.Linear(hidden_dim, num_eop_classes)
+        self.ttl_head = nn.Linear(hidden_dim, num_channels)
+        self.scram_head = nn.Sequential(
+            nn.Linear(hidden_dim, 32),
+            nn.SiLU(),
+            nn.Linear(32, 1),
+            nn.Sigmoid()
+        )
