@@ -139,5 +139,150 @@ def distill_fast(
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-5)
     
     kl_loss_fn = nn.KLDivLoss(reduction="batchmean")
-    ce
-# [Streaming pipeline module loaded]
+    ce_loss_fn = nn.CrossEntropyLoss()
+    mse_loss_fn = nn.MSELoss()
+    
+    best_val_loss = float("inf")
+    os.makedirs(os.path.dirname(os.path.abspath(output_checkpoint)), exist_ok=True)
+    
+    t2 = time.time()
+    
+    for epoch in range(1, epochs + 1):
+        student.train()
+        train_loss = 0.0
+        train_kl = 0.0
+        train_acc = 0.0
+        batches = 0
+        
+        for x_batch, y_eop_batch, t_eop_logits, t_ttl in train_loader:
+            x_batch = x_batch.to(device)
+            y_eop_batch = y_eop_batch.to(device)
+            t_eop_logits = t_eop_logits.to(device)
+            t_ttl = t_ttl.to(device)
+            
+            # Student forward (25K params — microseconds)
+            student_out = student(x_batch)
+            s_eop_logits = student_out["eop_logits"]
+            s_ttl = student_out["time_to_threshold"]
+            s_scram = student_out["scram_probability"]
+            
+            # 1. Soft Target KL Divergence (Temperature-scaled)
+            p_s = F.log_softmax(s_eop_logits / temperature, dim=-1)
+            p_t = F.softmax(t_eop_logits / temperature, dim=-1)
+            loss_kd = kl_loss_fn(p_s, p_t) * (temperature ** 2)
+            
+            # 2. Hard Target Cross-Entropy
+            loss_ce = ce_loss_fn(s_eop_logits, y_eop_batch)
+            
+            # 3. TTL Regression (mimic teacher countdown)
+            loss_ttl = mse_loss_fn(s_ttl, t_ttl)
+            
+            # 4. SCRAM Interlock (abnormal = 1, normal = 0)
+            is_abnormal = (y_eop_batch > 0).float().unsqueeze(-1)
+            loss_scram = F.binary_cross_entropy(s_scram, is_abnormal)
+            
+            # Composite
+            total_loss = (alpha * loss_kd) + ((1 - alpha) * loss_ce) + (0.5 * loss_ttl) + (0.5 * loss_scram)
+            
+            optimizer.zero_grad()
+            total_loss.backward()
+            torch.nn.utils.clip_grad_norm_(student.parameters(), max_norm=1.0)
+            optimizer.step()
+            
+            train_loss += total_loss.item()
+            train_kl += loss_kd.item()
+            preds = torch.argmax(s_eop_logits, dim=-1)
+            train_acc += (preds == y_eop_batch).float().mean().item()
+            batches += 1
+        
+        scheduler.step()
+        
+        # Validation
+        student.eval()
+        val_loss = 0.0
+        val_acc = 0.0
+        val_batches = 0
+        
+        with torch.no_grad():
+            for x_val, y_val_eop, t_val_eop, t_val_ttl in val_loader:
+                x_val = x_val.to(device)
+                y_val_eop = y_val_eop.to(device)
+                t_val_eop = t_val_eop.to(device)
+                t_val_ttl = t_val_ttl.to(device)
+                
+                s_out = student(x_val)
+                
+                p_s = F.log_softmax(s_out["eop_logits"] / temperature, dim=-1)
+                p_t = F.softmax(t_val_eop / temperature, dim=-1)
+                loss_kd = kl_loss_fn(p_s, p_t) * (temperature ** 2)
+                loss_ce = ce_loss_fn(s_out["eop_logits"], y_val_eop)
+                loss_ttl = mse_loss_fn(s_out["time_to_threshold"], t_val_ttl)
+                
+                v_loss = (alpha * loss_kd) + ((1 - alpha) * loss_ce) + (0.5 * loss_ttl)
+                val_loss += v_loss.item()
+                
+                v_preds = torch.argmax(s_out["eop_logits"], dim=-1)
+                val_acc += (v_preds == y_val_eop).float().mean().item()
+                val_batches += 1
+        
+        avg_train = train_loss / batches
+        avg_val = val_loss / val_batches
+        avg_acc = (val_acc / val_batches) * 100.0
+        epoch_time = time.time() - t2
+        
+        print(f"  Epoch [{epoch:02d}/{epochs:02d}] | Train: {avg_train:.4f} | Val: {avg_val:.4f} | EOP Acc: {avg_acc:.2f}% | LR: {scheduler.get_last_lr()[0]:.2e} | Time: {epoch_time:.1f}s")
+        
+        if avg_val < best_val_loss:
+            best_val_loss = avg_val
+            torch.save({
+                "model_state_dict": student.state_dict(),
+                "val_loss": avg_val,
+                "eop_accuracy": avg_acc,
+                "parameters": param_count,
+                "teacher_checkpoint": teacher_checkpoint,
+                "temperature": temperature,
+                "alpha": alpha,
+                "scale": "fast_reflex_25k",
+                "hidden_dim": 96,
+                "num_eop_classes": 64,
+                "target_latency_us": 4.0
+            }, output_checkpoint)
+            print(f"    [OK] Best checkpoint saved -> {output_checkpoint}")
+    
+    total_time = time.time() - t0
+    train_time = time.time() - t2
+    
+    print("\n" + "=" * 80)
+    print(f"  DISTILLATION COMPLETE")
+    print(f"  Teacher caching:  {cache_time:.1f}s (one-time)")
+    print(f"  Student training: {train_time:.1f}s ({epochs} epochs)")
+    print(f"  Total wall time:  {total_time:.1f}s")
+    print(f"  Best Val Loss:    {best_val_loss:.4f}")
+    print(f"  Checkpoint:       {output_checkpoint}")
+    print(f"  Model size:       {param_count:,} params ({mem_kb:.1f} KB)")
+    print(f"  Target latency:   <=4 us (L1/L2 cache resident)")
+    print("=" * 80)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Prajna Fast Knowledge Distillation")
+    parser.add_argument("--teacher", type=str, default="checkpoints/prajna_pinn_foundation_1b_best.pt")
+    parser.add_argument("--output", type=str, default="checkpoints/prajna_reflex_25k_best.pt")
+    parser.add_argument("--samples", type=int, default=100000)
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--temperature", type=float, default=3.0)
+    parser.add_argument("--alpha", type=float, default=0.7)
+    args = parser.parse_args()
+    
+    distill_fast(
+        teacher_checkpoint=args.teacher,
+        output_checkpoint=args.output,
+        samples=args.samples,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        lr=args.lr,
+        temperature=args.temperature,
+        alpha=args.alpha
+    )
