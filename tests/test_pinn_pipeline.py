@@ -88,6 +88,14 @@ class TestPrajnaPINNPipeline(unittest.TestCase):
         self.assertEqual(out_single["scram_probability"].shape, (2, 1))
         self.assertLess(model.count_parameters(), 50_000)
 
+    def test_06_fast_reflex_int8_quantization_parity(self):
+        from scripts.validate_reflex_quantization import run_fast_reflex_quantization_validation
+        res = run_fast_reflex_quantization_validation()
+        self.assertGreaterEqual(res["int8_eop_accuracy"], 95.0)
+        self.assertGreaterEqual(res["compression_ratio"], 2.0)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
