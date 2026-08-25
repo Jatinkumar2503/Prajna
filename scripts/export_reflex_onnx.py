@@ -105,12 +105,32 @@ def export_reflex_onnx(
         diff_scram = np.max(np.abs(pt_scram.numpy() - ort_outs[2]))
 
         print(f"[+] Parity Check: EOP Max Err: {diff_eop:.2e} | TTL Max Err: {diff_ttl:.2e} | SCRAM Max Err: {diff_scram:.2e}")
+        print(f"[+] Parity Check: EOP Max Err: {diff_eop:.2e} | TTL Max Err: {diff_ttl:.2e} | SCRAM Max Err: {diff_scram:.2e}")
         if max(diff_eop, diff_ttl, diff_scram) < 1e-4:
             print("  [OK] Exact Numerical Parity Confirmed!")
     except Exception as e:
         print(f"[!] ONNX Runtime validation notice: {e}")
 
-    # 3. Export C++ Header for Zero-Dependency Embedded Microsecond Execution
+    # 3. Dynamic INT8 Post-Training Quantization (PTQ)
+    base_name, _ = os.path.splitext(output_onnx_path)
+    int8_onnx_path = f"{base_name}_int8.onnx"
+    print(f"\n[*] Applying Dynamic INT8 Post-Training Quantization to Fast-Reflex Model...")
+    try:
+        from onnxruntime.quantization import quantize_dynamic, QuantType
+        quantize_dynamic(
+            model_input=output_onnx_path,
+            model_output=int8_onnx_path,
+            weight_type=QuantType.QInt8,
+            extra_options={"shape_inference": False}
+        )
+        fp32_size_kb = os.path.getsize(output_onnx_path) / 1024.0
+        int8_size_kb = os.path.getsize(int8_onnx_path) / 1024.0
+        print(f"[+] Successfully exported INT8 ONNX Graph: {int8_onnx_path} ({int8_size_kb:.2f} KB)")
+        print(f"[+] Memory Compression Ratio: {fp32_size_kb / max(0.01, int8_size_kb):.2f}x reduction")
+    except Exception as q_err:
+        print(f"[!] INT8 quantization notice: {q_err}")
+
+    # 4. Export C++ Header & JSON Weights for Zero-Dependency Embedded Microsecond Execution
     os.makedirs(os.path.dirname(os.path.abspath(output_cpp_header)), exist_ok=True)
     print(f"\n[*] Generating Zero-Dependency C++ Header: {output_cpp_header}...")
     
@@ -190,3 +210,4 @@ if __name__ == "__main__":
         output_onnx_path=args.onnx,
         output_cpp_header=args.cpp
     )
+
