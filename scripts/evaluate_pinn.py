@@ -350,7 +350,16 @@ def evaluate_checkpoint(checkpoint_path: str,
                 if mask.sum() > 0:
                     scenario_metrics[s_id]["y_true"].append(batch_x[mask, :, :pred_physics.shape[-1]].cpu())
                     scenario_metrics[s_id]["y_pred"].append(pred_physics[mask].cpu())
-                    scenario_metrics[s_id]["physics_losses"].append(loss_dict["total_loss"].item())
+                    
+                    # Compute per-scenario physics loss on masked scenario subset
+                    s_loss_dict = physics_loss_fn(
+                        pred_physics=pred_physics[mask],
+                        target_physics=batch_x[mask],
+                        eop_logits=eop_logits[mask],
+                        target_eop=batch_y[mask]
+                    )
+                    scenario_metrics[s_id]["physics_losses"].append(s_loss_dict["energy_loss"].item())
+
                     
             if (step + 1) % 5 == 0 or (step + 1) == len(loader):
                 pct = ((step + 1) / len(loader)) * 100.0
