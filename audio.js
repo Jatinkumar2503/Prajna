@@ -1,132 +1,196 @@
 /* ============================================================
-   AUDIO — audio.js
-   Auto siren + beep based on AI alerts (no other file changes)
+   PRAJNA HIGH-FIDELITY NUCLEAR EMERGENCY SIREN SYNTHESIZER — audio.js
+   Web Audio API dual-oscillator wailing air-horn & alarm system.
+   Generates continuous dual-tone industrial evacuation sirens
+   during any critical or high-risk reactor condition.
    ============================================================ */
 
-var _actx = null;
-var _lastLevel = null;
-var _lastSirenTime = 0;
+var AUDIO = (function () {
+  'use strict';
 
-/* ---- Audio Context ---- */
-function getACtx() {
-  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
-  return _actx;
-}
+  var _actx = null;
+  var _activeSiren = null;
+  var _lastLevel = null;
 
-/* ---- Siren ---- */
-function playSiren(level) {
-  try {
-    var ctx = getACtx();
-    if (ctx.state === 'suspended') ctx.resume();
-
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-
-    osc.type = "square";
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    gain.gain.value = level === 'critical' ? 0.9 : 0.7;
-
-    var t = ctx.currentTime;
-
-    osc.frequency.setValueAtTime(600, t);
-    osc.frequency.linearRampToValueAtTime(1000, t + 0.5);
-    osc.frequency.linearRampToValueAtTime(600, t + 1);
-    osc.frequency.linearRampToValueAtTime(1000, t + 1.5);
-    osc.frequency.linearRampToValueAtTime(600, t + 2);
-
-    osc.start(t);
-    osc.stop(t + 2);
-
-  } catch (e) {
-    console.log("Siren error:", e);
+  function getACtx() {
+    if (!_actx) {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        _actx = new AudioContextClass();
+      }
+    }
+    if (_actx && _actx.state === 'suspended') {
+      _actx.resume().catch(function () {});
+    }
+    return _actx;
   }
-}
 
-/* ---- Beep ---- */
-function playBeep(freq, dur) {
-  try {
+  /**
+   * Start continuous authentic nuclear wailing air siren / warning horn
+   * @param {string} mode - 'critical' | 'danger' | 'warning'
+   */
+  function startSiren(mode) {
+    stopSiren(); // Clear any existing sound
+
     var ctx = getACtx();
-    if (ctx.state === 'suspended') ctx.resume();
+    if (!ctx) return;
 
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
+    var now = ctx.currentTime;
 
-    osc.type = "sine";
-    osc.frequency.value = freq || 800;
+    // Dual Oscillators: Sawtooth + Sub-Square for rich metallic industrial timbre
+    var osc1 = ctx.createOscillator();
+    var osc2 = ctx.createOscillator();
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    // LFO for continuous frequency modulation (pitch sweep up and down)
+    var lfo = ctx.createOscillator();
+    var lfoGain = ctx.createGain();
 
-    gain.gain.value = 0.6;
+    // Biquad filter to warm up harsh harmonics into acoustic air-horn resonator
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
 
-    osc.start();
-    osc.stop(ctx.currentTime + (dur || 0.0));
-  } catch (e) {}
-}
+    // Master gain & smooth envelope
+    var masterGain = ctx.createGain();
 
-/* ---- Detect Alert Level ---- */
-function getAlertLevel() {
-  if (!window._aiState || !_aiState.alerts) return null;
+    osc1.type = 'sawtooth';
+    osc2.type = 'square';
+    lfo.type  = 'sine';
 
-  var alerts = _aiState.alerts;
+    if (mode === 'critical') {
+      // Nuclear Evacuation Air Siren: 420 Hz <-> 980 Hz continuous sweep at 0.75 Hz
+      osc1.frequency.setValueAtTime(700, now);
+      osc2.frequency.setValueAtTime(700 * 1.498, now); // Perfect fifth harmonic (1.5x)
+      
+      lfo.frequency.setValueAtTime(0.75, now); // Continuous wail frequency
+      lfoGain.gain.setValueAtTime(280, now);   // Pitch modulation depth
 
-  if (alerts.some(a => a.level === 'critical')) return 'critical';
-  if (alerts.some(a => a.level === 'danger')) return 'danger';
-  if (alerts.some(a => a.level === 'warning')) return 'warning';
-  if (alerts.some(a => a.level === 'predictive')) return 'predictive';
+      filter.frequency.setValueAtTime(3000, now);
+      masterGain.gain.setValueAtTime(0.001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.38, now + 0.25);
+    } else if (mode === 'danger') {
+      // High Danger Warning Siren: 520 Hz <-> 860 Hz sweep at 1.2 Hz cycle
+      osc1.frequency.setValueAtTime(680, now);
+      osc2.frequency.setValueAtTime(680 * 1.25, now); // Major third harmonic
 
-  return null;
-}
+      lfo.frequency.setValueAtTime(1.2, now);
+      lfoGain.gain.setValueAtTime(180, now);
 
-/* ---- Main Audio Loop ---- */
-setInterval(function () {
-  var level = getAlertLevel();
-  if (!level) return;
+      filter.frequency.setValueAtTime(2500, now);
+      masterGain.gain.setValueAtTime(0.001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.28, now + 0.2);
+    } else {
+      // Warning Chime
+      osc1.type = 'sine';
+      osc2.type = 'triangle';
+      osc1.frequency.setValueAtTime(800, now);
+      osc2.frequency.setValueAtTime(1600, now);
+      lfo.frequency.setValueAtTime(2.5, now);
+      lfoGain.gain.setValueAtTime(50, now);
 
-  var now = Date.now();
+      filter.frequency.setValueAtTime(3200, now);
+      masterGain.gain.setValueAtTime(0.001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.15, now + 0.2);
+    }
 
-  if (level === 'critical') {
-    if (now - _lastSirenTime > 5000) {
-      playSiren('critical');
-      _lastSirenTime = now;
+    // Connect LFO modulation to oscillator frequencies
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc1.frequency);
+    lfoGain.connect(osc2.frequency);
+
+    // Connect oscillators through lowpass filter and master gain
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(masterGain);
+    masterGain.connect(ctx.destination);
+
+    // Start generators
+    osc1.start(now);
+    osc2.start(now);
+    lfo.start(now);
+
+    _activeSiren = {
+      osc1: osc1,
+      osc2: osc2,
+      lfo: lfo,
+      masterGain: masterGain,
+      mode: mode
+    };
+  }
+
+  /**
+   * Stop active siren smoothly
+   */
+  function stopSiren() {
+    if (!_activeSiren) return;
+    var ctx = getACtx();
+    if (ctx && _activeSiren.masterGain) {
+      try {
+        var now = ctx.currentTime;
+        var curGain = Math.max(0.001, _activeSiren.masterGain.gain.value);
+        _activeSiren.masterGain.gain.setValueAtTime(curGain, now);
+        _activeSiren.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+        var s = _activeSiren;
+        setTimeout(function () {
+          try { s.osc1.stop(); s.osc2.stop(); s.lfo.stop(); } catch (e) {}
+        }, 160);
+      } catch (e) {}
+    }
+    _activeSiren = null;
+  }
+
+  /**
+   * Main audio loop checking active AI alert state
+   */
+  function update() {
+    var level = null;
+
+    if (window._aiState) {
+      var rs = window._aiState.riskScore || 0;
+      var hasCritAlert = false;
+      if (_aiState.history && _aiState.history.length) {
+        var lastH = _aiState.history[_aiState.history.length - 1];
+        if (lastH && lastH.alerts) {
+          hasCritAlert = lastH.alerts.some(function (a) { return a.level === 'critical' || a.level === 'danger'; });
+        }
+      }
+
+      if (rs >= 45 || hasCritAlert) level = 'critical';
+      else if (rs >= 28) level = 'danger';
+      else if (rs >= 15) level = 'warning';
+    }
+
+    if (level !== _lastLevel) {
+      _lastLevel = level;
+      if (level === 'critical' || level === 'danger') {
+        startSiren(level); // Triggers full continuous evacuation siren!
+      } else {
+        stopSiren();
+      }
     }
   }
-  else if (level === 'danger') {
-    if (now - _lastSirenTime > 4000) {
-      playSiren('danger');
-      _lastSirenTime = now;
-    }
+
+  // Poll alert state every 150ms
+  setInterval(update, 150);
+
+  // Auto unlock AudioContext on initial click or keypress
+  if (typeof window !== 'undefined') {
+    var unlock = function () {
+      getACtx();
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('click', unlock);
+    window.addEventListener('keydown', unlock);
   }
-  else if (level === 'warning' && _lastLevel !== 'warning') {
-    playBeep(900, 0.6);
-  }
-  else if (level === 'predictive' && _lastLevel !== 'predictive') {
-    playBeep(600, 0.15);
-  }
 
-  _lastLevel = level;
+  function playSiren(level) { startSiren(level || 'critical'); }
+  function playBeep(freq, dur) { startSiren('warning'); setTimeout(stopSiren, (dur || 0.5) * 1000); }
 
-}, 1000);
-
-/* ---- Unlock audio on first click ---- */
-document.body.addEventListener('click', function () {
-  try {
-    var ctx = getACtx();
-    if (ctx.state === 'suspended') ctx.resume();
-    console.log("Audio unlocked");
-  } catch (e) {}
-}, { once: true });
-function getAlertLevel() {
-  if (!window._aiState) return null;
-
-  var rs = _aiState.riskScore;
-
-  if (rs >= 60) return "critical";
-  if (rs >= 42) return "danger";
-  if (rs >= 25) return "warning";
-  if (rs >= 10) return "predictive";
-
-  return null;
-}
+  return {
+    startSiren: startSiren,
+    stopSiren: stopSiren,
+    playSiren: playSiren,
+    playBeep: playBeep,
+    update: update
+  };
+})();
