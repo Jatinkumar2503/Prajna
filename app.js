@@ -26,19 +26,21 @@ var APP = {
       /* 2. Run AI inference on new sensor snapshot */
       _aiState = AI.infer(r);
 
-      /* 3. Audio: play alerts for newly surfaced events */
-      var curIds = r.alerts.map(function (a) { return a.id; });
-      for (var i = 0; i < r.alerts.length; i++) {
-        var al    = r.alerts[i];
-        var isNew = _lastIds.indexOf(al.id) === -1;
-        if (isNew) {
-          if      (al.level === 'critical'  && !_sirPlaying) playSiren('critical');
-          else if (al.level === 'danger'    && !_sirPlaying) playSiren('danger');
-          else if (al.level === 'warning')                   playBeep(1000, 0.2);
-          else if (al.level === 'predictive')                playBeep(660,  0.15);
+      /* 3. Audio: play sirens and alerts for active risk states */
+      if (typeof AUDIO !== 'undefined') {
+        AUDIO.update();
+      } else if (typeof playSiren !== 'undefined') {
+        var curIds = r.alerts.map(function (a) { return a.id; });
+        for (var i = 0; i < r.alerts.length; i++) {
+          var al = r.alerts[i];
+          if (_lastIds.indexOf(al.id) === -1) {
+            if (al.level === 'critical' || al.level === 'danger') playSiren(al.level);
+            else if (al.level === 'warning') playBeep(1000, 0.2);
+          }
         }
+        _lastIds = curIds;
       }
-      _lastIds = curIds;
+
 
       /* 4. Update sensor panels */
       var keys = ['temperature', 'coolantFlow', 'neutronFlux', 'radiation'];
