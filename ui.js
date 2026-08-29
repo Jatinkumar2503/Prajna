@@ -172,7 +172,39 @@ function updateAI(ai) {
     var ttlBadge2 = gel('ttl-countdown-badge');
     if (ttlBadge2) ttlBadge2.style.display = 'none';
   }
+
+  // Render Physics SHAP Attributions Overlay
+  if (ai.shapAttributions && ai.shapAttributions.attributions) {
+    var listContainer = gel('shap-bars-list');
+    var topBadge = gel('shap-top-badge');
+
+    if (topBadge && ai.shapAttributions.topFactor) {
+      var tf = ai.shapAttributions.topFactor;
+      topBadge.textContent = tf.name.toUpperCase() + ' (' + tf.percent + '%)';
+      topBadge.style.background = tf.riskPoints > 5.0 ? 'rgba(255,34,68,0.2)' : 'rgba(0,255,136,0.15)';
+      topBadge.style.color = tf.riskPoints > 5.0 ? 'var(--red)' : 'var(--green)';
+    }
+
+    if (listContainer) {
+      listContainer.innerHTML = ai.shapAttributions.attributions.map(function (item) {
+        var isCrit = item.riskPoints > 6.0;
+        var barClass = item.direction === '+' ? 'pos' : 'neg';
+        var pctWidth = Math.min(100, Math.max(4, item.percent));
+
+        return '<div class="shap-bar-item ' + (isCrit ? 'shap-critical' : '') + '">'
+          + '<div class="shap-bar-header">'
+          + '<span>' + item.name + '</span>'
+          + '<span style="font-weight:700;">' + item.direction + item.riskPoints + ' pts (' + item.percent + '%)</span>'
+          + '</div>'
+          + '<div class="shap-bar-track">'
+          + '<div class="shap-bar-fill ' + barClass + '" style="width:' + pctWidth + '%"></div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+  }
 }
+
 
 /* ---- Top alert banner ------------------------------------ */
 function updateBanner(alerts) {
