@@ -163,6 +163,12 @@ var AI = (function () {
       trends[keys[i]] = t > 0.05 ? 'up' : t < -0.05 ? 'down' : 'stable';
     }
 
+    // Physics-Grounded SHAP Feature Attribution Computation
+    var shapResult = null;
+    if (typeof PrajnaSHAP !== 'undefined') {
+      shapResult = PrajnaSHAP.computeAttributions(reading, +risk.toFixed(1));
+    }
+
     ms = {
       riskScore:         +risk.toFixed(1),
       crossAnomalyScore: +cs.toFixed(3),
@@ -174,7 +180,8 @@ var AI = (function () {
       pinnForecast:      pinnResult ? pinnResult.forecast : null,
       timeToThreshold:   pinnResult ? pinnResult.timeToThreshold : null,
       eopGuidance:       pinnResult ? pinnResult.eopGuidance : null,
-      physicsResiduals:  pinnResult ? pinnResult.physicsResiduals : null
+      physicsResiduals:  pinnResult ? pinnResult.physicsResiduals : null,
+      shapAttributions:  shapResult
     };
     ms.history = (ms.history || []).concat([{ t: reading.time, risk: risk }]).slice(-60);
     return ms;
@@ -183,4 +190,4 @@ var AI = (function () {
   /* ---- Public API ------------------------------------------- */
   return { infer: infer };
 
-})();
+})();
