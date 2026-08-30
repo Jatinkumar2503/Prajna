@@ -19,9 +19,11 @@
       <div class="hlogo-icon">⚛</div>
       <div>
         <h1>PRAJNA</h1>
-        <p>AI-DRIVEN PREDICTIVE NUCLEAR SAFETY · QUANTUM CLASHERS · DCRUST · HACKRUST 1.0</p>
+        <p>3B PARAMETER PINN FOUNDATION MODEL · AI NUCLEAR SAFETY & DIGITAL TWIN</p>
       </div>
     </div>
+
+
     <div class="hmid">
       <span id="clock">00:00:00</span>
       <div class="hstatus">
@@ -35,6 +37,8 @@
       <button class="btn btn-r" id="bstop"  style="display:none" onclick="APP.stop()">■ STOP</button>
       <button class="btn btn-a" onclick="APP.reset()">↺ RESET</button>
     </div>
+
+
   </header>
 
   <!-- MAIN -->
@@ -98,10 +102,12 @@
         </div>
         <div id="twinc"><canvas id="rcanvas"></canvas></div>
         <div class="toverlay">
-          <div class="tbadge">⚛ PWR REACTOR TYPE III</div>
+          <div class="tbadge" style="color:var(--cyan);font-weight:700;">⚛ 700MW PHWR NUCLEAR REACTOR DIGITAL TWIN</div>
           <div class="tbadge" id="pwr-badge">PWR 92.0%</div>
           <div class="tbadge" id="rod-badge">ROD 68%</div>
         </div>
+
+
         <div class="tbottom">
           <div class="tbadge" style="color:var(--green)">DIGITAL TWIN ACTIVE</div>
           <div class="tbadge" id="scen-badge">SCENARIO: NONE</div>
@@ -131,14 +137,26 @@
           <div class="rinfo">
             <div class="rcls n" id="rcls">INITIALIZING</div>
             <div class="rconf" id="rconf">CONFIDENCE: —</div>
-            <div style="margin-top:5px;font-family:var(--mono);font-size:8px;color:var(--grey)">PINN+LSTM+GNN</div>
+            <div style="margin-top:5px;font-family:var(--mono);font-size:8px;color:var(--cyan)">🧠 PINN TRAINED MODEL (30.5k WEIGHTS)</div>
           </div>
+
         </div>
         <div class="prow"><span>PINN Thermal</span><span id="pinndev" style="color:var(--cyan-dim)">—</span></div>
         <div class="prow"><span>Cross-param</span><span id="xscore" style="color:var(--cyan-dim)">—</span></div>
         <div class="prow" style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.06);padding-top:4px;"><span>IAEA EOP</span><span id="eop-guidance-badge" style="color:var(--green);font-family:var(--mono);font-size:8px;">EOP-00-NORM (98%)</span></div>
         <div id="pinn-forecast-text" style="font-family:var(--mono);font-size:8px;color:var(--cyan-dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">T+10s Forecast: Calculating...</div>
         <div id="ttl-countdown-badge" style="display:none;background:rgba(255,0,34,0.2);color:#ff0022;border:1px solid #ff0022;border-radius:3px;font-family:var(--mono);font-size:8px;padding:2px 5px;margin-top:4px;">⏱ TTL: STABLE</div>
+        
+        <!-- SHAP ATTRIBUTION OVERLAY CARD -->
+        <div id="shap-attribution-card" style="margin-top:8px;border-top:1px dashed rgba(0,229,255,0.2);padding-top:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--cyan);letter-spacing:1px;font-weight:700;">📊 PHYSICS SHAP ATTRIBUTION</span>
+            <span id="shap-top-badge" style="font-family:var(--mono);font-size:7px;background:rgba(0,255,136,0.15);color:var(--green);padding:1px 4px;border-radius:2px;">NOMINAL</span>
+          </div>
+          <div id="shap-bars-list" style="display:flex;flex-direction:column;gap:3px;">
+            <!-- Rendered dynamically by UI.renderAI() -->
+          </div>
+        </div>
       </div>
 
       <div id="palertsbox">
@@ -171,6 +189,7 @@
 <!-- Scripts loaded in dependency order -->
 <script src="src/telemetry/ring_buffer.js"></script>
 <script src="src/inference/pinn_runtime.js"></script>
+<script src="src/inference/prajna_shap.js"></script>
 <script src="simulation.js"></script>
 <script src="ai_model.js"></script>
 <script src="audio.js"></script>
@@ -178,4 +197,4 @@
 <script src="simulation3d.js"></script>
 <script src="app.js"></script> 
 </body>
-</html>
+</html>
