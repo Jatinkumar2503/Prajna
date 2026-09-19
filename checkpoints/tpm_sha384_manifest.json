@@ -1,0 +1,17 @@
+{
+  "security_level": "TPM 2.0 / FIPS 140-3 Compliance",
+  "hash_algorithm": "SHA-384",
+  "timestamp_utc": "2026-09-19T23:25:00Z",
+  "hashes": {
+    "checkpoints/prajna_reflex_25k.onnx": "1fc128677835eaf1df318f7f16ef9f2a0099109fd99d526f79736755e4224294ad25f7e5a8bc2bf05c674948332de6a1",
+    "checkpoints/prajna_reflex_25k_int8.onnx": "0426693f938f77b28ff53158d35ebea5122b7a0d9d257a8ff67190863247204cff2d5c278ae8599642e561b1e7f2de09",
+    "checkpoints/prajna_reflex_25k_weights.json": "e6942b0353a2908eea86bf0a0ae62e60bf429bc93fb5c8479fd22b9ddcde38449cceb7bc1798616a30f82e2c8995213d",
+    "prajna_core/physics.py": "c730484f319f511c6232bc9d3cb61435881c625666ca76cfcd242de56c8c28b74678abf06dd9efa7803d4dfca170810f",
+    "prajna_core/models/fast_reflex.py": "e793381bb00b65b0a2683bcbeb1ba48b30911c0e11ce6dc29c55d26f0304c236dd784eab183bf25944efdccb1d46c8b2",
+    "prajna_core/models/pinn_foundation.py": "dbaf7dd24d3c32ea7b9d1efd6cb787ab632c9a91a94a9a3049696bd9bb6c7f1a3df6b35f086fbbbbf5e816f80bbda70c",
+    "src/inference/pinn_runtime.js": "863b42c4779233bd34c3a4054273d006596b3f20c8847bc29f6ae6761b558419371e5a7bce0e68e256d7de63ab309a99",
+    "src/inference/prajna_shap.js": "11312c39293e91c3c94d5be2dcae32589d2c9b789845e0aa976d290bd3e74c563ed6c1ec7c364fff1354a29486bbffaa",
+    "src/inference/eop_rules.js": "a7225391585ed15ddfd5f1d7c8d122524ea4fc50bf08f5aa8409a2db637174b023575dd7b567142ed52da1df81dd4c76",
+    "src/inference/audit_ledger.js": "d57c2d17bb81c3ca12d9646b5264b3d60d54bb923e1842014d68dd0b6742581520584df5993f1e0c77ae6d7f4ea0ff92"
+  }
+}

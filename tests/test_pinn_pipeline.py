@@ -94,6 +94,71 @@ class TestPrajnaPINNPipeline(unittest.TestCase):
         self.assertGreaterEqual(res["int8_eop_accuracy"], 95.0)
         self.assertGreaterEqual(res["compression_ratio"], 2.0)
 
+    def test_07_xenon_and_radiolysis_physics_closure(self):
+        from prajna_core.physics import XenonPoisoningCore, RadiolysisGasCore, PrajnaPhysicsLoss
+        xenon = XenonPoisoningCore()
+        flux_traj = torch.ones(2, 20, 1, requires_grad=True) * 2.32
+        res_xenon = xenon.compute_residual(flux_traj)
+        self.assertGreaterEqual(res_xenon.item(), 0.0)
+
+        radiolysis = RadiolysisGasCore()
+        rad = torch.ones(2, 20, 1) * 0.42
+        power = torch.ones(2, 20, 1) * 91.64
+        pen = radiolysis.compute_radiolysis_penalty(rad, power)
+        self.assertGreaterEqual(pen.item(), 0.0)
+
+        # Test composite loss backpropagation with the new terms
+        loss_fn = PrajnaPhysicsLoss()
+        pred_phys = torch.randn(2, 10, 16, requires_grad=True)
+        target_phys = torch.randn(2, 10, 16)
+        losses = loss_fn(pred_physics=pred_phys, target_physics=target_phys)
+        self.assertIn("xenon_loss", losses)
+        self.assertIn("radiolysis_margin", losses)
+        self.assertIn("dnbr_violation_margin", losses)
+        losses["total_loss"].backward()
+        self.assertIsNotNone(pred_phys.grad)
+
+    def test_08_prompt_jump_and_energy_conservation_analytic(self):
+        from prajna_core.physics import DifferentiablePointKinetics, ThermalHydraulicsCore
+        
+        # 1. Analytic Prompt-Jump Ratio: n_1 / n_0 = beta / (beta - rho)
+        pke = DifferentiablePointKinetics()
+        beta = pke.beta_total.item()  # 0.0065
+        rho_step = 0.0010  # subcritical positive step
+        expected_ratio = beta / (beta - rho_step)  # ~1.1818
+        
+        # Simulate prompt relaxation across characteristic timescale tau_p = Lambda / (beta - rho) = ~18.2 ms
+        # Over 80 ms (800 steps of dt=1e-4s), prompt jump reaches asymptotic level beta / (beta - rho)
+        n_0 = torch.tensor([[1.0]], dtype=torch.float32)
+        c_0 = (pke.beta_i / (pke.lambda_prompt * pke.lambda_i)) * n_0
+        n_curr, c_curr = n_0, c_0
+        rho_tensor = torch.tensor([[rho_step]], dtype=torch.float32)
+        for _ in range(800):
+            n_curr, c_curr = pke.step(n_curr, c_curr, rho_tensor, dt=1e-4)
+        simulated_ratio = (n_curr / n_0).item()
+        
+        # Verification within 0.5% of analytical prompt-jump ratio: 1.1818
+        self.assertAlmostEqual(simulated_ratio, expected_ratio, delta=0.01)
+
+        # 2. First-Law Thermodynamic Energy Conservation
+        th = ThermalHydraulicsCore(cp_coolant=4.184)
+        m_dot = torch.tensor([[78.0]])   # kg/s
+        t_out = torch.tensor([[285.0]])  # °C
+        t_in  = torch.tensor([[257.0]])  # °C (Delta-T = 28.0 K)
+        calc_power = th.compute_thermal_power(m_dot, t_out, t_in).item()
+        # Calibrated nominal power should match 91.64 MWth
+        self.assertAlmostEqual(calc_power, 91.64, delta=0.5)
+
+    def test_09_sensor_noise_suite_robustness(self):
+        from prajna_core.noise import apply_instrument_noise_suite
+        clean_telemetry = torch.ones(4, 45, 16) * 100.0
+        degraded = apply_instrument_noise_suite(clean_telemetry)
+        
+        self.assertEqual(degraded.shape, clean_telemetry.shape)
+        # Noise should create non-zero perturbation
+        diff = torch.abs(degraded - clean_telemetry).mean().item()
+        self.assertGreater(diff, 0.01)
+
 
 if __name__ == "__main__":
     unittest.main()

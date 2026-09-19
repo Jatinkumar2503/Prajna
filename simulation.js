@@ -90,6 +90,17 @@ var SIM = (function () {
         state.neutronFlux   = BASELINE.neutronFlux - p * 0.5 + noiseN;
         state.controlRodPos = BASELINE.controlRodPos + p * 18.0;
       }
+      else if (scenario.type === 'stationBlackout') {
+        // Station Blackout (SBO)
+        // Loss of all AC power -> Main coolant pump coastdown to natural thermosyphon circulation (~14 kg/s)
+        // Core scrammed, power drops to ANS-5.1 decay heat levels, temperature stabilizes via natural convection
+        state.coolantFlow   = Math.max(14.0, BASELINE.coolantFlow - p * 64.0 + noiseF);
+        state.reactorPower  = Math.max(4.2, BASELINE.reactorPower - p * 86.0);
+        state.neutronFlux   = Math.max(0.10, BASELINE.neutronFlux - p * 2.22 + noiseN);
+        state.controlRodPos = 100.0; // Full gravity SCRAM insertion
+        state.temperature   = BASELINE.temperature + Math.sin(p * Math.PI) * 22.0 - p * 12.0 + noiseT;
+        state.radiation     = BASELINE.radiation + p * 0.85 + noiseR;
+      }
     } else {
       // Nominal steady-state with natural thermal feedback oscillation
       state.temperature   = BASELINE.temperature + Math.sin(time * 0.08) * 0.8 + noiseT;
@@ -231,6 +242,7 @@ var SIM = (function () {
       if      (type === 'coolantLoss')        scenario.label = 'LOSS OF COOLANT (LOCA)';
       else if (type === 'controlRodFailure')  scenario.label = 'CONTROL ROD EJECTION';
       else if (type === 'steamTubeRupture')   scenario.label = 'STEAM TUBE RUPTURE';
+      else if (type === 'stationBlackout')    scenario.label = 'STATION BLACKOUT (SBO)';
       else                                    scenario.label = 'TRANSIENT INJECTION';
     },
 

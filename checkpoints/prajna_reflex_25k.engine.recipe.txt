@@ -1,0 +1,1 @@
+trtexec --onnx=checkpoints/prajna_reflex_25k.onnx --saveEngine=checkpoints/prajna_reflex_25k.engine --fp16 --memPoolSize=workspace:1024MiB --verbose

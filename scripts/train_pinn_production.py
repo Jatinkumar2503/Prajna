@@ -233,7 +233,8 @@ def generate_multi_physics_dataset(num_samples: int = 5000,
         c4 = torch.cat([t4, f4, flux4, rad4, p_prim4, p_pow4, sq4, rod4, pzr4, fw4, sf4, inlet4, dt4, clad4, prec4, cont4], dim=-1)
         X = torch.where(m4, c4, X)
         
-    X = X + noise
+    from prajna_core.noise import apply_instrument_noise_suite
+    X = apply_instrument_noise_suite(X)
     return X, Y_eop
 
 

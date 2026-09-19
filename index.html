@@ -157,6 +157,23 @@
             <!-- Rendered dynamically by UI.renderAI() -->
           </div>
         </div>
+
+        <!-- IAEA EOP OPERATOR ACTION CHECKLIST CARD -->
+        <div id="eop-checklist-card" style="margin-top:8px;border-top:1px dashed rgba(255,170,0,0.3);padding-top:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--amber);letter-spacing:1px;font-weight:700;">📋 IAEA EOP ACTION CHECKLIST</span>
+            <span id="eop-urgency-badge" style="font-family:var(--mono);font-size:7px;background:rgba(255,170,0,0.15);color:var(--amber);padding:1px 4px;border-radius:2px;">MONITORING</span>
+          </div>
+          <div id="eop-actions-list" style="display:flex;flex-direction:column;gap:3px;max-height:130px;overflow-y:auto;padding-right:2px;">
+            <!-- Populated dynamically by UI.updateAI() -->
+          </div>
+        </div>
+
+        <!-- EPISTEMIC UNCERTAINTY & AUDIT LEDGER BAR -->
+        <div id="pinn-meta-bar" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:5px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:7px;color:var(--grey);">
+          <span id="epistemic-uncertainty-txt">±2σ Uncertainty: ±1.1°C</span>
+          <span id="audit-ledger-badge" style="color:var(--green);display:flex;align-items:center;"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:3px;"></span>LEDGER SIGNED</span>
+        </div>
       </div>
 
       <div id="palertsbox">
@@ -170,7 +187,7 @@
           <button class="sbtn" data-sc="coolantLoss"       onclick="APP.trigger('coolantLoss')">💧 LOSS OF COOLANT (LOCA)</button>
           <button class="sbtn" data-sc="controlRodFailure" onclick="APP.trigger('controlRodFailure')">⚡ CONTROL ROD EJECTION</button>
           <button class="sbtn" data-sc="steamTubeRupture"  onclick="APP.trigger('steamTubeRupture')">💨 STEAM TUBE RUPTURE</button>
-          <button class="sbtn" data-sc="stationBlackout"   onclick="APP.trigger('coolantLoss')">⚡ STATION BLACKOUT (SBO)</button>
+          <button class="sbtn" data-sc="stationBlackout"   onclick="APP.trigger('stationBlackout')">⚡ STATION BLACKOUT (SBO)</button>
         </div>
         <div class="sprogw"><div class="sprog" id="sprogbar"></div></div>
         <div id="scenlbl" style="font-family:var(--mono);font-size:8px;color:var(--grey);margin-top:4px;text-align:center">NO ACTIVE SCENARIO</div>
@@ -188,6 +205,8 @@
 
 <!-- Scripts loaded in dependency order -->
 <script src="src/telemetry/ring_buffer.js"></script>
+<script src="src/inference/eop_rules.js"></script>
+<script src="src/inference/audit_ledger.js"></script>
 <script src="src/inference/pinn_runtime.js"></script>
 <script src="src/inference/prajna_shap.js"></script>
 <script src="simulation.js"></script>

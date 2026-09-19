@@ -18,7 +18,7 @@ import torch.nn.functional as F
 class PrajnaFastReflex(nn.Module):
     """
     Tier-1 Microsecond Safety Reflex Engine.
-    Total Parameters: ~25,488 (Size: ~100 KB in memory, fits 100% in 128KB L1/L2 cache).
+    Total Parameters: 30,577 (Weights: 119.4 KB FP32 / 47.16 KB INT8; fits in CPU L2 cache <512 KB).
     """
     def __init__(self, num_channels: int = 16, hidden_dim: int = 96, num_eop_classes: int = 64):
         super().__init__()

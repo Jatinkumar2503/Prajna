@@ -145,24 +145,26 @@ class PrajnaFoundationPINN(nn.Module):
         super().__init__()
         
         # Determine architectural configuration based on scale
-        if scale == "production_3b":
-            d_model = custom_d_model or 3072
-            num_layers = custom_layers or 36
+        if scale in ("production_3b", "scale_3b"):
+            # ~3.08 Billion parameter configuration (scaling target for cluster training)
+            d_model = custom_d_model or 3584
+            num_layers = custom_layers or 40
             fno_width = 512
             eop_hidden = 2048
-        elif scale == "intermediate_2.25b":
-            d_model = custom_d_model or 2560
-            num_layers = custom_layers or 30
+        elif scale in ("intermediate_2.25b", "scale_2.25b"):
+            # ~2.27 Billion parameter configuration
+            d_model = custom_d_model or 3072
+            num_layers = custom_layers or 40
             fno_width = 448
             eop_hidden = 1536
         elif scale in ("full_1b", "foundation_1b_full", "1b_billion"):
-            # Full True 1,000,000,000+ Parameter Foundation Model
+            # Full 1.05B Parameter Scaling Target
             d_model = custom_d_model or 2048
             num_layers = custom_layers or 40
             fno_width = 512
             eop_hidden = 1536
-        elif scale == "foundation_1b":
-            # High-Capacity Foundation Model Scale optimized for 6GB VRAM GPUs (~264M parameters)
+        elif scale in ("pinn_265m", "foundation_1b", "teacher_265m"):
+            # 264.7 Million Parameter Trained Foundation Teacher Model (optimized for 6GB VRAM GPUs)
             d_model = custom_d_model or 1536
             num_layers = custom_layers or 18
             fno_width = 384
@@ -172,13 +174,13 @@ class PrajnaFoundationPINN(nn.Module):
             num_layers = custom_layers or 24
             fno_width = 384
             eop_hidden = 1024
-        elif scale == "efficient_125m":
-            # Highly optimized for 4-5 hour training on 6GB RTX 3050 or multi-core CPU
+        elif scale in ("pinn_60m", "efficient_125m"):
+            # 60.8 Million Parameter Compact Trained Baseline Model
             d_model = custom_d_model or 768
             num_layers = custom_layers or 16
             fno_width = 256
             eop_hidden = 512
-        else:  # "test_4m"
+        else:  # "test_4m" (~2.7M parameters)
             d_model = custom_d_model or 256
             num_layers = custom_layers or 4
             fno_width = 128

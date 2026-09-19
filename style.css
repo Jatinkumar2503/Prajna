@@ -819,3 +819,104 @@ body::after {
   background: linear-gradient(90deg, #0099bb, #00ff88);
   box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
 }
+
+/*  IAEA EOP ACTION CHECKLIST STYLES  */
+#eop-checklist-card {
+  background: rgba(12, 18, 28, 0.75);
+  border: 1px solid rgba(255, 170, 0, 0.25);
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.eop-action-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(7, 21, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  padding: 4px 6px;
+  transition: all 0.2s ease;
+}
+
+.eop-action-item:hover {
+  background: rgba(15, 30, 48, 0.85);
+  border-color: rgba(255, 170, 0, 0.4);
+}
+
+.eop-action-item.crit {
+  border-left-color: var(--red);
+  background: rgba(255, 0, 34, 0.08);
+}
+
+.eop-action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 7.5px;
+}
+
+.eop-action-title {
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.3px;
+}
+
+.eop-tier-badge {
+  font-family: var(--disp);
+  font-size: 6.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.eop-tier-badge.tier-crit {
+  background: rgba(255, 0, 34, 0.25);
+  color: #ff3355;
+  border: 1px solid rgba(255, 0, 34, 0.4);
+}
+
+.eop-tier-badge.tier-mand {
+  background: rgba(255, 170, 0, 0.2);
+  color: #ffaa00;
+  border: 1px solid rgba(255, 170, 0, 0.4);
+}
+
+.eop-tier-badge.tier-high {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.eop-tier-badge.tier-rout {
+  background: rgba(0, 255, 136, 0.12);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.25);
+}
+
+.eop-action-desc {
+  font-family: var(--mono);
+  font-size: 7px;
+  color: var(--grey);
+  line-height: 1.2;
+}
+
+.eop-action-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  color: var(--cyan-dim);
+}
+
+.eop-cd-active {
+  color: #ffaa00;
+  font-weight: 700;
+}

@@ -203,6 +203,53 @@ function updateAI(ai) {
       }).join('');
     }
   }
+
+  // Render IAEA EOP Operator Action Checklist
+  if (ai.eopGuidance && ai.eopGuidance.rankedGuidance) {
+    var rg = ai.eopGuidance.rankedGuidance;
+    var urgBadge = gel('eop-urgency-badge');
+    if (urgBadge) {
+      urgBadge.textContent = rg.urgencyLevel;
+      urgBadge.style.background = rg.priority === 'CRITICAL' ? 'rgba(255,0,34,0.2)' : 'rgba(255,170,0,0.15)';
+      urgBadge.style.color = rg.priority === 'CRITICAL' ? 'var(--red)' : 'var(--amber)';
+    }
+
+    var eopList = gel('eop-actions-list');
+    if (eopList && rg.actions) {
+      eopList.innerHTML = rg.actions.map(function (act) {
+        var isCrit = act.tier === 'CRITICAL';
+        var tierClass = isCrit ? 'tier-crit' : (act.tier === 'MANDATORY' ? 'tier-mand' : (act.tier === 'HIGH' ? 'tier-high' : 'tier-rout'));
+        var cdTxt = act.countdownSec > 0 ? act.countdownSec + 's limit' : 'IMMEDIATE';
+
+        return '<div class="eop-action-item ' + (isCrit ? 'crit' : '') + '">'
+          + '<div class="eop-action-header">'
+          + '<span class="eop-action-title">[' + act.step + '] ' + act.title + '</span>'
+          + '<span class="eop-tier-badge ' + tierClass + '">' + act.tier + '</span>'
+          + '</div>'
+          + '<div class="eop-action-desc">' + act.desc + '</div>'
+          + '<div class="eop-action-footer">'
+          + '<span>STATUS: ' + act.status + '</span>'
+          + '<span class="eop-cd-active">⏱ ' + cdTxt + '</span>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+  }
+
+  // Epistemic Uncertainty & Cryptographic Audit Ledger Display
+  if (ai.pinnForecast && ai.pinnForecast.uncertaintySigma !== undefined) {
+    var uncEl = gel('epistemic-uncertainty-txt');
+    if (uncEl) {
+      uncEl.textContent = '±2σ Bounds: ±' + ai.pinnForecast.uncertaintySigma + '°C [' + ai.pinnForecast.tempLower95 + '°C - ' + ai.pinnForecast.tempUpper95 + '°C]';
+    }
+  }
+
+  if (ai.auditRecord) {
+    var auditEl = gel('audit-ledger-badge');
+    if (auditEl) {
+      auditEl.innerHTML = '<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:3px;"></span>BLOCK #' + ai.auditRecord.sequenceId + ' VERIFIED';
+    }
+  }
 }
 
 

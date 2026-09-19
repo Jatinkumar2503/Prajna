@@ -233,6 +233,18 @@
       if (neuralTTL > 0.1 && neuralTTL < 900) minTTL = Math.min(minTTL, neuralTTL);
     }
 
+    // Epistemic Uncertainty Estimation (Mahalanobis-style distance from training manifold)
+    var distSq = Math.pow((temp - 285.0)/35.0, 2) + Math.pow((flow - 78.0)/28.0, 2) + Math.pow((flux - 2.32)/1.5, 2);
+    var epistemicSigma = Math.sqrt(0.8 + distSq * 1.5 + energyResidual * 20.0);
+    var confidenceBoundUpper = +(predTemp10 + 1.96 * epistemicSigma).toFixed(2);
+    var confidenceBoundLower = +(predTemp10 - 1.96 * epistemicSigma).toFixed(2);
+
+    // Formal IAEA EOP Ranked Action Steps
+    var rankedGuidance = null;
+    if (typeof PrajnaEOPRules !== 'undefined') {
+      rankedGuidance = PrajnaEOPRules.getRankedGuidance(eopId, reading, minTTL < 900 ? minTTL : null);
+    }
+
     return {
       neuralExecutionActive: this.weightsLoaded,
       scramProbability: neuralRes ? +neuralRes.scramProb.toFixed(4) : 0.0,
@@ -240,7 +252,10 @@
         temperature10s: +predTemp10.toFixed(2),
         coolantFlow10s: +predFlow10.toFixed(2),
         neutronFlux10s: +predFlux10.toFixed(3),
-        radiation10s:   +predRad10.toFixed(3)
+        radiation10s:   +predRad10.toFixed(3),
+        uncertaintySigma: +epistemicSigma.toFixed(2),
+        tempUpper95:    confidenceBoundUpper,
+        tempLower95:    confidenceBoundLower
       },
       physicsResiduals: {
         energyBalanceLoss: +energyResidual.toFixed(6),
@@ -257,7 +272,8 @@
         eopCode: eopAction.code,
         eopTitle: eopAction.title,
         priority: eopAction.priority,
-        confidencePct: confidencePct
+        confidencePct: confidencePct,
+        rankedGuidance: rankedGuidance
       }
     };
   };

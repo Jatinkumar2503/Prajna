@@ -169,6 +169,18 @@ var AI = (function () {
       shapResult = PrajnaSHAP.computeAttributions(reading, +risk.toFixed(1));
     }
 
+    // Tamper-Evident Cryptographic Audit Ledger Entry (IAEA SRS-91)
+    var auditRecord = null;
+    if (typeof PrajnaAuditLedger !== 'undefined') {
+      auditRecord = PrajnaAuditLedger.logEvent({
+        riskScore: +risk.toFixed(1),
+        classification: cls,
+        eopCode: pinnResult && pinnResult.eopGuidance ? pinnResult.eopGuidance.eopCode : "NORM",
+        topFactor: shapResult && shapResult.topFactor ? shapResult.topFactor.name : "NOMINAL",
+        scramProbability: pinnResult ? pinnResult.scramProbability : 0.0
+      });
+    }
+
     ms = {
       riskScore:         +risk.toFixed(1),
       crossAnomalyScore: +cs.toFixed(3),
@@ -181,7 +193,8 @@ var AI = (function () {
       timeToThreshold:   pinnResult ? pinnResult.timeToThreshold : null,
       eopGuidance:       pinnResult ? pinnResult.eopGuidance : null,
       physicsResiduals:  pinnResult ? pinnResult.physicsResiduals : null,
-      shapAttributions:  shapResult
+      shapAttributions:  shapResult,
+      auditRecord:       auditRecord
     };
     ms.history = (ms.history || []).concat([{ t: reading.time, risk: risk }]).slice(-60);
     return ms;

@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-08-20 19:07:08",
+  "timestamp": "2026-09-20 00:07:05",
   "checkpoint_path": "checkpoints/prajna_pinn_foundation_1b_best.pt",
   "model_scale": "foundation_1b",
   "parameter_count": 264736864,
   "saved_epoch": 10,
   "evaluation_samples": 1000,
-  "eval_time_seconds": 9.51,
+  "eval_time_seconds": 10.142,
   "eop_classification_accuracy_pct": 100.0,
   "physical_conservation": {
     "mean_energy_balance_loss": 0.012755,
