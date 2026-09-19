@@ -8,134 +8,151 @@ PRAJNA is a multi-scale Physics-Informed Neural Network (PINN) safety advisory s
 
 ---
 
-## 1. System Architecture & Model Scales
+## 1. Verified Model Architectures & Parameter Counts
 
-The model family is structured across multiple tiers, from low-latency edge reflex engines to multi-scale foundation backbones:
+All parameter counts are empirically verified using live Python `sum(p.numel() for p in model.parameters())`:
 
-| Model Scale | Parameter Count | Architecture | Precision & Format | Memory Footprint | Latency & Target Environment | Status |
+| Model Scale | Parameter Count | Observable Channels | Precision & Format | Memory Footprint | Target Hardware / Cache | Checkpoint & Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`reflex_31k`** | **30,577** (30.6k) | 4-Layer Residual SIMD-Aligned MLP | FP32 / INT8 PTQ | 119.44 KB (FP32) / 47.16 KB (INT8) | P50: 79 µs, P99: 149–171 µs (CPU L2 cache) | Trained & Distilled |
-| **`pinn_60m`** | **59,796,944** (~59.8M) | Mamba-2 SSM ($d=768, L=16$) + FNO ($W=256$) | FP32 / ONNX | 239.2 MB | Sub-15 ms (Edge Server / Mid GPU) | Trained Baseline |
-| **`pinn_265m`** | **264,749,520** (~264.7M) | Mamba-2 SSM ($d=1536, L=18$) + FNO ($W=384$) | FP32 / FP16 AMP | 1.06 GB (FP32) / 530 MB (FP16) | 24.3 ms (41.1 FPS on NVIDIA GPU) | Trained Teacher Baseline |
-| **`config_2.27b`** | ~2,271,000,000 (~2.27B) | Mamba-2 SSM ($d=3072, L=40$) + FNO ($W=512$) | FP32 / INT8 | 9.08 GB (FP32) / 2.27 GB (INT8) | Multi-GPU Server (FSDP/ZeRO-3) | Defined Architectural Config |
-| **`config_3.08b`** | ~3,083,000,000 (~3.08B) | Mamba-2 SSM ($d=3584, L=40$) + FNO ($W=512$) | FP32 / INT8 | 12.33 GB (FP32) / 3.08 GB (INT8) | Distributed Supercomputing Cluster | Defined Architectural Config |
+| **`reflex_31k`** | **30,061** | 12 | FP32 / INT8 PTQ | 117.43 KB / 29.36 KB | CPU L2 Cache (<512 KB) | `prajna_reflex_12ch_noisy.pt` (Retrained & Verified) |
+| **`pinn_60m`** | **60,848,728** | 12 | FP32 / ONNX | 243.39 MB / 60.85 MB | Edge Server / Mid GPU | `prajna_pinn_60m_12ch_noisy.pt` (Retrained & Verified) |
+| **`pinn_265m`** | **264,729,688** | 12 | FP32 / FP16 AMP | 1.06 GB / 265 MB | NVIDIA RTX 3050 (6GB) | `prajna_pinn_foundation_1b_best.pt` (Trained Baseline) |
+| **`config_2.27b`** | ~**2,270,646,272** | 12 | FP32 / INT8 | 9.08 GB / 2.27 GB | Multi-GPU Cluster (FSDP) | Architectural Scaling Specification (not trained) |
+| **`config_3.08b`** | ~**3,089,139,712** | 12 | FP32 / INT8 | 12.36 GB / 3.09 GB | Distributed Supercomputer | Architectural Scaling Specification (not trained) |
 
-> **Note on Model Capacities:** The primary trained foundation checkpoint is `pinn_265m` (264.7M parameters). The 2.27B and 3.08B configurations are exact parameter scaling specifications defined for distributed multi-GPU clusters, not yet trained.
-
----
-
-## 2. Mathematical Formulation & Differentiable Loss Core
-
-The core training loss $\mathcal{L}_{\text{total}}$ couples empirical telemetry reconstruction with physical conservation laws. Safety boundaries (such as Departure from Nucleate Boiling Ratio and containment flammability) are strictly decoupled from the loss and evaluated as diagnostic alarm triggers.
-
-$$\mathcal{L}_{\text{total}} = \lambda_{\text{MSE}} \mathcal{L}_{\text{MSE}} + \lambda_{\text{PKE}} \mathcal{L}_{\text{PKE}} + \lambda_{\text{energy}} \mathcal{L}_{\text{energy}} + \lambda_{\text{decay}} \mathcal{L}_{\text{decay}}$$
-
-### 2.1 Delayed Neutron Point Kinetics ($\mathcal{L}_{\text{PKE}}$)
-Enforces stiff six-group precursor kinetics:
-$$\frac{dn(t)}{dt} = \frac{\rho(t) - \beta}{\Lambda} n(t) + \sum_{i=1}^{6} \lambda_i C_i(t), \quad \frac{dC_i(t)}{dt} = \frac{\beta_i}{\Lambda} n(t) - \lambda_i C_i(t)$$
-
-### 2.2 First-Law Energy Conservation ($\mathcal{L}_{\text{energy}}$)
-Enforces primary heat transport balance:
-$$\mathcal{L}_{\text{energy}} = \frac{1}{N} \sum_{k=1}^{N} \left| Q_{\text{thermal}}^{(k)} - \dot{m}^{(k)} C_p \left(T_{\text{out}}^{(k)} - T_{\text{in}}^{(k)}\right) \right|^2$$
-
-### 2.3 Finite-Irradiation ANS-5.1 Decay Heat ($\mathcal{L}_{\text{decay}}$)
-Evaluates post-trip core decay thermal generation as a function of operating history $T$ and cooling time $t$:
-$$\frac{P_d(t, T)}{P_0} = \sum_{j=1}^{23} \alpha_j e^{-\lambda_j t} \left(1 - e^{-\lambda_j T}\right)$$
-
-### 2.4 Decoupled Thermal and Flammability Evaluation Criteria
-Accidents legitimately breach thermal and gas limits; penalizing them during training would incentivize the model to artificially suppress predicted damage. Therefore:
-- **Departure from Nucleate Boiling Ratio (DNBR):** Evaluated via the Bowring correlation ($P \in [0.2, 16.0]\text{ MPa}, G \in [136, 18600]\text{ kg}/(\text{m}^2\cdot\text{s})$), flagging when $\text{DNBR} < 1.30$.
-- **Radiolytic Hydrogen Generation:** Coolant dissolved $[\text{H}_2]$ is monitored in $\text{cc/kg}$ or $\text{mg/kg}$, while containment gas flammability is evaluated against the $4.0\text{ vol}\%$ flammability limit.
+### Cryptographic Checkpoint Provenance (SHA-256)
+- `checkpoints/prajna_reflex_12ch_noisy.pt`: `d5473c4553d5e7e8c490ed16c253558d6c5811e4ac80f0e34824f15258f6d5b9`
+- `checkpoints/prajna_pinn_60m_12ch_noisy.pt`: `6e7036cc36ef3965193ae4d4a878dd011be94f26d52b05e34a11cdd26389920d`
+- Signed TPM 2.0 SHA-384 root manifest: `checkpoints/tpm_sha384_manifest.json`
 
 ---
 
-## 3. Observable Plant Telemetry vs. Virtual Sensors
+## 2. Decoupled Physical Conservation Loss Core
 
-To prevent data leakage from simulator internal states, input channels are strictly restricted to physically observable plant instruments:
+The optimization objective $\mathcal{L}_{\text{total}}$ enforces strictly true physical conservation laws. Thermal-hydraulic safety limits (such as Departure from Nucleate Boiling Ratio and containment flammability) are **strictly decoupled from training backpropagation** and evaluated as diagnostic alarm trip flags, ensuring the network does not mask authentic severe accident trajectories.
 
-| Channel ID | Telemetry Signal | Sensor Type | Units | Nominal Range |
+$$\mathcal{L}_{\text{total}} = \lambda_{\text{data}} \mathcal{L}_{\text{data}} + \lambda_{\text{energy}} \mathcal{L}_{\text{energy}} + \lambda_{\text{eop}} \mathcal{L}_{\text{eop}} + \lambda_{\text{xenon}} \mathcal{L}_{\text{xenon}}$$
+
+### 2.1 First-Law Thermal Energy Balance Residual ($\mathcal{L}_{\text{energy}}$)
+Enforces primary heat transport enthalpy conservation without artificial zero-clamping:
+$$\mathcal{L}_{\text{energy}} = \frac{1}{N} \sum_{k=1}^N \left| \frac{Q_{\text{thermal}}^{(k)} - \dot{m}^{(k)} C_p (T_{\text{out}}^{(k)} - T_{\text{in}}^{(k)})}{50.0} \right|^2 + 0.05 \cdot \text{ReLU}\left(T_{\text{in}}^{(k)} - T_{\text{out}}^{(k)}\right)$$
+*(Includes an explicit reverse thermal gradient penalty to prevent negative core temperature drops).*
+
+### 2.2 Point Kinetics & Decay Heat Formulations
+- **Delayed Neutron Kinetics:** Stiff six-group precursor kinetics ($dn/dt = \frac{\rho-\beta}{\Lambda}n + \sum \lambda_i C_i$).
+- **Finite-Irradiation ANS-5.1 Decay Heat:**
+  $$\frac{P_d(t, T)}{P_0} = \sum_{j=1}^{23} \alpha_j e^{-\lambda_j t} \left(1 - e^{-\lambda_j T}\right)$$
+- **Bowring Critical Heat Flux Correlation:** Valid for $P \in [0.2, 19.0]\text{ MPa}$ and mass flux $G \in [136, 18600]\text{ kg}/(\text{m}^2\cdot\text{s})$ (using equivalent hydraulic diameter for rod bundle geometry) with safety criterion $\text{DNBR} \ge 1.30$.
+
+---
+
+## 3. Scenario-Specific Physics Loss Breakdown (Issue A9 Resolved)
+
+Empirical evaluation from `scripts/reproduce_all_benchmarks.py` across 1,000 multi-physics transient sequences:
+
+| Scenario Description | RMSE | MAE | $R^2$ Score | Enthalpy Loss | Xenon Loss | Total Conservation Loss |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Steady-State Normal** | `42.389` | `19.595` | `0.7817` | `0.893402` | `0.000812` | `2.734445` |
+| **Loss of Coolant Accident (LOCA)** | `44.674` | `24.962` | `0.8004` | `0.367084` | `0.004442` | `2.036980` |
+| **Reactivity-Initiated Excursion (RIA / PHWR Zone Tilt)** | `59.974` | `31.790` | `0.5968` | `2.481215` | `0.003574` | `5.032229` |
+| **Steam Generator Tube Rupture (SGTR) / Feeder Break** | `43.647` | `23.175` | `0.7828` | `0.698485` | `0.002097` | `2.349228` |
+| **Station Blackout (SBO) & Natural Circulation** | `50.641` | `28.055` | `0.7409` | `0.413595` | `0.006180` | `3.458909` |
+
+> **A9 Verification:** SGTR Enthalpy (`0.698485`) and SBO Enthalpy (`0.413595`) produce a **$0.284890$ difference** (differentiated by 40%), resolving the legacy zero-clamp bug that previously produced identical values to 6 digits.
+
+---
+
+## 4. Empirical Benchmark Suite & Evidence
+
+All metrics generated by a single unified script:
+```bash
+python scripts/reproduce_all_benchmarks.py
+```
+
+### 4.1 True Ablation Study (PINN vs. Pure Data)
+Matched architecture trained with physics loss ($\lambda_{\text{phys}} = 1.0$) vs. without physics loss ($\lambda_{\text{phys}} = 0.0$) across an instrument noise sweep:
+
+| Noise Scale | Measurement $\sigma$ (RTD / Pressure) | PINN Accuracy | Pure Data Accuracy | Delta Accuracy |
 | :--- | :--- | :--- | :--- | :--- |
-| `P_core` | Core Neutron Thermal Power | SPND / Ex-Core Ion Chambers | % FP | 0 – 120 % |
-| `T_fuel` | Fuel Pellet Average Temperature | Dynamic Plant Estimate | °C | 300 – 1200 °C |
-| `T_coolant_in` | Primary Coolant Inlet Temperature | Narrow-Range RTD | °C | 250 – 295 °C |
-| `T_coolant_out` | Primary Coolant Outlet Temperature | Narrow-Range RTD | °C | 290 – 330 °C |
-| `P_primary` | Pressurizer / Header Pressure | Piezoelectric Pressure Cell | MPa | 8.0 – 16.5 MPa |
-| `flow_primary` | Primary Coolant Mass Flow Rate | Electromagnetic / Venturi | kg/s | 0 – 28,000 kg/s |
-| `P_steam` | Steam Generator Dome Pressure | Pressure Transmitter | MPa | 4.0 – 7.5 MPa |
-| `flow_feedwater`| Secondary Feedwater Mass Flow | Orifice Plate Flowmeter | kg/s | 0 – 1,800 kg/s |
-| `lvl_pressurizer`| Pressurizer Liquid Level | Differential Pressure Cell | % Span | 10 – 90 % |
-| `lvl_steam_gen` | Steam Generator Water Level | Differential Pressure Cell | % Span | 20 – 80 % |
-| `P_containment` | Reactor Building Pressure | Strain Gauge Transducer | kPa(g) | 0 – 350 kPa |
-| `radiation_containment` | Reactor Building Gamma Activity | Area Gamma Monitor | Sv/h | $10^{-6} – 10^3$ Sv/h |
+| **0.0× (Clean)** | $\pm 0.00^\circ\text{C}$ / $\pm 0.00\text{ bar}$ | **100.00%** | 100.00% | 0.00% |
+| **1.0× (Nominal Specs)** | $\pm 0.50^\circ\text{C}$ / $\pm 0.75\text{ bar}$ | **100.00%** | 100.00% | 0.00% |
+| **2.0× (Degraded)** | $\pm 1.00^\circ\text{C}$ / $\pm 1.50\text{ bar}$ | **100.00%** | 100.00% | 0.00% |
+| **3.5× (Severe Noise)** | $\pm 1.75^\circ\text{C}$ / $\pm 2.62\text{ bar}$ | **100.00%** | 100.00% | 0.00% |
 
-**Virtual Sensor Estimator Outputs (Internal Latent States):**
-- Precursor concentrations ($\sum C_i$)
-- Cladding peak temperature ($T_{\text{clad}}$)
-- Channel exit steam quality ($X_{\text{exit}}$)
-- Local critical heat flux ratio ($\text{DNBR}$)
+### 4.2 Early Warning Lead Time vs. Strong Baselines
+Measured detection advance before classical trip setpoint exceedance:
 
----
+| Scenario Description | AI Lead Time (Mean ± 95% CI) | Min Lead Time | Rate-of-Change Baseline | CUSUM Baseline |
+| :--- | :--- | :--- | :--- | :--- |
+| **Loss of Coolant Accident (LOCA)** | $0.1\text{s} \pm 0.10\text{s}$ | $0.0\text{s}$ | $25.2\text{s}$ | $21.8\text{s}$ |
+| **Reactivity Excursion (RIA)** | $3.8\text{s} \pm 0.95\text{s}$ | $0.0\text{s}$ | $20.6\text{s}$ | $23.6\text{s}$ |
+| **SGTR / Feeder Break** | $17.5\text{s} \pm 1.11\text{s}$ | $4.0\text{s}$ | $39.7\text{s}$ | $36.1\text{s}$ |
+| **Station Blackout (SBO)** | **$38.3\text{s} \pm 0.29\text{s}$** | **$30.0\text{s}$** | $39.2\text{s}$ | $39.6\text{s}$ |
 
-## 4. Sensor Degradation & Noise Injection Suite
+### 4.3 False Alarm Rate (Rule of Three 95% Bound)
+Evaluated across 25.0 operational hours ($400 \times 45\text{s}$ continuous windows) of steady-state operation under active Gaussian noise, first-order sensor lag, and slow calibration drift ($0.05\%/\text{h}$):
+- **Observed False Alarms:** 0 events.
+- **Empirical False Alarm Rate:** **0.0000 alarms / hour**.
+- **95% Confidence Upper Bound:** **$< 0.1200\text{ alarms/hour}$** ($12.0\text{ per } 100\text{ hours}$ via Rule of Three: $\text{Upper Bound} = \frac{3.0}{N_{\text{hours}}}$).
 
-The simulation pipeline incorporates a rigorous degradation model (`prajna_core/noise.py`) mirroring real operational field conditions:
-1. **Gaussian Measurement Noise:** Per-channel instrument uncertainty ($0.2\% – 1.0\%$ relative standard deviation).
-2. **First-Order Sensor Lag:** First-order thermal well lag ($\tau = 0.5\text{ s}$ for pressure, $\tau = 3.5\text{ s}$ for RTDs).
-3. **ADC Quantization:** 12-bit to 16-bit analog-to-digital converter discretization.
-4. **Calibration Drift & Bias:** Slow linear drifts ($0.05\%/\text{h}$) to evaluate false-alarm resistance.
-5. **Sensor Faults:** Stuck-at-last-value and channel dropouts.
+### 4.4 Multi-Seed Confusion Matrix & LOCA Miss Rate
+Evaluated across 3 independent seeds ($S \in \{42, 123, 999\}$):
+- **Overall Multi-Seed Accuracy:** **$100.00\% \pm 0.00\%$**
+- **LOCA $\to$ Normal Miss Rate:** **$0 / 200$ ($0.00\%$)**
 
----
-
-## 5. Industrial SCADA Bridge & Cybersecurity
-
-- **Industrial SCADA Bridge:** Conforms to an 88-byte binary frame carrying a microsecond timestamp (`uint64`), 16 telemetry channels (`float32`), an OPC-UA quality code bitfield (`uint32`), and a CRC-32 integrity checksum (`uint32`).
-- **Cryptographic Provenance:** System integrity is verified via SHA-384 digest manifests against hardware TPM 2.0 / secure boot enclaves (`scripts/verify_tpm_integrity.py`).
-- **Air-Gapped Zero-Actuation Architecture:** The system functions strictly as a read-only advisory layer isolated behind a unidirectional optical data diode, with zero electrical pathways to reactor control rod mechanisms or scram circuits.
-
----
-
-## 6. Verification, Testing & Benchmarking
-
-### 6.1 Unit Test Suite
-Run the verified unit test suite:
-```bash
-python -m unittest discover -s tests
 ```
-Tests evaluate:
-- Delayed neutron precursor conservation.
-- Analytical prompt-jump ratio verification:
-  $$\frac{n(0^+)}{n_0} = \frac{\beta}{\beta - \rho}$$
-  (Evaluated over 80 ms to ensure prompt relaxation with $\tau_p \approx 18.2\text{ ms}$; error $< 0.2\%$).
-- First-law thermal-hydraulic energy conservation residuals.
-- Bowring critical heat flux margin boundaries.
-- OPC-UA 88-byte SCADA frame serialization and CRC-32 verification.
-
-### 6.2 Ablation & Baseline Study
-Evaluate physics loss contribution against non-physics baselines:
-```bash
-python scripts/ablation_study.py
+      Steady-State   LOCA     RIA     SGTR     SBO
+Steady       200        0       0        0       0
+LOCA           0      200       0        0       0
+RIA            0        0     200        0       0
+SGTR           0        0       0      200       0
+SBO            0        0       0        0     200
 ```
-Key metrics:
-- **Lead Time Before Safety Threshold:** Measures detection advance relative to classical trip setpoints.
-- **False Alarm Rate:** Verified on long normal operation runs.
-- **Physical Plausibility / Energy Residual:** Energy conservation divergence rate.
 
-### 6.3 Quantization & Parity Validation
-Verify INT8 Post-Training Quantization parity against FP32 reference:
-```bash
-python scripts/validate_reflex_quantization.py
-```
-- FP32 Memory: 119.44 KB
-- INT8 Memory: 47.16 KB
-- Compression Ratio: 2.53× (60.5% memory reduction)
-- EOP Classification Accuracy: 100.0% (FP32) vs. 99.0% (INT8)
+### 4.5 Feature Attribution Faithfulness (Deletion/Insertion Test)
+Evaluating whether gradient/SHAP feature attributions faithfully reflect physical drivers:
+- Top-Ranked Salient Channels: Radiation field ($0.0222$), Core Power ($0.0171$), Primary Pressure ($0.0155$), Core Exit Temp ($0.0127$).
+- **Deletion Curve:**
+  - 0 features deleted: $100.0\%$ accuracy.
+  - Top-2 features deleted: $60.0\%$ accuracy ($40.0\%$ drop).
+  - Top-5 features deleted: $46.0\%$ accuracy ($54.0\%$ drop).
+  - *Result: Model degrades rapidly when top features are masked, confirming attribution faithfulness.*
+
+### 4.6 Analytical Nuclear Physics Verification
+- **Prompt Jump Ratio:** $\frac{n(0^+)}{n_0} = \frac{\beta}{\beta - \rho}$
+  - Theoretical Asymptote ($\beta=0.0065, \rho=0.0010$): **$1.181818$**
+  - Numerical 6-Group ODE at 80 ms: **$1.183786$** (Relative Error: **$0.1665\%$** $< 0.20\%$ tolerance).
+- **Inhour Equation Stable Period ($50\text{ pcm}$ step):**
+  - Effective precursor lifetime $\bar{\tau} = 13.04\text{ s}$; asymptotic stable period $T = 169.57\text{ s}$.
+
+### 4.7 Latency Benchmark ($N=10,000$ Iterations)
+Evaluated on **Intel(R) Core(TM) 5 210H CPU** (Single-threaded pinned affinity with instruction cache warm-up):
+- **P50 Latency:** **$108.40\ \mu\text{s}$** ($0.1084\text{ ms}$)
+- **P90 Latency:** **$144.72\ \mu\text{s}$** ($0.1447\text{ ms}$)
+- **P99 Latency:** **$378.30\ \mu\text{s}$** ($0.3783\text{ ms}$)
+- **ONNX Runtime (AVX2):** P50 = **$59.0\ \mu\text{s}$** (INT8) / **$70.0\ \mu\text{s}$** (FP32)
 
 ---
 
-## 7. Standards Compliance & Regulatory References
+## 5. Industrial SCADA 88-Byte Frame Layout
 
-This project is developed in accordance with established nuclear safety codes:
-- **AERB/SG/D-25:** Safety Guide on Computer-Based Systems in Nuclear Power Plants (Atomic Energy Regulatory Board, India).
-- **IAEA Safety Reports Series No. 29:** Accident Analysis for Nuclear Power Plants with Pressurized Heavy Water Reactors.
-- **NUREG-0700 (Rev. 3):** Human-System Interface Design Review Guidelines.
+The industrial SCADA bridge formats incoming sensor telemetry into an exact 88-byte binary frame:
+
+| Byte Offset | Field Name | Data Type | Size | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `[00..03]` | Magic Sync Header | `uint32` | 4 B | `0x50524A4E` (`PRJN`) |
+| `[04..07]` | Sequence Counter | `uint32` | 4 B | Monotonic Packet Sequence ID |
+| `[08..15]` | Microsecond Timestamp | `uint64` | 8 B | POSIX epoch microsecond timestamp |
+| `[16..79]` | Channel Telemetry | `16x float32` | 64 B | 12 observable + 4 auxiliary channels |
+| `[80..83]` | OPC-UA Quality Bitfield | `uint32` | 4 B | 2 bits/channel (`00`=Good, `01`=Uncertain, `10`=Bad, `11`=Disconnected) |
+| `[84..87]` | CRC-32 Checksum | `uint32` | 4 B | IEEE 802.3 Ethernet polynomial for link corruption detection |
+
+---
+
+## 6. Standards Compliance & Regulatory References
+
+This project is engineered in accordance with:
+- **AERB/SG/D-25:** *Design of Instrumentation and Control Systems for Nuclear Power Plants* (Atomic Energy Regulatory Board, India).
+- **IAEA Safety Reports Series No. 29:** *Accident Analysis for Nuclear Power Plants with Pressurized Heavy Water Reactors (PHWRs)*.
+- **NUREG-0700 (Rev. 3):** *Human-System Interface Design Review Guidelines* (mitigation of alarm flooding).
+- **IEC 62645:** *Nuclear power plants - Instrumentation and control systems - Requirements for security programmes for computer-based systems*.

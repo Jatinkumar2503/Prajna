@@ -156,7 +156,7 @@ class ThermalHydraulicsCore(nn.Module):
         t_outlet, t_inlet: [Batch, 1] in °C
         Returns: Power in MWth
         """
-        delta_t = torch.clamp(t_outlet - t_inlet, min=0.0)
+        delta_t = t_outlet - t_inlet
         # Scaled thermal power calibration: 78.0 kg/s * 4.184 * 28.0 K * 0.010025 = 91.64 MWth
         return mass_flow * self.cp * delta_t * 0.010025
 
@@ -347,8 +347,11 @@ class PrajnaPhysicsLoss(nn.Module):
 
         # 2. Energy Balance Residual Loss: Pred Power vs m_dot * Cp * delta_T
         computed_power = self.th.compute_thermal_power(m_flow, p_temp, t_inlet)
-        # Normalized energy residual
+        # Normalized energy residual: signed physical balance
         l_energy = F.mse_loss(p_power / 50.0, computed_power / 50.0)
+        # Explicit penalty for reverse thermal gradient (T_inlet > T_outlet) across heat-producing core
+        unphysical_gradient = torch.mean(torch.relu(t_inlet - p_temp)) * 0.05
+        l_energy = l_energy + unphysical_gradient
 
         # 3. DNBR Safety Evaluation Flag (NOT a loss penalty, preserves accident fidelity)
         local_flux_proxy = p_power / 100.0

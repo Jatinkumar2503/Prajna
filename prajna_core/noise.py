@@ -38,9 +38,11 @@ ADC_RESOLUTIONS = torch.tensor([
 ], dtype=torch.float32)
 
 # Thermowell / sensor first-order response time constants (seconds)
-# Thermocouples in wells typically have tau = 2.5 - 4.0s; electronic pressure < 0.1s
+# Thermocouples in wells: tau = 2.5 - 4.0s; electronic pressure < 0.1s;
+# SPND: Platinum/Cobalt (prompt gamma) tau ~ 0.1s; Rhodium beta-decay component has tau ~ 42s.
+# We model prompt SPND as default (0.1s) with optional delayed Rhodium emitter lag (42.0s).
 SENSOR_TAU = torch.tensor([
-    3.0, 0.2, 0.05, 0.5, 0.1, 1.0, 2.0, 0.1, 0.8, 3.0, 0.3, 3.0, 3.0, 2.5, 0.1, 0.5
+    3.0, 0.2, 0.1, 0.5, 0.1, 1.0, 2.0, 0.1, 0.8, 3.0, 0.3, 3.0, 3.0, 2.5, 0.1, 0.5
 ], dtype=torch.float32)
 
 
