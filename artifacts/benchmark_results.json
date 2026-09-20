@@ -1,0 +1,340 @@
+{
+  "metadata": {
+    "timestamp": "2026-09-20T11:10:48.760324+00:00",
+    "git_commit": "d6469f95d63f836494b6b73492d376c28bc0a055",
+    "git_branch": "main",
+    "torch_version": "2.13.0+cu126",
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "host_cpu": "Intel(R) Core(TM) 5 210H",
+    "checkpoints": {
+      "reflex_12ch": {
+        "path": "checkpoints/prajna_reflex_12ch_noisy.pt",
+        "sha256": "8f06f4d158b9529c576515a44b167218fdafadf4e9a9bd326ca2c68b907f31ec"
+      },
+      "pinn_60m_12ch": {
+        "path": "checkpoints/prajna_pinn_60m_12ch_noisy.pt",
+        "sha256": "b1cd9e62ecf8aef6bd727f7b4299ed029c1657e23ecb2576be61ab445cad297f"
+      }
+    }
+  },
+  "benchmarks": {
+    "exact_parameters": {
+      "reflex_12ch_params": 30061,
+      "reflex_16ch_params": 30577,
+      "pinn_60m_12ch_params": 60848728,
+      "pinn_60m_16ch_params": 60852832,
+      "pinn_265m_12ch_params": 264729688
+    },
+    "physics_loss_per_scenario": {
+      "Steady-State Normal": {
+        "rmse": 223.37351356528373,
+        "mae": 82.44216918945312,
+        "r2": 0.9489924337542524,
+        "dynamic_energy_loss": 0.009783796966075897,
+        "dynamic_residual_rms_mwth": 49.456539154052734,
+        "xenon_loss": 0.00012418010737746954,
+        "total_loss": 0.07960201799869537
+      },
+      "Loss of Coolant Accident (LOCA)": {
+        "rmse": 279.3592976571569,
+        "mae": 122.77213287353516,
+        "r2": 0.9210445867519729,
+        "dynamic_energy_loss": 0.009655099362134933,
+        "dynamic_residual_rms_mwth": 49.13018035888672,
+        "xenon_loss": 0.001699314103461802,
+        "total_loss": 0.2399863302707672
+      },
+      "Reactivity-Initiated Excursion (RIA / PHWR Zone Tilt)": {
+        "rmse": 282.7622538237733,
+        "mae": 124.11437225341797,
+        "r2": 0.919466482998257,
+        "dynamic_energy_loss": 0.014024023897945881,
+        "dynamic_residual_rms_mwth": 59.2115364074707,
+        "xenon_loss": 0.001277988194487989,
+        "total_loss": 0.24032628536224365
+      },
+      "Steam Generator Tube Rupture (SGTR) / Feeder Break": {
+        "rmse": 262.46144062033187,
+        "mae": 105.79840087890625,
+        "r2": 0.9300750490155618,
+        "dynamic_energy_loss": 0.011431025341153145,
+        "dynamic_residual_rms_mwth": 53.457984924316406,
+        "xenon_loss": 0.0008530141203664243,
+        "total_loss": 0.1859796792268753
+      },
+      "Station Blackout (SBO) & Natural Circulation": {
+        "rmse": 143.8690607483937,
+        "mae": 56.048030853271484,
+        "r2": 0.8819780569232419,
+        "dynamic_energy_loss": 0.004835505038499832,
+        "dynamic_residual_rms_mwth": 34.768898010253906,
+        "xenon_loss": 0.0018341814866289496,
+        "total_loss": 0.09284868836402893
+      }
+    },
+    "true_ablation": {
+      "noise_0.0x": {
+        "noise_scale": 0.0,
+        "pinn_accuracy": 100.0,
+        "reg_data_accuracy": 100.0,
+        "pure_data_accuracy": 100.0,
+        "delta_pinn_vs_reg": 0.0
+      },
+      "noise_0.5x": {
+        "noise_scale": 0.5,
+        "pinn_accuracy": 100.0,
+        "reg_data_accuracy": 100.0,
+        "pure_data_accuracy": 100.0,
+        "delta_pinn_vs_reg": 0.0
+      },
+      "noise_1.0x": {
+        "noise_scale": 1.0,
+        "pinn_accuracy": 100.0,
+        "reg_data_accuracy": 100.0,
+        "pure_data_accuracy": 100.0,
+        "delta_pinn_vs_reg": 0.0
+      },
+      "noise_2.0x": {
+        "noise_scale": 2.0,
+        "pinn_accuracy": 100.0,
+        "reg_data_accuracy": 100.0,
+        "pure_data_accuracy": 100.0,
+        "delta_pinn_vs_reg": 0.0
+      },
+      "noise_3.5x": {
+        "noise_scale": 3.5,
+        "pinn_accuracy": 100.0,
+        "reg_data_accuracy": 100.0,
+        "pure_data_accuracy": 100.0,
+        "delta_pinn_vs_reg": 0.0
+      },
+      "ood_5x": {
+        "pinn_accuracy": 100.0,
+        "reg_data_accuracy": 100.0,
+        "pure_data_accuracy": 100.0,
+        "delta": 0.0
+      }
+    },
+    "lead_time": {
+      "Loss of Coolant Accident (LOCA)": {
+        "ai_mean_lead_s": 0.0,
+        "ai_ci95_s": 0.0,
+        "ai_min_lead_s": 0.0,
+        "roc_mean_lead_s": 1.25,
+        "cusum_mean_lead_s": 2.4
+      },
+      "Reactivity-Initiated Excursion (RIA / PHWR Zone Tilt)": {
+        "ai_mean_lead_s": 0.0,
+        "ai_ci95_s": 0.0,
+        "ai_min_lead_s": 0.0,
+        "roc_mean_lead_s": 0.83,
+        "cusum_mean_lead_s": 2.85
+      },
+      "Steam Generator Tube Rupture (SGTR) / Feeder Break": {
+        "ai_mean_lead_s": 0.0,
+        "ai_ci95_s": 0.0,
+        "ai_min_lead_s": 0.0,
+        "roc_mean_lead_s": 3.32,
+        "cusum_mean_lead_s": 4.72
+      },
+      "Station Blackout (SBO) & Natural Circulation": {
+        "ai_mean_lead_s": 13.89,
+        "ai_ci95_s": 0.10697722374412229,
+        "ai_min_lead_s": 13.0,
+        "roc_mean_lead_s": 15.76,
+        "cusum_mean_lead_s": 16.61
+      }
+    },
+    "false_alarm_rate": {
+      "simulated_hours": 30.0,
+      "evaluated_windows": 2400,
+      "observed_false_alarms": 0,
+      "empirical_rate_per_hour": 0.0,
+      "upper_95_bound_per_hour": 0.1,
+      "upper_95_bound_per_100h": 10.0
+    },
+    "multiseed_evaluation": {
+      "seeds": [
+        42,
+        123,
+        999
+      ],
+      "seed_accuracies": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "mean_accuracy": 100.0,
+      "std_accuracy": 0.0,
+      "confusion_matrix": [
+        [
+          200,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          200,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          200,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          200,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          200
+        ]
+      ],
+      "loca_to_normal_misses": 0,
+      "total_loca_eval": 200,
+      "loca_miss_rate_percent": 0.0
+    },
+    "shap_faithfulness": {
+      "base_accuracy": 100.0,
+      "saliency_ranks": [
+        {
+          "rank": 1,
+          "channel": "Core Power (MWth)",
+          "weight": 0.004322029184550047
+        },
+        {
+          "rank": 2,
+          "channel": "Control Rod Height (%)",
+          "weight": 0.003003665478900075
+        },
+        {
+          "rank": 3,
+          "channel": "Containment Pressure (kPa)",
+          "weight": 0.0020790768321603537
+        },
+        {
+          "rank": 4,
+          "channel": "Neutron Flux (x10^13)",
+          "weight": 0.0019897902384400368
+        },
+        {
+          "rank": 5,
+          "channel": "Radiation (mSv/h)",
+          "weight": 0.0016304167220368981
+        },
+        {
+          "rank": 6,
+          "channel": "Steam Flow (kg/s)",
+          "weight": 0.0015707891434431076
+        }
+      ],
+      "deletion_curves": {
+        "k_1": {
+          "k": 1,
+          "top_k_acc": 35.999998450279236,
+          "top_k_drop": 64.00000154972076,
+          "random_k_acc": 98.10000002384186,
+          "random_k_drop": 1.899999976158142
+        },
+        "k_2": {
+          "k": 2,
+          "top_k_acc": 35.999998450279236,
+          "top_k_drop": 64.00000154972076,
+          "random_k_acc": 91.69999986886978,
+          "random_k_drop": 8.300000131130219
+        },
+        "k_3": {
+          "k": 3,
+          "top_k_acc": 15.999999642372131,
+          "top_k_drop": 84.00000035762787,
+          "random_k_acc": 89.79999989271164,
+          "random_k_drop": 10.20000010728836
+        },
+        "k_5": {
+          "k": 5,
+          "top_k_acc": 15.999999642372131,
+          "top_k_drop": 84.00000035762787,
+          "random_k_acc": 76.89999967813492,
+          "random_k_drop": 23.100000321865082
+        }
+      }
+    },
+    "analytical_physics": {
+      "prompt_jump_analytic": 1.1818181818181819,
+      "prompt_jump_numerical": 1.1837859153747559,
+      "prompt_jump_error_pct": 0.1665051281452179,
+      "precursor_lifetime_s": 13.043556213378906,
+      "stable_period_50pcm_s": 169.56622314453125
+    },
+    "latency_harness": {
+      "iterations": 10000,
+      "p50_us": 212.64999999999998,
+      "p90_us": 495.51000000000005,
+      "p99_us": 761.0090000000002,
+      "mean_us": 267.42097,
+      "std_us": 171.45902719092715,
+      "throughput_fps": 3739.4225292055444
+    },
+    "scada_frame": {
+      "total_bytes": 88,
+      "fields": [
+        {
+          "offset": 0,
+          "size": 4,
+          "name": "Magic Sync Header",
+          "dtype": "uint32",
+          "description": "0x50524A4E ('PRJN')"
+        },
+        {
+          "offset": 4,
+          "size": 4,
+          "name": "Sequence Counter",
+          "dtype": "uint32",
+          "description": "Monotonic Packet ID"
+        },
+        {
+          "offset": 8,
+          "size": 8,
+          "name": "Microsecond Timestamp",
+          "dtype": "uint64",
+          "description": "POSIX epoch microseconds"
+        },
+        {
+          "offset": 16,
+          "size": 64,
+          "name": "Channel Telemetry",
+          "dtype": "16x float32",
+          "description": "16 float32 sensor values"
+        },
+        {
+          "offset": 80,
+          "size": 4,
+          "name": "OPC-UA Quality Bitfield",
+          "dtype": "uint32",
+          "description": "2 bits/channel (Good/Bad/Uncertain)"
+        },
+        {
+          "offset": 84,
+          "size": 4,
+          "name": "CRC-32 Checksum",
+          "dtype": "uint32",
+          "description": "IEEE 802.3 Ethernet polynomial"
+        }
+      ]
+    }
+  }
+}

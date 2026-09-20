@@ -168,15 +168,15 @@ class PhysicalPHWRSimulator:
             decay_heat_frac = 0.065 * math.exp(-t_curr / 35.0) + 0.015  # ANS-5.1 decay heat curve
             
             if scenario_id == 0:  # Steady-State Normal with realistic small control oscillations
-                rho_ext = 0.00002 * torch.sin(torch.tensor(t_curr * 0.2))
+                rho_ext = torch.full((batch_size, 1), 0.00002 * math.sin(t_curr * 0.2), device=self.device)
                 
             elif scenario_id == 1:  # LOCA: Primary leak, voiding, positive void feedback, SCRAM at t=1.5s
                 if t_curr > 0.5:
                     break_area = 0.012  # m^2 double-ended feeder break
                     leak_flow = 1200.0 * (1.0 - math.exp(-(t_curr - 0.5) / 2.0))
                     state["m_prim"] = torch.clamp(state["m_prim"] - leak_flow * dt, min=15000.0)
-                    state["p_prim"] = torch.tensor([[max(25.0, 87.0 - (t_curr - 0.5) * 6.5)]], device=self.device)
-                    state["void_frac"] = torch.tensor([[min(35.0, (t_curr - 0.5) * 1.8)]], device=self.device)
+                    state["p_prim"] = torch.full((batch_size, 1), max(25.0, 87.0 - (t_curr - 0.5) * 6.5), device=self.device)
+                    state["void_frac"] = torch.full((batch_size, 1), min(35.0, (t_curr - 0.5) * 1.8), device=self.device)
                     state["p_cont"] = state["p_cont"] + (leak_flow * 0.008) * dt
                     state["rad"] = state["rad"] + (0.15 * (t_curr - 0.5)) * dt
                     
@@ -190,7 +190,7 @@ class PhysicalPHWRSimulator:
                         
             elif scenario_id == 2:  # Reactivity Insertion (Zone Controller Drain)
                 # Uncontrolled positive ramp +1.5 mk (+150 pcm), Doppler feedback arrests excursion
-                rho_ext = torch.tensor([[min(0.0028, t_curr * 0.00035)]], device=self.device)
+                rho_ext = torch.full((batch_size, 1), min(0.0028, t_curr * 0.00035), device=self.device)
                 if t_curr > 8.0:  # Manual trip at t=8s
                     rho_ext = -0.040 * torch.ones(batch_size, 1, device=self.device)
                     state["rod"] = torch.clamp(state["rod"] - 40.0 * dt, min=0.0)
@@ -198,7 +198,7 @@ class PhysicalPHWRSimulator:
             elif scenario_id == 3:  # SGTR: Feeder tube rupture, secondary activity spike
                 if t_curr > 0.5:
                     leak_sg = 45.0 * (1.0 - math.exp(-(t_curr - 0.5) / 5.0))
-                    state["p_prim"] = torch.tensor([[max(55.0, 87.0 - (t_curr - 0.5) * 1.2)]], device=self.device)
+                    state["p_prim"] = torch.full((batch_size, 1), max(55.0, 87.0 - (t_curr - 0.5) * 1.2), device=self.device)
                     state["rad"] = state["rad"] + 0.12 * dt
                     state["pzr"] = torch.clamp(state["pzr"] - 0.8 * dt, min=15.0)
                     if t_curr > 20.0:

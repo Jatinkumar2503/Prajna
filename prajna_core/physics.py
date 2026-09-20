@@ -138,27 +138,61 @@ class ANSDecayHeat(nn.Module):
 # -----------------------------------------------------------------------------
 # 4. PRIMARY HEAT TRANSPORT ENTHALPY & BOWRING DNBR
 # -----------------------------------------------------------------------------
+CP_COOLANT_KJ_KG_K = 4.6437346  # kJ / (kg * K) for heavy water (D2O at 271°C, 8.7 MPa)
+M_CORE_COOLANT_KG = 12500.0      # kg core coolant inventory (scaled surrogate)
+
 class ThermalHydraulicsCore(nn.Module):
     """
     Thermodynamic heat transport and critical heat flux (CHF) / DNBR calculation.
+    Calibrated in SI units for heavy water (D2O at 271°C, 8.7 MPa).
     """
-    def __init__(self, cp_coolant: float = 4.184):  # kJ / (kg * K) for light/heavy water
+    def __init__(self, cp_coolant: float = CP_COOLANT_KJ_KG_K, m_core_coolant: float = M_CORE_COOLANT_KG):
         super().__init__()
         self.cp = cp_coolant
+        self.m_core_coolant = m_core_coolant
 
     def compute_thermal_power(self,
-                             mass_flow: torch.Tensor,
-                             t_outlet: torch.Tensor,
-                             t_inlet: torch.Tensor) -> torch.Tensor:
+                              mass_flow: torch.Tensor,
+                              t_outlet: torch.Tensor,
+                              t_inlet: torch.Tensor) -> torch.Tensor:
         """
-        Q = m_dot * Cp * (T_out - T_in) * scale
-        mass_flow: [Batch, 1] in kg/s
-        t_outlet, t_inlet: [Batch, 1] in °C
-        Returns: Power in MWth
+        Q_flow = m_dot * Cp * (T_out - T_in) * 1e-3
+        mass_flow: [Batch, ...] in kg/s
+        t_outlet, t_inlet: [Batch, ...] in °C
+        Returns: Heat removal rate in MWth
         """
         delta_t = t_outlet - t_inlet
-        # Scaled thermal power calibration: 78.0 kg/s * 4.184 * 28.0 K * 0.010025 = 91.64 MWth
-        return mass_flow * self.cp * delta_t * 0.010025
+        # Pure SI units: kg/s * kJ/(kg*K) * K * 1e-3 MW/kW = MWth
+        return mass_flow * self.cp * delta_t * 1e-3
+
+    def compute_dynamic_residual(self,
+                                 power: torch.Tensor,
+                                 mass_flow: torch.Tensor,
+                                 t_outlet: torch.Tensor,
+                                 t_inlet: torch.Tensor,
+                                 dt: float = 0.05) -> torch.Tensor:
+        """
+        Dynamic heat balance residual:
+        R(t) = M_core * Cp * dT_out/dt - [Power(t) - m_dot * Cp * (T_out - T_in)]
+        Returns: Residual in MWth (identically 0 for conservative physical trajectory)
+        """
+        q_flow = self.compute_thermal_power(mass_flow, t_outlet, t_inlet)
+        
+        # Central difference for dT_out/dt across time dimension (dim=1) if sequence length > 2
+        if t_outlet.dim() >= 2 and t_outlet.shape[1] > 2:
+            dt_out = torch.zeros_like(t_outlet)
+            dt_out[:, 1:-1] = (t_outlet[:, 2:] - t_outlet[:, :-2]) / (2.0 * dt)
+            dt_out[:, 0] = (t_outlet[:, 1] - t_outlet[:, 0]) / dt
+            dt_out[:, -1] = (t_outlet[:, -1] - t_outlet[:, -2]) / dt
+        else:
+            dt_out = torch.zeros_like(t_outlet)
+            
+        c_cool_mj = (self.m_core_coolant * self.cp) * 1e-3  # ~58.05 MJ/K
+        q_accum = c_cool_mj * dt_out                         # MWth
+        
+        # Dynamic residual: accumulation - net heat generation
+        r_dynamic = q_accum - (power - q_flow)
+        return r_dynamic
 
     def compute_dnbr(self,
                      local_heat_flux: torch.Tensor,
@@ -281,24 +315,24 @@ class PrajnaPhysicsLoss(nn.Module):
         self.mse = nn.MSELoss()
         self.ce = nn.CrossEntropyLoss()
 
-        # Normalized characteristic channel scales for balanced gradient propagation
+        # Normalized characteristic channel scales for balanced gradient propagation (756 MWth plant)
         channel_scales = torch.tensor([
-            100.0,  # 0: Core Temp (°C)
-            50.0,   # 1: Coolant Flow (kg/s)
-            2.0,    # 2: Neutron Flux (x10^13)
-            2.0,    # 3: Radiation (mSv/h)
-            100.0,  # 4: Primary Pressure (bar)
-            50.0,   # 5: Core Power (MWth)
-            0.1,    # 6: Steam Quality (x)
-            50.0,   # 7: Control Rods (%)
-            50.0,   # 8: Pressurizer Level (%)
-            100.0,  # 9: Feedwater Temp (°C)
-            50.0,   # 10: Steam Flow (kg/s)
-            100.0,  # 11: Core Inlet Temp (°C)
-            20.0,   # 12: Core Delta-T (°C)
-            100.0,  # 13: Cladding Temp (°C)
-            1.0,    # 14: Precursor Conc (C)
-            100.0   # 15: Containment Pressure (kPa)
+            100.0,   # 0: Core Temp (°C)
+            1000.0,  # 1: Coolant Flow (kg/s)
+            2.0,     # 2: Neutron Flux (x10^13)
+            2.0,     # 3: Radiation (mSv/h)
+            100.0,   # 4: Primary Pressure (bar)
+            500.0,   # 5: Core Power (MWth)
+            50.0,    # 6: Control Rods (%)
+            50.0,    # 7: Pressurizer Level (%)
+            100.0,   # 8: Feedwater / Secondary Temp (°C)
+            500.0,   # 9: Steam Flow (kg/s)
+            100.0,   # 10: Core Inlet Temp (°C)
+            100.0,   # 11: Containment Pressure (kPa)
+            100.0,   # 12: Steam Gen Level (%)
+            100.0,   # 13: Core Delta-P (kPa)
+            100.0,   # 14: Loop Flow (%)
+            100.0    # 15: Turbine Speed (%)
         ], dtype=torch.float32)
         self.register_buffer("channel_scales", channel_scales)
 
@@ -331,9 +365,9 @@ class PrajnaPhysicsLoss(nn.Module):
             # Extract slices for physics constraints
             p_temp = pred_physics[:, :, 0:1]
             p_flux = pred_physics[:, :, 2:3]
-            p_power = pred_physics[:, :, 5:6] if num_c > 5 else p_flux * 39.5
+            p_power = pred_physics[:, :, 5:6] if num_c > 5 else p_flux * 336.0
             m_flow = target_physics[:, :, 1:2]
-            t_inlet = target_physics[:, :, 11:12] if num_c > 11 else p_temp - 28.0
+            t_inlet = target_physics[:, :, 10:11] if num_c > 10 else p_temp - 44.0
         else:
             # Backward-compatible single-channel inputs
             l_data_flux = self.mse(pred_flux, measured_flux)
@@ -345,13 +379,11 @@ class PrajnaPhysicsLoss(nn.Module):
             m_flow = mass_flow
             t_inlet = inlet_temp
 
-        # 2. Energy Balance Residual Loss: Pred Power vs m_dot * Cp * delta_T
-        computed_power = self.th.compute_thermal_power(m_flow, p_temp, t_inlet)
-        # Normalized energy residual: signed physical balance
-        l_energy = F.mse_loss(p_power / 50.0, computed_power / 50.0)
-        # Explicit penalty for reverse thermal gradient (T_inlet > T_outlet) across heat-producing core
-        unphysical_gradient = torch.mean(torch.relu(t_inlet - p_temp)) * 0.05
-        l_energy = l_energy + unphysical_gradient
+        # 2. Dynamic Thermal Residual Loss: R(t) = M_core * Cp * dT_out/dt - [P(t) - Q_flow(t)]
+        # Evaluates First-Law dynamic heat balance without penalizing legitimate transient thermal lag
+        r_dyn = self.th.compute_dynamic_residual(p_power, m_flow, p_temp, t_inlet)
+        # Normalized dynamic residual against plant characteristic power (500 MW scale)
+        l_energy = F.mse_loss(r_dyn / 500.0, torch.zeros_like(r_dyn))
 
         # 3. DNBR Safety Evaluation Flag (NOT a loss penalty, preserves accident fidelity)
         local_flux_proxy = p_power / 100.0

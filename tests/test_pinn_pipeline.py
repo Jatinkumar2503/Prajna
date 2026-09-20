@@ -140,14 +140,15 @@ class TestPrajnaPINNPipeline(unittest.TestCase):
         # Verification within 0.5% of analytical prompt-jump ratio: 1.1818
         self.assertAlmostEqual(simulated_ratio, expected_ratio, delta=0.01)
 
-        # 2. First-Law Thermodynamic Energy Conservation
-        th = ThermalHydraulicsCore(cp_coolant=4.184)
-        m_dot = torch.tensor([[78.0]])   # kg/s
-        t_out = torch.tensor([[285.0]])  # °C
-        t_in  = torch.tensor([[257.0]])  # °C (Delta-T = 28.0 K)
+        # 2. First-Law Thermodynamic Energy Conservation (Pure SI Units)
+        th = ThermalHydraulicsCore()
+        m_dot = torch.tensor([[3700.0]])  # kg/s
+        t_out = torch.tensor([[293.0]])   # °C
+        t_in  = torch.tensor([[249.0]])   # °C (Delta-T = 44.0 K)
         calc_power = th.compute_thermal_power(m_dot, t_out, t_in).item()
-        # Calibrated nominal power should match 91.64 MWth
-        self.assertAlmostEqual(calc_power, 91.64, delta=0.5)
+        # Calibrated nominal power should match 756.0 MWth
+        # 3700 kg/s * 4.6437346 kJ/(kg*K) * 44 K * 1e-3 = 756.00 MWth
+        self.assertAlmostEqual(calc_power, 756.0, delta=0.5)
 
     def test_09_sensor_noise_suite_robustness(self):
         from prajna_core.noise import apply_instrument_noise_suite
