@@ -1,8 +1,8 @@
 # PRAJNA Verified Provenance Tables
 
-**Generated:** 2026-09-20T18:33:03.841226+00:00
-**Git Commit:** `abb0b598d06a578a326f7bb765f55471f938c655` (branch: `main`)
-**Working Tree Clean:** `False`
+**Generated:** 2026-09-20T18:34:15.870590+00:00
+**Git Commit:** `5ed5f1706aaed129519a4355860b90f90184f829` (branch: `main`)
+**Working Tree Clean:** `True`
 **Command:** `C:\Program Files\Python314\python.exe scripts/generate_results_provenance.py`
 **Random Seeds:** `[42, 43, 44, 45, 46]`
 **Hardware Platform:** `Intel64 Family 6 Model 186 Stepping 2, GenuineIntel` on `Windows`
