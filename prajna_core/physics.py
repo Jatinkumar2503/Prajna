@@ -138,18 +138,34 @@ class ANSDecayHeat(nn.Module):
 # -----------------------------------------------------------------------------
 # 4. PRIMARY HEAT TRANSPORT ENTHALPY & BOWRING DNBR
 # -----------------------------------------------------------------------------
-CP_COOLANT_KJ_KG_K = 4.6437346  # kJ / (kg * K) for heavy water (D2O at 271°C, 8.7 MPa)
-M_CORE_COOLANT_KG = 12500.0      # kg core coolant inventory (scaled surrogate)
+# Independent physical properties from IAPWS / CoolProp for D2O at 8.5 MPa (85 bar / 87 kg/cm²)
+# Mean Cp over 249.0°C -> 293.4°C: 4.863 kJ/(kg * K)
+CP_COOLANT_KJ_KG_K = 4.863        # kJ / (kg * K) for heavy water (D2O at 8.5 MPa, 249-293.4°C)
+FLOW_NOMINAL_KG_S = 3500.0        # kg/s primary coolant flow (derived: 756 MW / (4.863 * 44.4) ≈ 3,501.5 kg/s)
+POWER_NOMINAL_MWTH = 756.0        # MWth primary heat transfer rate to coolant
+FISSION_POWER_NOMINAL_MW = 802.0  # MW fission power (IAEA ARIS PHWR-220 baseline)
+PRESSURE_NOMINAL_BAR = 85.0       # bar (8.5 MPa, 87 kg/cm² outlet header)
+M_CORE_COOLANT_KG = 12500.0       # kg core coolant inventory (scaled surrogate)
+M_FUEL_KG = 58500.0               # kg UO2 fuel inventory
+CP_FUEL_KJ_KG_K = 0.280           # kJ / (kg * K) for UO2 fuel (fuel heat capacity ~ 16.38 MJ/K)
 
 class ThermalHydraulicsCore(nn.Module):
     """
     Thermodynamic heat transport and critical heat flux (CHF) / DNBR calculation.
-    Calibrated in SI units for heavy water (D2O at 271°C, 8.7 MPa).
+    Calibrated in SI units with independent CoolProp D2O properties (8.5 MPa, 249-293.4°C).
     """
-    def __init__(self, cp_coolant: float = CP_COOLANT_KJ_KG_K, m_core_coolant: float = M_CORE_COOLANT_KG):
+    def __init__(self,
+                 cp_coolant: float = CP_COOLANT_KJ_KG_K,
+                 m_core_coolant: float = M_CORE_COOLANT_KG,
+                 m_fuel: float = M_FUEL_KG,
+                 cp_fuel: float = CP_FUEL_KJ_KG_K):
         super().__init__()
         self.cp = cp_coolant
         self.m_core_coolant = m_core_coolant
+        self.m_fuel = m_fuel
+        self.cp_fuel = cp_fuel
+        self.c_fuel_mj = (m_fuel * cp_fuel) * 1e-3       # ~16.38 MJ/K
+        self.c_cool_mj = (m_core_coolant * cp_coolant) * 1e-3  # ~60.79 MJ/K
 
     def compute_thermal_power(self,
                               mass_flow: torch.Tensor,
@@ -170,27 +186,38 @@ class ThermalHydraulicsCore(nn.Module):
                                  mass_flow: torch.Tensor,
                                  t_outlet: torch.Tensor,
                                  t_inlet: torch.Tensor,
+                                 t_fuel: Optional[torch.Tensor] = None,
                                  dt: float = 0.05) -> torch.Tensor:
         """
-        Dynamic heat balance residual:
-        R(t) = M_core * Cp * dT_out/dt - [Power(t) - m_dot * Cp * (T_out - T_in)]
-        Returns: Residual in MWth (identically 0 for conservative physical trajectory)
+        True 2-node core dynamic heat balance residual:
+        dE_stored/dt = C_fuel * dT_fuel/dt + C_cool * d(T_bar_cool)/dt
+        R(t) = dE_stored/dt - [Power(t) - Q_flow(t)]
+        Returns: Residual in MWth (identically 0 for closed physical trajectory)
         """
         q_flow = self.compute_thermal_power(mass_flow, t_outlet, t_inlet)
+        t_bar_cool = (t_outlet + t_inlet) / 2.0
         
-        # Central difference for dT_out/dt across time dimension (dim=1) if sequence length > 2
-        if t_outlet.dim() >= 2 and t_outlet.shape[1] > 2:
-            dt_out = torch.zeros_like(t_outlet)
-            dt_out[:, 1:-1] = (t_outlet[:, 2:] - t_outlet[:, :-2]) / (2.0 * dt)
-            dt_out[:, 0] = (t_outlet[:, 1] - t_outlet[:, 0]) / dt
-            dt_out[:, -1] = (t_outlet[:, -1] - t_outlet[:, -2]) / dt
-        else:
-            dt_out = torch.zeros_like(t_outlet)
+        # Numerical time derivative across dim=1 (time dimension)
+        # Forward difference matches forward Euler step: dX/dt = (X[t+1] - X[t]) / dt
+        def calc_dt(tensor_seq: torch.Tensor) -> torch.Tensor:
+            if tensor_seq.dim() >= 2 and tensor_seq.shape[1] > 1:
+                d_tensor = torch.zeros_like(tensor_seq)
+                d_tensor[:, :-1] = (tensor_seq[:, 1:] - tensor_seq[:, :-1]) / dt
+                d_tensor[:, -1] = d_tensor[:, -2]
+                return d_tensor
+            return torch.zeros_like(tensor_seq)
             
-        c_cool_mj = (self.m_core_coolant * self.cp) * 1e-3  # ~58.05 MJ/K
-        q_accum = c_cool_mj * dt_out                         # MWth
+        dt_cool = calc_dt(t_outlet)
         
-        # Dynamic residual: accumulation - net heat generation
+        if t_fuel is not None:
+            dt_fuel = calc_dt(t_fuel)
+            q_accum = self.c_fuel_mj * dt_fuel + self.c_cool_mj * dt_cool
+        else:
+            # When fuel temperature is latent (SCADA), effective core stored heat capacity = C_fuel + C_cool
+            c_total_mj = self.c_fuel_mj + self.c_cool_mj
+            q_accum = c_total_mj * dt_cool
+            
+        # Dynamic residual: stored energy rate - net generation
         r_dynamic = q_accum - (power - q_flow)
         return r_dynamic
 

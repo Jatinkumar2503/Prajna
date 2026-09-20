@@ -12,6 +12,7 @@ import sys
 import time
 import math
 import hashlib
+import random
 from typing import Dict, Tuple, Optional
 import torch
 import torch.nn as nn
@@ -127,8 +128,17 @@ def retrain_reflex_model(device: torch.device, epochs: int = 15) -> str:
         train_loss = 0.0
         for bx, by in train_loader:
             bx, by = bx.to(device), by.to(device)
+            # Channel dropout augmentation: 25% chance of masking 1-3 random channels
+            if random.random() < 0.25:
+                bx_in = bx.clone()
+                drop_chs = random.sample(range(12), random.randint(1, 3))
+                for ch in drop_chs:
+                    bx_in[:, :, ch] = bx_in[:, :, ch].mean()
+            else:
+                bx_in = bx
+                
             optimizer.zero_grad()
-            out = model(bx)
+            out = model(bx_in)
             loss = criterion(out["eop_logits"], by)
             loss.backward()
             optimizer.step()
@@ -195,12 +205,20 @@ def retrain_pinn_model(device: torch.device, epochs: int = 10) -> str:
         
         for bx, by in train_loader:
             bx, by = bx.to(device), by.to(device)
+            # Channel dropout augmentation on PINN inputs
+            if random.random() < 0.25:
+                bx_in = bx.clone()
+                drop_chs = random.sample(range(12), random.randint(1, 3))
+                for ch in drop_chs:
+                    bx_in[:, :, ch] = bx_in[:, :, ch].mean()
+            else:
+                bx_in = bx
+                
             optimizer.zero_grad()
-            
-            out = model(bx)
+            out = model(bx_in)
             losses = loss_fn(
                 pred_physics=out["physics_trajectories"],
-                target_physics=bx,
+                target_physics=bx,  # Targets remain uncorrupted full channels
                 eop_logits=out["eop_logits"],
                 target_eop=by
             )

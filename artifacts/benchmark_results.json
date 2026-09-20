@@ -1,20 +1,37 @@
 {
   "metadata": {
-    "timestamp": "2026-09-20T11:10:48.760324+00:00",
-    "git_commit": "d6469f95d63f836494b6b73492d376c28bc0a055",
+    "timestamp": "2026-09-20T12:02:14.090431+00:00",
+    "git_commit": "7ddbf5a352ccaf284218f91f9b245b0fba34e752",
     "git_branch": "main",
     "torch_version": "2.13.0+cu126",
     "cuda_available": true,
     "cuda_device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
     "host_cpu": "Intel(R) Core(TM) 5 210H",
+    "reference_plant": {
+      "name": "220 MWe PHWR (IAEA ARIS / CoolProp Heavy Water Calibrated)",
+      "thermal_power_primary_mwth": 756.0,
+      "fission_power_core_mw": 802.0,
+      "coolant_mass_kg": 12500.0,
+      "coolant_cp_kj_kg_k": 4.863,
+      "core_mass_flow_kg_s": 3500.0,
+      "primary_pressure_bar": 85.0,
+      "core_inlet_temp_c": 249.0,
+      "core_outlet_temp_c": 293.4,
+      "delta_t_nominal_k": 44.4,
+      "secondary_sat_temp_c": 245.0,
+      "secondary_pressure_bar": 36.5,
+      "steam_flow_kg_s": 364.0,
+      "fuel_mass_kg": 58500.0,
+      "fuel_cp_kj_kg_k": 0.28
+    },
     "checkpoints": {
       "reflex_12ch": {
         "path": "checkpoints/prajna_reflex_12ch_noisy.pt",
-        "sha256": "8f06f4d158b9529c576515a44b167218fdafadf4e9a9bd326ca2c68b907f31ec"
+        "sha256": "b271dc41973adceed39facbd835deebb311d81ed6f257df224a66d1e13f4e5ba"
       },
       "pinn_60m_12ch": {
         "path": "checkpoints/prajna_pinn_60m_12ch_noisy.pt",
-        "sha256": "b1cd9e62ecf8aef6bd727f7b4299ed029c1657e23ecb2576be61ab445cad297f"
+        "sha256": "583eeada61e923327fd8ec6aac985c535046d986fbcabfc6584e5eb962120e95"
       }
     }
   },
@@ -28,49 +45,59 @@
     },
     "physics_loss_per_scenario": {
       "Steady-State Normal": {
-        "rmse": 223.37351356528373,
-        "mae": 82.44216918945312,
-        "r2": 0.9489924337542524,
-        "dynamic_energy_loss": 0.009783796966075897,
-        "dynamic_residual_rms_mwth": 49.456539154052734,
-        "xenon_loss": 0.00012418010737746954,
-        "total_loss": 0.07960201799869537
+        "rmse": 413.27276101867636,
+        "mae": 139.53819274902344,
+        "r2": 0.804070702646148,
+        "data_loss": 0.18911996483802795,
+        "dynamic_energy_loss": 0.017011597752571106,
+        "dynamic_residual_rms_mwth": 65.2142562866211,
+        "xenon_loss": 0.0001235250529134646,
+        "radiolysis_margin": 0.0,
+        "total_loss": 0.20614391565322876
       },
       "Loss of Coolant Accident (LOCA)": {
-        "rmse": 279.3592976571569,
-        "mae": 122.77213287353516,
-        "r2": 0.9210445867519729,
-        "dynamic_energy_loss": 0.009655099362134933,
-        "dynamic_residual_rms_mwth": 49.13018035888672,
-        "xenon_loss": 0.001699314103461802,
-        "total_loss": 0.2399863302707672
+        "rmse": 465.47197149774763,
+        "mae": 182.58848571777344,
+        "r2": 0.7543589194315503,
+        "data_loss": 0.3646076023578644,
+        "dynamic_energy_loss": 0.008351719006896019,
+        "dynamic_residual_rms_mwth": 45.69386672973633,
+        "xenon_loss": 0.001565611339174211,
+        "radiolysis_margin": 2.174994707107544,
+        "total_loss": 0.3731158673763275
       },
       "Reactivity-Initiated Excursion (RIA / PHWR Zone Tilt)": {
-        "rmse": 282.7622538237733,
-        "mae": 124.11437225341797,
-        "r2": 0.919466482998257,
-        "dynamic_energy_loss": 0.014024023897945881,
-        "dynamic_residual_rms_mwth": 59.2115364074707,
-        "xenon_loss": 0.001277988194487989,
-        "total_loss": 0.24032628536224365
+        "rmse": 465.3927944489472,
+        "mae": 183.88372802734375,
+        "r2": 0.7556661310690487,
+        "data_loss": 0.35476604104042053,
+        "dynamic_energy_loss": 0.006556098815053701,
+        "dynamic_residual_rms_mwth": 40.484867095947266,
+        "xenon_loss": 0.0010914639569818974,
+        "radiolysis_margin": 0.0,
+        "total_loss": 0.3614312708377838
       },
       "Steam Generator Tube Rupture (SGTR) / Feeder Break": {
-        "rmse": 262.46144062033187,
-        "mae": 105.79840087890625,
-        "r2": 0.9300750490155618,
-        "dynamic_energy_loss": 0.011431025341153145,
-        "dynamic_residual_rms_mwth": 53.457984924316406,
-        "xenon_loss": 0.0008530141203664243,
-        "total_loss": 0.1859796792268753
+        "rmse": 447.5552863892907,
+        "mae": 165.097412109375,
+        "r2": 0.7719766577276377,
+        "data_loss": 0.3158751130104065,
+        "dynamic_energy_loss": 0.01034584455192089,
+        "dynamic_residual_rms_mwth": 50.857261657714844,
+        "xenon_loss": 0.000822404632344842,
+        "radiolysis_margin": 0.0,
+        "total_loss": 0.3263032138347626
       },
       "Station Blackout (SBO) & Natural Circulation": {
-        "rmse": 143.8690607483937,
-        "mae": 56.048030853271484,
-        "r2": 0.8819780569232419,
-        "dynamic_energy_loss": 0.004835505038499832,
-        "dynamic_residual_rms_mwth": 34.768898010253906,
-        "xenon_loss": 0.0018341814866289496,
-        "total_loss": 0.09284868836402893
+        "rmse": 208.10345233801385,
+        "mae": 85.46670532226562,
+        "r2": 0.7233249082694568,
+        "data_loss": 0.2977316379547119,
+        "dynamic_energy_loss": 0.012458712793886662,
+        "dynamic_residual_rms_mwth": 55.80929946899414,
+        "xenon_loss": 0.0020907914731651545,
+        "radiolysis_margin": 0.0,
+        "total_loss": 0.31039944291114807
       }
     },
     "true_ablation": {
@@ -122,37 +149,93 @@
         "ai_ci95_s": 0.0,
         "ai_min_lead_s": 0.0,
         "roc_mean_lead_s": 1.25,
-        "cusum_mean_lead_s": 2.4
+        "cusum_mean_lead_s": 2.53
       },
       "Reactivity-Initiated Excursion (RIA / PHWR Zone Tilt)": {
         "ai_mean_lead_s": 0.0,
         "ai_ci95_s": 0.0,
         "ai_min_lead_s": 0.0,
-        "roc_mean_lead_s": 0.83,
-        "cusum_mean_lead_s": 2.85
+        "roc_mean_lead_s": 0.82,
+        "cusum_mean_lead_s": 2.98
       },
       "Steam Generator Tube Rupture (SGTR) / Feeder Break": {
         "ai_mean_lead_s": 0.0,
         "ai_ci95_s": 0.0,
         "ai_min_lead_s": 0.0,
-        "roc_mean_lead_s": 3.32,
-        "cusum_mean_lead_s": 4.72
+        "roc_mean_lead_s": 2.9,
+        "cusum_mean_lead_s": 4.92
       },
       "Station Blackout (SBO) & Natural Circulation": {
-        "ai_mean_lead_s": 13.89,
-        "ai_ci95_s": 0.10697722374412229,
-        "ai_min_lead_s": 13.0,
-        "roc_mean_lead_s": 15.76,
-        "cusum_mean_lead_s": 16.61
+        "ai_mean_lead_s": 24.18,
+        "ai_ci95_s": 0.9198979734731454,
+        "ai_min_lead_s": 17.0,
+        "roc_mean_lead_s": 33.47,
+        "cusum_mean_lead_s": 34.85
+      }
+    },
+    "onset_early_detection": {
+      "t_5.0s": {
+        "horizon_s": 5.0,
+        "loca_acc": 0.0,
+        "ria_acc": 0.0,
+        "sgtr_acc": 0.0,
+        "sbo_acc": 0.0,
+        "overall_acc": 0.0,
+        "mean_confidence": 94.53007727861404
+      },
+      "t_10.0s": {
+        "horizon_s": 10.0,
+        "loca_acc": 0.0,
+        "ria_acc": 0.0,
+        "sgtr_acc": 0.0,
+        "sbo_acc": 73.0,
+        "overall_acc": 18.25,
+        "mean_confidence": 80.32932803034782
+      },
+      "t_15.0s": {
+        "horizon_s": 15.0,
+        "loca_acc": 0.0,
+        "ria_acc": 0.0,
+        "sgtr_acc": 0.0,
+        "sbo_acc": 100.0,
+        "overall_acc": 25.0,
+        "mean_confidence": 99.13336634635925
+      },
+      "t_25.0s": {
+        "horizon_s": 25.0,
+        "loca_acc": 100.0,
+        "ria_acc": 0.0,
+        "sgtr_acc": 0.0,
+        "sbo_acc": 100.0,
+        "overall_acc": 50.0,
+        "mean_confidence": 91.87517613172531
+      },
+      "t_35.0s": {
+        "horizon_s": 35.0,
+        "loca_acc": 100.0,
+        "ria_acc": 100.0,
+        "sgtr_acc": 0.0,
+        "sbo_acc": 100.0,
+        "overall_acc": 75.0,
+        "mean_confidence": 94.67368274927139
+      },
+      "t_45.0s": {
+        "horizon_s": 45.0,
+        "loca_acc": 100.0,
+        "ria_acc": 100.0,
+        "sgtr_acc": 100.0,
+        "sbo_acc": 100.0,
+        "overall_acc": 100.0,
+        "mean_confidence": 99.17016327381134
       }
     },
     "false_alarm_rate": {
-      "simulated_hours": 30.0,
-      "evaluated_windows": 2400,
+      "simulated_hours": 300.0,
+      "evaluated_windows": 24000,
       "observed_false_alarms": 0,
       "empirical_rate_per_hour": 0.0,
-      "upper_95_bound_per_hour": 0.1,
-      "upper_95_bound_per_100h": 10.0
+      "upper_95_bound_per_hour": 0.01,
+      "upper_95_bound_per_100h": 1.0
     },
     "multiseed_evaluation": {
       "seeds": [
@@ -213,81 +296,110 @@
       "saliency_ranks": [
         {
           "rank": 1,
-          "channel": "Core Power (MWth)",
-          "weight": 0.004322029184550047
+          "channel": "Neutron Flux (x10^13)",
+          "weight": 0.004538968671113253
         },
         {
           "rank": 2,
-          "channel": "Control Rod Height (%)",
-          "weight": 0.003003665478900075
+          "channel": "Radiation (mSv/h)",
+          "weight": 0.0042214542627334595
         },
         {
           "rank": 3,
-          "channel": "Containment Pressure (kPa)",
-          "weight": 0.0020790768321603537
+          "channel": "Control Rod Height (%)",
+          "weight": 0.0033261922653764486
         },
         {
           "rank": 4,
-          "channel": "Neutron Flux (x10^13)",
-          "weight": 0.0019897902384400368
+          "channel": "Containment Pressure (kPa)",
+          "weight": 0.0032231020741164684
         },
         {
           "rank": 5,
-          "channel": "Radiation (mSv/h)",
-          "weight": 0.0016304167220368981
+          "channel": "Steam Flow (kg/s)",
+          "weight": 0.003193264128640294
         },
         {
           "rank": 6,
-          "channel": "Steam Flow (kg/s)",
-          "weight": 0.0015707891434431076
+          "channel": "Core Power (MWth)",
+          "weight": 0.0026076852809637785
         }
       ],
       "deletion_curves": {
         "k_1": {
           "k": 1,
-          "top_k_acc": 35.999998450279236,
-          "top_k_drop": 64.00000154972076,
-          "random_k_acc": 98.10000002384186,
-          "random_k_drop": 1.899999976158142
+          "top_k_acc": 100.0,
+          "top_k_drop": 0.0,
+          "random_k_acc": 98.89999985694885,
+          "random_k_drop": 1.1000001430511475
         },
         "k_2": {
           "k": 2,
-          "top_k_acc": 35.999998450279236,
-          "top_k_drop": 64.00000154972076,
-          "random_k_acc": 91.69999986886978,
-          "random_k_drop": 8.300000131130219
+          "top_k_acc": 100.0,
+          "top_k_drop": 0.0,
+          "random_k_acc": 96.09999895095825,
+          "random_k_drop": 3.900001049041748
         },
         "k_3": {
           "k": 3,
-          "top_k_acc": 15.999999642372131,
-          "top_k_drop": 84.00000035762787,
-          "random_k_acc": 89.79999989271164,
-          "random_k_drop": 10.20000010728836
+          "top_k_acc": 100.0,
+          "top_k_drop": 0.0,
+          "random_k_acc": 95.39999961853027,
+          "random_k_drop": 4.600000381469727
         },
         "k_5": {
           "k": 5,
-          "top_k_acc": 15.999999642372131,
-          "top_k_drop": 84.00000035762787,
-          "random_k_acc": 76.89999967813492,
-          "random_k_drop": 23.100000321865082
+          "top_k_acc": 64.99999761581421,
+          "top_k_drop": 35.00000238418579,
+          "random_k_acc": 81.79999947547913,
+          "random_k_drop": 18.200000524520874
+        }
+      },
+      "channel_dropout_robustness": {
+        "missing_0_channels": {
+          "missing_channels": 0,
+          "accuracy": 100.0,
+          "degradation": 0.0
+        },
+        "missing_1_channels": {
+          "missing_channels": 1,
+          "accuracy": 100.0,
+          "degradation": 0.0
+        },
+        "missing_2_channels": {
+          "missing_channels": 2,
+          "accuracy": 94.79999959468842,
+          "degradation": 5.2000004053115845
+        },
+        "missing_3_channels": {
+          "missing_channels": 3,
+          "accuracy": 92.99999952316284,
+          "degradation": 7.000000476837158
+        },
+        "missing_4_channels": {
+          "missing_channels": 4,
+          "accuracy": 95.39999961853027,
+          "degradation": 4.600000381469727
         }
       }
     },
     "analytical_physics": {
+      "matrix_exp_max_diff_vs_scipy": 3.3306690738754696e-16,
+      "inhour_analytic_root_s1": 0.006238579982891679,
+      "matrix_a_dominant_eigenvalue_s1": 0.006238580041439056,
+      "inhour_eigenvalue_error_pct": 9.384728123466449e-07,
       "prompt_jump_analytic": 1.1818181818181819,
-      "prompt_jump_numerical": 1.1837859153747559,
-      "prompt_jump_error_pct": 0.1665051281452179,
-      "precursor_lifetime_s": 13.043556213378906,
-      "stable_period_50pcm_s": 169.56622314453125
+      "prompt_jump_numerical": 1.1249558925628662,
+      "prompt_jump_error_pct": 4.811420440673828
     },
     "latency_harness": {
       "iterations": 10000,
-      "p50_us": 212.64999999999998,
-      "p90_us": 495.51000000000005,
-      "p99_us": 761.0090000000002,
-      "mean_us": 267.42097,
-      "std_us": 171.45902719092715,
-      "throughput_fps": 3739.4225292055444
+      "p50_us": 98.4,
+      "p90_us": 111.9,
+      "p99_us": 291.31100000000026,
+      "mean_us": 105.10467,
+      "std_us": 47.59447790648722,
+      "throughput_fps": 9514.325100873253
     },
     "scada_frame": {
       "total_bytes": 88,

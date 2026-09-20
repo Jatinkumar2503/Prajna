@@ -17,27 +17,31 @@ import torch.nn as nn
 # -----------------------------------------------------------------------------
 # 1. PHYSICAL CONSTANTS & REFERENCE PLANT PARAMETERS (PHWR-like 220 MWe / 756 MWth)
 # -----------------------------------------------------------------------------
-P_NOMINAL_MWTH = 756.0              # Nominal thermal power (MWth)
-FLOW_NOMINAL_KG_S = 3700.0          # Total core primary coolant flow (kg/s)
+P_NOMINAL_MWTH = 756.0              # Nominal core thermal power to coolant (MWth)
+FISSION_POWER_NOMINAL_MW = 802.0    # Total fission power (MW) for neutron flux normalization
+FLOW_NOMINAL_KG_S = 3500.0          # Core primary coolant flow (kg/s, derived from 756 MW / (4.863 * 44.4))
 T_IN_NOMINAL_C = 249.0              # Reactor Inlet Header temperature (°C)
-T_OUT_NOMINAL_C = 293.0             # Reactor Outlet Header temperature (°C)
-DELTA_T_NOMINAL_K = 44.0            # Core temperature rise (K)
+T_OUT_NOMINAL_C = 293.4             # Reactor Outlet Header temperature (°C)
+DELTA_T_NOMINAL_K = 44.4            # Core temperature rise (K)
 
-# True heavy water (D2O at 271°C, 8.7 MPa) specific heat derived from P = m_dot * Cp * delta_T:
-# 756 MWth / (3700 kg/s * 44 K * 1e-3 MW/kW) = 4.6437346 kJ/(kg * K)
-CP_COOLANT = 4.6437346              # kJ/(kg * K)
-CP_FUEL = 0.315                     # UO2 specific heat kJ/(kg * K)
+# True heavy water (D2O at 8.5 MPa, 249.0 -> 293.4°C) specific heat from IAPWS / CoolProp:
+CP_COOLANT = 4.863                  # kJ/(kg * K)
+CP_FUEL = 0.280                     # UO2 fuel specific heat kJ/(kg * K)
 
-M_FUEL = 52000.0                    # Fuel inventory mass (kg)
+M_FUEL = 58500.0                    # Fuel inventory mass (kg)
 M_CORE_COOLANT = 12500.0            # Core channels coolant mass (kg)
 M_SG_COOLANT = 25000.0              # Steam generator coolant mass (kg)
 
 T_FUEL_NOMINAL_C = 580.0            # Mean fuel pellet temperature (°C)
-T_BAR_C_NOMINAL = (T_OUT_NOMINAL_C + T_IN_NOMINAL_C) / 2.0  # 271.0 °C
-U_FC_A = P_NOMINAL_MWTH / (T_FUEL_NOMINAL_C - T_BAR_C_NOMINAL)  # MW/K (~2.4466 MW/K)
+T_BAR_C_NOMINAL = (T_OUT_NOMINAL_C + T_IN_NOMINAL_C) / 2.0  # 271.2 °C
+U_FC_A = P_NOMINAL_MWTH / (T_FUEL_NOMINAL_C - T_BAR_C_NOMINAL)  # MW/K (~2.448 MW/K)
 
-T_SEC_NOMINAL_C = 185.0             # Secondary steam saturation temperature (°C)
-U_SG_A = P_NOMINAL_MWTH / (T_BAR_C_NOMINAL - T_SEC_NOMINAL_C)   # MW/K (~8.7907 MW/K)
+# Secondary heat sink under PHWR variable boiler-pressure programme:
+# Secondary Tsat = 245.0 °C (Psat ≈ 3.65 MPa), pinch point Delta-T = 249.0 - 245.0 = 4.0 K > 0 (SG effectiveness < 1.0)
+T_SEC_NOMINAL_C = 245.0             # Secondary steam saturation temperature (°C)
+T_BAR_SG_NOMINAL = (T_OUT_NOMINAL_C + T_IN_NOMINAL_C) / 2.0  # 271.2 °C
+U_SG_A = P_NOMINAL_MWTH / (T_BAR_SG_NOMINAL - T_SEC_NOMINAL_C)  # MW/K (~28.85 MW/K)
+STEAM_FLOW_NOMINAL_KG_S = 364.0     # Nominal steam flow (kg/s, h_fg ≈ 2075 kJ/kg)
 
 # 7-Group Delayed Neutron & Photoneutron Parameters (Heavy Water Lattice)
 # Keepin 6 groups + 1 effective photoneutron group
@@ -56,6 +60,7 @@ class PhysicalPHWRSimulator:
     """
     Closed-loop physical ODE simulator for transient safety analysis.
     Maintains continuous dynamic conservation of mass, momentum, and energy.
+    Reference Plant: 220 MWe / 756 MWth PHWR-like surrogate.
     """
     def __init__(self, device: torch.device = torch.device("cpu")):
         self.device = device
@@ -64,7 +69,7 @@ class PhysicalPHWRSimulator:
         self.beta_total = BETA_TOTAL
         self.lambda_prompt = PROMPT_NEUTRON_LIFETIME
         
-    def build_kinetics_matrix(self, rho: torch.Tensor) -> torch.Tensor:
+    def build_kinetics_matrix(self, rho: torch.Tensor, dtype: torch.dtype = torch.float32) -> torch.Tensor:
         """
         Constructs the 8x8 point kinetics transition matrix A(rho).
         rho: [Batch, 1] or scalar
@@ -73,17 +78,21 @@ class PhysicalPHWRSimulator:
         batch_size = rho.shape[0] if rho.dim() > 0 else 1
         rho = rho.view(batch_size, 1)
         
-        A = torch.zeros(batch_size, 8, 8, device=self.device, dtype=torch.float32)
+        A = torch.zeros(batch_size, 8, 8, device=self.device, dtype=dtype)
+        beta_i = self.beta_i.to(dtype=dtype)
+        lambda_i = self.lambda_i.to(dtype=dtype)
+        beta_tot = float(self.beta_total)
+        lambda_p = float(self.lambda_prompt)
         
         # Row 0: dn/dt = [(rho - beta)/Lambda] * n + sum(lambda_i * C_i)
-        A[:, 0, 0] = (rho[:, 0] - self.beta_total) / self.lambda_prompt
+        A[:, 0, 0] = (rho[:, 0] - beta_tot) / lambda_p
         for i in range(7):
-            A[:, 0, i + 1] = self.lambda_i[i]
+            A[:, 0, i + 1] = lambda_i[i]
             
         # Rows 1..7: dC_i/dt = (beta_i / Lambda) * n - lambda_i * C_i
         for i in range(7):
-            A[:, i + 1, 0] = self.beta_i[i] / self.lambda_prompt
-            A[:, i + 1, i + 1] = -self.lambda_i[i]
+            A[:, i + 1, 0] = beta_i[i] / lambda_p
+            A[:, i + 1, i + 1] = -lambda_i[i]
             
         return A
 
@@ -103,12 +112,12 @@ class PhysicalPHWRSimulator:
         t_out = T_OUT_NOMINAL_C * ones
         t_in = T_IN_NOMINAL_C * ones
         flow = FLOW_NOMINAL_KG_S * ones
-        p_prim = 87.0 * ones                # bar (8.7 MPa)
+        p_prim = 85.0 * ones                # bar (8.5 MPa, 87 kg/cm²)
         pzr = 50.0 * ones                  # %
         m_prim = 45000.0 * ones            # kg
         p_cont = 101.325 * ones            # kPa
         rad = 0.40 * ones                  # mSv/h
-        t_sec = T_SEC_NOMINAL_C * ones     # °C
+        t_sec = T_SEC_NOMINAL_C * ones     # °C (245.0 °C)
         rod = 65.0 * ones                  # %
         void_frac = 0.0 * ones             # %
         
@@ -154,11 +163,14 @@ class PhysicalPHWRSimulator:
         traj_power = []    # [Batch, Steps, 1] thermal power (MWth)
         traj_q_flow = []   # [Batch, Steps, 1] m_dot * Cp * delta_T (MWth)
         traj_dt_out = []   # [Batch, Steps, 1] dT_out/dt numerical derivative
+        traj_t_fuel = []   # [Batch, Steps, 1] fuel temperature (°C)
+        traj_t_out = []    # [Batch, Steps, 1] core outlet temperature (°C)
+        traj_t_in = []     # [Batch, Steps, 1] core inlet temperature (°C)
         
         # Fuel & Coolant heat capacities in MW*s / K (MJ / K)
         c_fuel_mj = (M_FUEL * CP_FUEL) * 1e-3             # ~16.38 MJ/K
-        c_cool_mj = (M_CORE_COOLANT * CP_COOLANT) * 1e-3   # ~58.05 MJ/K
-        c_sg_mj = (M_SG_COOLANT * CP_COOLANT) * 1e-3       # ~116.09 MJ/K
+        c_cool_mj = (M_CORE_COOLANT * CP_COOLANT) * 1e-3   # ~60.79 MJ/K
+        c_sg_mj = (M_SG_COOLANT * CP_COOLANT) * 1e-3       # ~121.58 MJ/K
         
         for step in range(steps):
             t_curr = step * dt
@@ -249,42 +261,17 @@ class PhysicalPHWRSimulator:
             else:
                 p_total = p_fission
                 
-            # 5. Two-Node Core Thermal Hydraulics Integration (Explicit Sub-stepping for Stability)
-            # Fuel Node: M_f * C_f * dT_f/dt = P(t) - U_fc*A*(T_f - T_bar_c)
+            # 5. Core Thermal Hydraulics Evaluation at t_curr
             q_fuel_to_coolant = U_FC_A * (state["t_fuel"] - t_bar_c)
-            dt_fuel = (p_total - q_fuel_to_coolant) / c_fuel_mj
-            state["t_fuel"] = state["t_fuel"] + dt_fuel * dt
-            
-            # Core Coolant Node: M_c * C_c * dT_out/dt = q_fuel_to_coolant - m_dot * Cp * (T_out - T_in)
             q_flow = state["flow"] * CP_COOLANT * (state["t_out"] - state["t_in"]) * 1e-3  # in MWth
-            dt_out = (q_fuel_to_coolant - q_flow) / c_cool_mj
-            state["t_out"] = state["t_out"] + dt_out * dt
-            
-            # Steam Generator (Heat Sink) Node: M_sg * C_c * dT_in/dt = q_flow - U_sg*A*(T_bar_sg - T_sec)
             t_bar_sg = (state["t_out"] + state["t_in"]) / 2.0
             q_sg_sink = U_SG_A * (t_bar_sg - state["t_sec"])
-            dt_in = (q_flow - q_sg_sink) / c_sg_mj
-            state["t_in"] = state["t_in"] + dt_in * dt
+            steam_flow = torch.clamp((q_sg_sink * 1e3) / 2075.0, min=15.0)  # h_fg ~ 2075 kJ/kg
             
             # Pressurizer Level Tracking
             state["pzr"] = torch.clamp(50.0 + (state["t_out"] - T_OUT_NOMINAL_C) * 0.85, min=5.0, max=98.0)
             
-            # Steam Flow derived from secondary heat balance
-            steam_flow = torch.clamp((q_sg_sink * 1e3) / 2100.0, min=15.0)  # h_fg ~ 2100 kJ/kg
-            
-            # 6. Map State Vector to the 12 SCADA Telemetry Channels
-            # Ch 0: Core Exit Temp (°C)
-            # Ch 1: Coolant Flow (kg/s)
-            # Ch 2: Neutron Flux (x10^13)
-            # Ch 3: Radiation (mSv/h)
-            # Ch 4: Primary Pressure (bar)
-            # Ch 5: Core Power (MWth)
-            # Ch 6: Control Rod Position (%)
-            # Ch 7: Pressurizer Level (%)
-            # Ch 8: Feedwater / Secondary Temp (°C)
-            # Ch 9: Steam Flow (kg/s)
-            # Ch 10: Core Inlet Temp (°C)
-            # Ch 11: Containment Pressure (kPa)
+            # 6. Record State Vector and SCADA Telemetry at t_curr (Exactly Synchronized)
             flux_meas = state["n"] * 2.25
             obs_step = torch.cat([
                 state["t_out"],      # 0
@@ -304,6 +291,18 @@ class PhysicalPHWRSimulator:
             traj_obs.append(obs_step)
             traj_power.append(p_total)
             traj_q_flow.append(q_flow)
+            traj_t_fuel.append(state["t_fuel"].clone())
+            traj_t_out.append(state["t_out"].clone())
+            traj_t_in.append(state["t_in"].clone())
+            
+            # 7. Advance Thermal State from t_curr to t_curr + dt
+            dt_fuel = (p_total - q_fuel_to_coolant) / c_fuel_mj
+            dt_out = (q_fuel_to_coolant - q_flow) / c_cool_mj
+            dt_in = (q_flow - q_sg_sink) / c_sg_mj
+            
+            state["t_fuel"] = state["t_fuel"] + dt_fuel * dt
+            state["t_out"] = state["t_out"] + dt_out * dt
+            state["t_in"] = state["t_in"] + dt_in * dt
             traj_dt_out.append(dt_out)
             
         return {
@@ -311,5 +310,97 @@ class PhysicalPHWRSimulator:
             "power": torch.stack(traj_power, dim=1),        # [Batch, Steps, 1]
             "q_flow": torch.stack(traj_q_flow, dim=1),      # [Batch, Steps, 1]
             "dt_out": torch.stack(traj_dt_out, dim=1),      # [Batch, Steps, 1]
+            "t_fuel": torch.stack(traj_t_fuel, dim=1),      # [Batch, Steps, 1]
+            "t_out": torch.stack(traj_t_out, dim=1),        # [Batch, Steps, 1]
+            "t_in": torch.stack(traj_t_in, dim=1),          # [Batch, Steps, 1]
             "dt": dt
         }
+
+    def generate_continuous_operational_run(self,
+                                           duration_hours: float = 300.0,
+                                           window_len: int = 45,
+                                           dt: float = 1.0,
+                                           seed: int = 42):
+        """
+        Simulates an uninterrupted, continuous plant operating campaign across hundreds of hours.
+        State is carried over continuously between windows (no resets).
+        Includes:
+        - Operational power maneuvering (±2% load-following swings)
+        - Monotonically accumulating sensor drift (0.05% per hour)
+        - First-order sensor thermowell lag and active instrument noise
+        Yields: (window_obs [1, window_len, 12], elapsed_hours float)
+        """
+        torch.manual_seed(seed)
+        total_seconds = int(duration_hours * 3600.0)
+        total_windows = total_seconds // window_len
+        
+        state = self.get_steady_state(batch_size=1)
+        c_fuel_mj = (M_FUEL * CP_FUEL) * 1e-3
+        c_cool_mj = (M_CORE_COOLANT * CP_COOLANT) * 1e-3
+        c_sg_mj = (M_SG_COOLANT * CP_COOLANT) * 1e-3
+        
+        # Sensor drift direction per channel (-1 or +1)
+        drift_directions = torch.sign(torch.randn(1, 1, 12, device=self.device))
+        drift_directions[drift_directions == 0] = 1.0
+        
+        elapsed_sec = 0.0
+        rho_cached = None
+        M_exp = None
+        
+        for w_idx in range(total_windows):
+            window_steps = []
+            for _ in range(window_len):
+                elapsed_sec += dt
+                elapsed_hours = elapsed_sec / 3600.0
+                
+                # Small operational power maneuver (period ~2 hours, ±2% amplitude)
+                rho_maneuver = 0.00003 * math.sin(2.0 * math.pi * elapsed_sec / 7200.0)
+                rho_total = torch.full((1, 1), rho_maneuver, device=self.device)
+                
+                # Point kinetics step (cache M_exp if delta_rho < 1e-6)
+                if rho_cached is None or abs(rho_maneuver - rho_cached) > 1e-6:
+                    A = self.build_kinetics_matrix(rho_total)
+                    M_exp = torch.linalg.matrix_exp(A * dt)
+                    rho_cached = rho_maneuver
+                kinetics_state = torch.cat([state["n"], state["C"]], dim=-1).unsqueeze(-1)
+                kinetics_next = torch.bmm(M_exp, kinetics_state).squeeze(-1)
+                state["n"] = torch.clamp(kinetics_next[:, 0:1], min=1e-5)
+                state["C"] = torch.clamp(kinetics_next[:, 1:8], min=1e-5)
+                
+                p_total = P_NOMINAL_MWTH * state["n"]
+                t_bar_c = (state["t_out"] + state["t_in"]) / 2.0
+                
+                # Fuel Node
+                q_fuel_to_coolant = U_FC_A * (state["t_fuel"] - t_bar_c)
+                dt_fuel = (p_total - q_fuel_to_coolant) / c_fuel_mj
+                state["t_fuel"] = state["t_fuel"] + dt_fuel * dt
+                
+                # Coolant Node
+                q_flow = state["flow"] * CP_COOLANT * (state["t_out"] - state["t_in"]) * 1e-3
+                dt_out = (q_fuel_to_coolant - q_flow) / c_cool_mj
+                state["t_out"] = state["t_out"] + dt_out * dt
+                
+                # SG Node
+                t_bar_sg = (state["t_out"] + state["t_in"]) / 2.0
+                q_sg_sink = U_SG_A * (t_bar_sg - state["t_sec"])
+                dt_in = (q_flow - q_sg_sink) / c_sg_mj
+                state["t_in"] = state["t_in"] + dt_in * dt
+                
+                # Secondary steam flow
+                steam_flow = torch.clamp((q_sg_sink * 1e3) / 2075.0, min=15.0)
+                state["pzr"] = torch.clamp(50.0 + (state["t_out"] - T_OUT_NOMINAL_C) * 0.85, min=5.0, max=98.0)
+                
+                flux_meas = state["n"] * 2.25
+                obs = torch.cat([
+                    state["t_out"], state["flow"], flux_meas, state["rad"],
+                    state["p_prim"], p_total, state["rod"], state["pzr"],
+                    state["t_sec"], steam_flow, state["t_in"], state["p_cont"]
+                ], dim=-1)
+                
+                # Monotonically accumulating calibration drift (0.05% per hour of reading)
+                drift_frac = 0.0005 * elapsed_hours
+                obs_drifted = obs * (1.0 + drift_directions * drift_frac)
+                window_steps.append(obs_drifted)
+                
+            window_tensor = torch.cat(window_steps, dim=1)  # [1, window_len, 12]
+            yield window_tensor, elapsed_sec / 3600.0
