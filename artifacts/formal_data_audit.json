@@ -1,0 +1,230 @@
+{
+  "timestamp": "2026-09-20T16:39:42.374061+00:00",
+  "datasets": {
+    "nppad": {
+      "total_files": 1217,
+      "total_columns": 97,
+      "columns": [
+        "TIME",
+        "P",
+        "TAVG",
+        "THA",
+        "THB",
+        "TCA",
+        "TCB",
+        "WRCA",
+        "WRCB",
+        "PSGA",
+        "PSGB",
+        "WFWA",
+        "WFWB",
+        "WSTA",
+        "WSTB",
+        "VOL",
+        "LVPZ",
+        "VOID",
+        "WLR",
+        "WUP",
+        "HUP",
+        "HLW",
+        "WHPI",
+        "WECS",
+        "QMWT",
+        "LSGA",
+        "LSGB",
+        "QMGA",
+        "QMGB",
+        "NSGA",
+        "NSGB",
+        "TBLD",
+        "WTRA",
+        "WTRB",
+        "TSAT",
+        "QRHR",
+        "LVCR",
+        "SCMA",
+        "SCMB",
+        "FRCL",
+        "PRB",
+        "PRBA",
+        "TRB",
+        "LWRB",
+        "DNBR",
+        "QFCL",
+        "WBK",
+        "WSPY",
+        "WCSP",
+        "HTR",
+        "MH2",
+        "CNH2",
+        "RHBR",
+        "RHMT",
+        "RHFL",
+        "RHRD",
+        "RH",
+        "PWNT",
+        "PWR",
+        "TFSB",
+        "TFPK",
+        "TF",
+        "TPCT",
+        "WCFT",
+        "WLPI",
+        "WCHG",
+        "RM1",
+        "RM2",
+        "RM3",
+        "RM4",
+        "RC87",
+        "RC131",
+        "STRB",
+        "STSG",
+        "STTB",
+        "RBLK",
+        "SGLK",
+        "DTHY",
+        "DWB",
+        "WRLA",
+        "WRLB",
+        "WLD",
+        "MBK",
+        "EBK",
+        "TKLV",
+        "FRZR",
+        "TDBR",
+        "MDBR",
+        "MCRT",
+        "MGAS",
+        "TCRT",
+        "TSLP",
+        "PPM",
+        "RRCA",
+        "RRCB",
+        "RRCO",
+        "WFLB"
+      ],
+      "mapped_columns_count": 9,
+      "permanently_excluded_count": 14,
+      "mapped_stats": {
+        "P": {
+          "min": 155.47216796875,
+          "max": 155.51170349121094,
+          "mean": 155.510423831282,
+          "target_ch": 4,
+          "validity": "HIGH"
+        },
+        "THA": {
+          "min": 327.8082580566406,
+          "max": 327.823974609375,
+          "mean": 327.81304831669246,
+          "target_ch": 0,
+          "validity": "HIGH"
+        },
+        "TCA": {
+          "min": 292.1496276855469,
+          "max": 292.1760559082031,
+          "mean": 292.1518055356782,
+          "target_ch": 10,
+          "validity": "HIGH"
+        },
+        "WRCA": {
+          "min": 16515.818359375,
+          "max": 16515.818359375,
+          "mean": 16515.818359375,
+          "target_ch": 1,
+          "validity": "MEDIUM"
+        },
+        "PWR": {
+          "min": 100.0,
+          "max": 100.33602905273438,
+          "mean": 100.27470258515457,
+          "target_ch": 2,
+          "validity": "HIGH"
+        },
+        "QMWT": {
+          "min": 2895.0,
+          "max": 2904.72802734375,
+          "mean": 2902.952665763066,
+          "target_ch": 5,
+          "validity": "HIGH"
+        },
+        "RRCO": {
+          "min": 1.0000001192092896,
+          "max": 1.0000001192092896,
+          "mean": 1.0000001192092896,
+          "target_ch": 6,
+          "validity": "MEDIUM"
+        },
+        "PRB": {
+          "min": 1.034000039100647,
+          "max": 1.034000039100647,
+          "mean": 1.034000039100647,
+          "target_ch": 11,
+          "validity": "HIGH"
+        },
+        "WSTA": {
+          "min": 1915.842041015625,
+          "max": 1915.86474609375,
+          "mean": 1915.8467615587958,
+          "target_ch": 9,
+          "validity": "MEDIUM"
+        }
+      },
+      "sampling_dt_sec": 10.0
+    },
+    "pur1": {
+      "total_files": 5,
+      "total_columns": 9,
+      "columns": [
+        "index",
+        "nfd-1-cps",
+        "nfd-1-cr",
+        "rr-active-state",
+        "rr-position",
+        "ss1-active-state",
+        "ss1-position",
+        "ss2-active-state",
+        "ss2-position"
+      ],
+      "total_rows_real_dataset": 200000,
+      "mapped_stats": {
+        "nfd-1-cps": {
+          "min": 0.0,
+          "max": 1.151549953,
+          "mean": 0.22639126187135483,
+          "target_ch": 2,
+          "validity": "HIGH_DYNAMICS_ONLY"
+        },
+        "rr-position": {
+          "min": 0.0,
+          "max": 1.337660308,
+          "mean": 0.6961611760440528,
+          "target_ch": 6,
+          "validity": "HIGH_CONTROL_DYNAMICS"
+        },
+        "ss1-position": {
+          "min": -0.000672073,
+          "max": 1.0,
+          "mean": 0.860868391598968,
+          "target_ch": 6,
+          "validity": "HIGH_SCRAM_DYNAMICS"
+        }
+      },
+      "sampling_dt_sec": 1.0,
+      "prohibited_mappings": [
+        {
+          "target_ch": 0,
+          "reason": "Cannot transfer open pool ambient water temp to 85 bar 293C PHWR fuel exit"
+        },
+        {
+          "target_ch": 4,
+          "reason": "Cannot transfer open pool atmospheric pressure to 85 bar primary circuit"
+        },
+        {
+          "target_ch": 1,
+          "reason": "PUR-1 is natural convection pool; no forced circulation equivalent"
+        }
+      ]
+    }
+  }
+}

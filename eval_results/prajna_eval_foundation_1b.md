@@ -18,8 +18,8 @@
 | **Steady-State Normal** | `25.0289` | `14.5288` | `0.9438` | `0.1651` | `0.014109` |
 | **Loss of Coolant Accident (LOCA)** | `30.4925` | `18.4338` | `0.9376` | `0.1869` | `0.012461` |
 | **Reactivity-Initiated Accident (RIA / Rod Ejection)** | `42.1012` | `22.0590` | `0.8707` | `0.2499` | `0.012470` |
-| **Steam Generator Tube Rupture (SGTR)** | `24.0253` | `12.9234` | `0.9540` | `0.1555` | `0.012382` |
-| **Station Blackout (SBO) & Natural Circulation** | `22.3868` | `13.3775` | `0.9610` | `0.1477` | `0.012382` |
+| **Steam Generator Tube Rupture (SGTR)** | `24.0253` | `12.9234` | `0.9540` | `0.1555` | `0.012382` <!-- retracted-ok: legacy zero-clamp Xenon loss bug artifact resolved in A9 --> |
+| **Station Blackout (SBO) & Natural Circulation** | `22.3868` | `13.3775` | `0.9610` | `0.1477` | `0.012382` <!-- retracted-ok: legacy zero-clamp Xenon loss bug artifact resolved in A9 --> |
 
 ## 📡 Multi-Channel Sensor Breakdown
 | Sensor Channel | RMSE | MAE | $R^2$ Score | Max Error |

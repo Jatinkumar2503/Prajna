@@ -1,0 +1,95 @@
+{
+  "experiment": "Exp02_Cross_Simulator_Diagnosis",
+  "scientific_statement": "Cross-simulator zero-shot transfer evaluated under matched 1.0s sampling and per-unit normalization.",
+  "test_samples": 2684,
+  "seeds_evaluated": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "zero_shot_accuracy_mean": 0.0919,
+  "zero_shot_accuracy_std": 0.0183,
+  "average_confusion_matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      213,
+      0,
+      696,
+      0,
+      0
+    ],
+    [
+      453,
+      0,
+      247,
+      0,
+      0
+    ],
+    [
+      1075,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "per_scenario_metrics": {
+    "Normal": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 0
+    },
+    "LOCA": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 909
+    },
+    "RIA": {
+      "precision": 0.2674,
+      "recall": 0.4457,
+      "f1_score": 0.3342,
+      "support": 700
+    },
+    "SGTR": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 1075
+    },
+    "SBO": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "support": 0
+    }
+  },
+  "root_cause_diagnosis": {
+    "preprocessing_harmonization": {
+      "temporal_resampling": "Linearly resampled native 10s PCTRAN data to 1.0s, eliminating the 10x temporal dilation.",
+      "normalization": "Non-dimensional per-unit (p.u.) coordinate transformation relative to plant nominal references."
+    },
+    "physical_domain_gap": {
+      "LOCA": "PWR large-break LOCAs depressurize a 155 bar vertical vessel with cold-leg accumulator flooding vs PHWR 85 bar horizontal channels.",
+      "SGTR": "PWR inverted U-tube steam generator water level surge vs PHWR horizontal thermosiphoning.",
+      "RIA": "Prompt kinetics slopes are partially transferable (exponential power rise), but Doppler feedback and photoneutron fractions differ substantially."
+    }
+  },
+  "elapsed_sec": 3.49
+}

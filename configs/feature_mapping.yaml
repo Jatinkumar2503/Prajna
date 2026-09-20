@@ -1,0 +1,149 @@
+# PRAJNA VALIDATED FEATURE MAPPING SPECIFICATION
+# Machine-readable schema mapping raw external dataset channels to target physical channels.
+# Version: 1.0.0
+# Audit Reference: docs/variable_mapping.md
+
+target_channels:
+  0:
+    name: "core_exit_temperature"
+    symbol: "T_out"
+    unit: "degC"
+    nominal: 293.4
+  1:
+    name: "primary_coolant_flow"
+    symbol: "m_dot_cool"
+    unit: "kg/s"
+    nominal: 3500.0
+  2:
+    name: "thermal_neutron_flux"
+    symbol: "phi_th"
+    unit: "1e13 n/cm2-s"
+    nominal: 2.25
+  3:
+    name: "containment_radiation"
+    symbol: "R_field"
+    unit: "mSv/h"
+    nominal: 0.40
+  4:
+    name: "primary_system_pressure"
+    symbol: "P_prim"
+    unit: "bar"
+    nominal: 85.0
+  5:
+    name: "core_thermal_power"
+    symbol: "Q_core"
+    unit: "MWth"
+    nominal: 756.0
+  6:
+    name: "control_rod_position"
+    symbol: "Z_rod"
+    unit: "percent"
+    nominal: 65.0
+  7:
+    name: "pressurizer_level"
+    symbol: "L_pzer"
+    unit: "percent"
+    nominal: 50.0
+  8:
+    name: "steam_generator_temperature"
+    symbol: "T_sec"
+    unit: "degC"
+    nominal: 245.0
+  9:
+    name: "main_steam_flow"
+    symbol: "m_dot_steam"
+    unit: "kg/s"
+    nominal: 364.0
+  10:
+    name: "core_inlet_temperature"
+    symbol: "T_in"
+    unit: "degC"
+    nominal: 249.0
+  11:
+    name: "containment_pressure"
+    symbol: "P_cont"
+    unit: "kPa"
+    nominal: 101.325
+
+datasets:
+  nppad_pctran:
+    reactor_type: "PWR"
+    sampling_dt_sec: 10.0
+    allowed_role: "cross_simulator_generalization"
+    validated_mapping:
+      P:
+        target_ch: 4
+        unit_conversion: "auto_psia_to_bar"
+        validity: "HIGH"
+      THA:
+        target_ch: 0
+        unit_conversion: "auto_degF_to_degC"
+        validity: "HIGH"
+      TCA:
+        target_ch: 10
+        unit_conversion: "auto_degF_to_degC"
+        validity: "HIGH"
+      WRCA:
+        target_ch: 1
+        unit_conversion: "scale_flow_by_capacity"
+        validity: "MEDIUM"
+      PWR:
+        target_ch: 2
+        unit_conversion: "percent_to_flux_scale"
+        validity: "HIGH"
+      QMWT:
+        target_ch: 5
+        unit_conversion: "scale_power_to_phwr"
+        validity: "HIGH"
+      RRCO:
+        target_ch: 6
+        unit_conversion: "fraction_to_percent"
+        validity: "MEDIUM"
+      PRB:
+        target_ch: 11
+        unit_conversion: "identity"
+        validity: "HIGH"
+      WSTA:
+        target_ch: 9
+        unit_conversion: "scale_steam_by_capacity"
+        validity: "MEDIUM"
+    permanently_excluded:
+      - "VOL"
+      - "WLR"
+      - "WUP"
+      - "HUP"
+      - "HLW"
+      - "LVCR"
+      - "HTR"
+      - "WCHG"
+      - "WLD"
+      - "DWB"
+      - "PPM"
+      - "MCRT"
+      - "TCRT"
+      - "TDBR"
+
+  pur1_purdue:
+    reactor_type: "Open Pool MTR (1 kW)"
+    sampling_dt_sec: 1.0
+    allowed_role: "real_data_robustness_testing"
+    validated_mapping:
+      nfd-1-cps:
+        target_ch: 2
+        unit_conversion: "counts_to_relative_flux"
+        validity: "HIGH_DYNAMICS_ONLY"
+      rr-position:
+        target_ch: 6
+        unit_conversion: "identity"
+        validity: "HIGH_CONTROL_DYNAMICS"
+      ss1-position:
+        target_ch: 6
+        unit_conversion: "scram_rod_position"
+        validity: "HIGH_SCRAM_DYNAMICS"
+    strictly_prohibited_mappings:
+      - target_ch: 0
+        reason: "Cannot transfer open pool ambient water temp to 85 bar 293C PHWR fuel exit"
+      - target_ch: 4
+        reason: "Cannot transfer open pool atmospheric pressure to 85 bar primary circuit"
+      - target_ch: 1
+        reason: "PUR-1 is natural convection pool; no forced circulation equivalent"

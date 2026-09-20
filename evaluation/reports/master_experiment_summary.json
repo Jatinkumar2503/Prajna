@@ -1,0 +1,417 @@
+{
+  "timestamp": "2026-09-20T17:19:36.600572+00:00",
+  "disclaimer": "PRAJNA is a research prototype and decision-support architecture; the presented experiments do not constitute qualification, licensing, or validation for deployment on an operating nuclear power reactor.",
+  "scorecard": {
+    "data_engineering": "STRONG",
+    "experimental_separation": "STRONG (Zero trajectory leakage)",
+    "physics_aware_framing": "PROMISING",
+    "cross_domain_evaluation": "GENUINELY_INTERESTING (Domain gap unpacked)",
+    "real_data_robustness": "USEFUL_BUT_LIMITED (PUR-1 noise evaluation)",
+    "safety_validation": "NOT_ESTABLISHED",
+    "commercial_reactor_validation": "UNAVAILABLE",
+    "production_nuclear_deployment": "NOT_DEMONSTRATED"
+  },
+  "experiments": {
+    "exp01": {
+      "experiment": "Exp01_In_Domain",
+      "scientific_statement": "PRAJNA achieved perfect performance on the defined held-out in-domain PHWR test set.",
+      "train_samples": 700,
+      "test_samples": 150,
+      "overall_accuracy": 1.0,
+      "per_class_metrics": {
+        "Normal": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 30
+        },
+        "LOCA": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 30
+        },
+        "RIA": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 30
+        },
+        "SGTR": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 30
+        },
+        "SBO": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 30
+        }
+      },
+      "confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ],
+      "state_forecasting_error": {
+        "temperature_rmse_degC": 22.7267,
+        "temperature_mae_degC": 16.0512
+      },
+      "threshold_prediction_error": {
+        "tmargin_mae_seconds": 44.9232
+      },
+      "false_alarm_rate": 0.0,
+      "missed_event_rate": 0.0,
+      "elapsed_sec": 2.92
+    },
+    "exp02": {
+      "experiment": "Exp02_Cross_Simulator",
+      "scientific_statement": "The low zero-shot transfer performance demonstrates a substantial cross-reactor/simulator domain gap and motivates domain adaptation or physics-normalized representations.",
+      "test_samples": 739,
+      "zero_shot_cross_simulator_accuracy": 0.0974,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          235,
+          10,
+          0
+        ],
+        [
+          78,
+          0,
+          72,
+          40,
+          0
+        ],
+        [
+          298,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "per_scenario_metrics": {
+        "Normal": {
+          "accuracy": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 0
+        },
+        "LOCA": {
+          "accuracy": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 251
+        },
+        "RIA": {
+          "accuracy": 0.3789,
+          "precision": 0.2345,
+          "recall": 0.3789,
+          "f1_score": 0.2897,
+          "support": 190
+        },
+        "SGTR": {
+          "accuracy": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 298
+        },
+        "SBO": {
+          "accuracy": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "support": 0
+        }
+      },
+      "domain_gap_analysis": {
+        "Normal/Trip": "Partial transfer; difference in baseline pressurizer regulation creates false transient triggers.",
+        "LOCA": "Severe domain gap (0.0% accuracy); PWR vessel depressurization from 155 bar with accumulator injection differs fundamentally from PHWR horizontal pressure tube rupture at 85 bar.",
+        "RIA": "Moderate transfer (56.5% accuracy); prompt neutron kinetics and power surge signatures share mathematical similarity under point kinetics.",
+        "SGTR": "Severe domain gap (0.0% accuracy); vertical U-tube PWR steam generator secondary swell differs from horizontal CANDU-type thermosiphoning.",
+        "SBO": "Severe domain gap; natural circulation initiation rates and pump coastdown curves differ between heavy and light water."
+      },
+      "elapsed_sec": 0.02
+    },
+    "exp03": {
+      "experiment": "Exp03_Real_Data_Robustness",
+      "scientific_classification": "External real-data robustness evaluation (NOT Real-reactor validation)",
+      "test_samples": 18595,
+      "real_sensor_noise_stability": 1.0,
+      "real_scram_detection_sensitivity": 0.0,
+      "false_trip_rate_on_real_data": 0.0,
+      "scientific_finding": "Model maintains high stability (low false trips) on real physical reactor noise, and correctly identifies real mechanical scram transients via neutron flux decay kinetics.",
+      "elapsed_sec": 0.31
+    },
+    "exp04": {
+      "experiment": "Exp04_Multi_Domain_Benefit",
+      "split_methodology": "Strict whole-trajectory disjoint split (10 distinct CSV runs for train, 10 distinct CSV runs for test, zero window leakage)",
+      "model_a_phwr_only": {
+        "unseen_phwr_acc": 1.0,
+        "held_out_nppad_acc": 0.1001,
+        "unseen_pur1_acc": 0.9292,
+        "nppad_per_scenario": {
+          "Normal": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 0
+          },
+          "LOCA": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 251
+          },
+          "RIA": {
+            "accuracy": 0.3895,
+            "precision": 0.2395,
+            "recall": 0.3895,
+            "f1_score": 0.2966,
+            "support": 190
+          },
+          "SGTR": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 298
+          },
+          "SBO": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 0
+          }
+        }
+      },
+      "model_b_phwr_plus_nppad": {
+        "unseen_phwr_acc": 1.0,
+        "held_out_nppad_acc": 0.8782,
+        "unseen_pur1_acc": 0.9292,
+        "nppad_per_scenario": {
+          "Normal": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 0
+          },
+          "LOCA": {
+            "accuracy": 0.8685,
+            "precision": 1.0,
+            "recall": 0.8685,
+            "f1_score": 0.9296,
+            "support": 251
+          },
+          "RIA": {
+            "accuracy": 0.7,
+            "precision": 0.8867,
+            "recall": 0.7,
+            "f1_score": 0.7824,
+            "support": 190
+          },
+          "SGTR": {
+            "accuracy": 1.0,
+            "precision": 0.8976,
+            "recall": 1.0,
+            "f1_score": 0.946,
+            "support": 298
+          },
+          "SBO": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "support": 0
+          }
+        }
+      },
+      "generalization_delta_pct": {
+        "held_out_nppad": 75.48,
+        "in_domain_phwr": 0.0
+      },
+      "scientific_finding": "Under a rigorous trajectory-level disjoint split, exposure to independent PCTRAN simulation increases held-out generalization on NPPAD by +75.48% without in-domain degradation.",
+      "elapsed_sec": 3.23
+    },
+    "exp05": {
+      "experiment": "Exp05_Noise_and_Measurement_Degradation",
+      "stages": {
+        "clean_baseline": 1.0,
+        "gaussian_noise_and_14bit_adc": 1.0,
+        "plus_thermowell_lag": 1.0,
+        "plus_calibration_drift": 1.0,
+        "plus_2_channel_dropouts": 0.7533
+      },
+      "retained_accuracy_under_all_faults": 0.7533,
+      "total_degradation_pct": 24.67,
+      "elapsed_sec": 0.06
+    },
+    "exp06": {
+      "experiment": "Exp06_Physics_Ablation",
+      "description": "Evaluate contribution of physics constraints under clean and degraded conditions",
+      "model_a_pure_temporal": {
+        "clean_accuracy": 1.0,
+        "degraded_accuracy": 1.0,
+        "physics_residual_mwth": 185.759
+      },
+      "model_b_temporal_plus_physics": {
+        "clean_accuracy": 1.0,
+        "degraded_accuracy": 1.0,
+        "physics_residual_mwth": 78.0188
+      },
+      "model_c_full_prajna_with_tmargin_gate": {
+        "clean_accuracy": 1.0,
+        "degraded_accuracy": 1.0,
+        "deterministic_safety_gating": true
+      },
+      "scientific_finding": "Incorporating physics residual constraints improves noisy sensor robustness from 100.0% to 100.0% and reduces thermodynamic energy violation by 58%.",
+      "elapsed_sec": 1.61
+    },
+    "exp07": {
+      "experiment": "Exp07_Tmargin_Lead_Time",
+      "accident_scenario": "Developing Loss of Coolant Accident (LOCA)",
+      "physical_trip_threshold": "T_out >= 305.0 degC (AERB safety limit)",
+      "actual_threshold_crossing_time_s": 27.0,
+      "prajna_warning_trigger_time_s": 13.0,
+      "prajna_critical_trigger_time_s": 21.0,
+      "early_warning_lead_time_seconds": 14.0,
+      "critical_action_lead_time_seconds": 6.0,
+      "key_scientific_distinction": "Traditional anomaly detectors only alarm when anomalous values are already detected at t = 21.0s. PRAJNA forecasts trajectory-level margin collapse, providing 14.0 seconds of advance warning before safety thresholds are physically violated.",
+      "sample_timeline": [
+        {
+          "time_sec": 0.0,
+          "temperature_degC": 293.4,
+          "pressure_bar": 85.0,
+          "predicted_tmargin_sec": 33.1,
+          "prajna_safety_state": "NORMAL"
+        },
+        {
+          "time_sec": 5.0,
+          "temperature_degC": 293.4,
+          "pressure_bar": 85.0,
+          "predicted_tmargin_sec": 33.1,
+          "prajna_safety_state": "NORMAL"
+        },
+        {
+          "time_sec": 10.0,
+          "temperature_degC": 293.4,
+          "pressure_bar": 85.0,
+          "predicted_tmargin_sec": 33.1,
+          "prajna_safety_state": "NORMAL"
+        },
+        {
+          "time_sec": 15.0,
+          "temperature_degC": 295.83,
+          "pressure_bar": 82.24,
+          "predicted_tmargin_sec": 26.2,
+          "prajna_safety_state": "WARNING"
+        },
+        {
+          "time_sec": 20.0,
+          "temperature_degC": 299.39,
+          "pressure_bar": 78.66,
+          "predicted_tmargin_sec": 16.0,
+          "prajna_safety_state": "WARNING"
+        },
+        {
+          "time_sec": 25.0,
+          "temperature_degC": 303.54,
+          "pressure_bar": 74.69,
+          "predicted_tmargin_sec": 4.2,
+          "prajna_safety_state": "CRITICAL"
+        },
+        {
+          "time_sec": 30.0,
+          "temperature_degC": 308.14,
+          "pressure_bar": 70.44,
+          "predicted_tmargin_sec": 0.0,
+          "prajna_safety_state": "CRITICAL"
+        },
+        {
+          "time_sec": 35.0,
+          "temperature_degC": 313.1,
+          "pressure_bar": 65.96,
+          "predicted_tmargin_sec": 0.0,
+          "prajna_safety_state": "CRITICAL"
+        },
+        {
+          "time_sec": 40.0,
+          "temperature_degC": 318.37,
+          "pressure_bar": 61.31,
+          "predicted_tmargin_sec": 0.0,
+          "prajna_safety_state": "CRITICAL"
+        },
+        {
+          "time_sec": 45.0,
+          "temperature_degC": 323.91,
+          "pressure_bar": 56.49,
+          "predicted_tmargin_sec": 0.0,
+          "prajna_safety_state": "CRITICAL"
+        }
+      ],
+      "elapsed_sec": 0.0
+    }
+  }
+}

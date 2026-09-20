@@ -1,0 +1,13 @@
+{
+  "experiment": "Exp05_Noise_and_Measurement_Degradation",
+  "stages": {
+    "clean_baseline": 1.0,
+    "gaussian_noise_and_14bit_adc": 1.0,
+    "plus_thermowell_lag": 1.0,
+    "plus_calibration_drift": 1.0,
+    "plus_2_channel_dropouts": 0.7533
+  },
+  "retained_accuracy_under_all_faults": 0.7533,
+  "total_degradation_pct": 24.67,
+  "elapsed_sec": 0.06
+}

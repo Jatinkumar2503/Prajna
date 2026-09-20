@@ -1,0 +1,20 @@
+{
+  "experiment": "Exp04_Rigorous_Zero_Leakage_Audit",
+  "audit_verification": {
+    "normalization_leakage": "PASSED (Scalers fitted strictly on training partition)",
+    "trajectory_leakage": "PASSED (Disjoint CSV runs, set intersection = 0)",
+    "temporal_leakage": "PASSED (Stride 45s non-overlapping windows)"
+  },
+  "framing_clarification": "Training on NPPAD files 0-9 and testing on held-out NPPAD files 10-19 represents in-domain PCTRAN supervised learning on held-out trajectories of the same simulator.",
+  "model_a_phwr_only": {
+    "held_out_nppad_acc": "9.24% \u00b1 1.78%",
+    "unseen_phwr_acc": "100.00% \u00b1 0.00%"
+  },
+  "model_b_phwr_plus_nppad": {
+    "held_out_nppad_acc": "84.72% \u00b1 7.07%",
+    "unseen_phwr_acc": "100.00% \u00b1 0.00%"
+  },
+  "reconciled_delta_pct": 75.48,
+  "loato_zero_shot_sgtr_anomaly_detection_pct": 100.0,
+  "elapsed_sec": 20.0
+}

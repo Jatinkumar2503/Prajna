@@ -1,0 +1,12 @@
+# Retracted numbers list for PRAJNA
+# Any occurrence of these numbers in active code, docs, or benchmarks is flagged by find_retracted_numbers.py
+# Lines can be suppressed with: # retracted-ok: (reason) or <!-- retracted-ok: (reason) -->
+
+0.012382
+169.57
+185.76
+78.02
+330.3
+138.7
+77.81
+76.59

@@ -1,0 +1,34 @@
+{
+  "experiment": "Exp06_Physics_Constraint_Ablation",
+  "seeds_evaluated": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "definition_of_physics_gated": "Physics-Gated PRAJNA is a hybrid architecture: a learned deep neural network forecaster coupled with a deterministic First-Law thermodynamic validation rule filter (primary heat balance & kinematic projector).",
+  "comparison_matrix": {
+    "Model_A_Conventional_Temporal": {
+      "dynamic_energy_residual_mwth": "187.95 \u00b1 0.00",
+      "tmargin_mae_seconds": "1.53 \u00b1 0.06",
+      "clean_accuracy": "100.00% \u00b1 0.00%",
+      "nuisance_advisory_alerts": 0
+    },
+    "Model_B_Physics_Constrained": {
+      "dynamic_energy_residual_mwth": "78.94 \u00b1 0.00",
+      "tmargin_mae_seconds": "3.49 \u00b1 0.04",
+      "clean_accuracy": "100.00% \u00b1 0.00%",
+      "nuisance_advisory_alerts": 0
+    },
+    "Model_C_Full_PRAJNA_Gated": {
+      "dynamic_energy_residual_mwth": "78.94 \u00b1 0.00",
+      "tmargin_mae_seconds": "1.22 \u00b1 0.01",
+      "clean_accuracy": "100.00% \u00b1 0.00%",
+      "nuisance_advisory_alerts": 0,
+      "advisory_safety_gate": "Deterministic First-Law Kinematic Filter Active"
+    }
+  },
+  "honest_physics_discussion": "Model B reduces dynamic energy violation by ~58% compared to unconstrained temporal networks. However, it retains a non-zero residual (~78 MWth, ~10% of 756 MWth) compared to clean ODE integration (0.011 MWth). This gap reflects finite neural surrogate capacity, multi-objective loss balancing, and discrete time-stepping.",
+  "elapsed_sec": 8.37
+}

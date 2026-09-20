@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-09-20T17:45:30.195684+00:00",
+  "phwr_in_domain": {
+    "train_windows": 700,
+    "val_windows": 150,
+    "test_windows": 150,
+    "split_type": "disjoint_whole_trajectories"
+  },
+  "nppad_cross_simulator": {
+    "train_windows": 2859,
+    "test_windows": 2684,
+    "split_type": "disjoint_whole_csv_files"
+  },
+  "pur1_real_data": {
+    "test_windows": 18595,
+    "role": "external_real_data_robustness"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "timestamp": "2026-09-20T12:02:14.090431+00:00",
-    "git_commit": "7ddbf5a352ccaf284218f91f9b245b0fba34e752",
+    "timestamp": "2026-09-20T18:01:36.729488+00:00",
+    "git_commit": "abb0b598d06a578a326f7bb765f55471f938c655",
     "git_branch": "main",
     "torch_version": "2.13.0+cu126",
     "cuda_available": true,
@@ -45,59 +45,59 @@
     },
     "physics_loss_per_scenario": {
       "Steady-State Normal": {
-        "rmse": 413.27276101867636,
-        "mae": 139.53819274902344,
-        "r2": 0.804070702646148,
-        "data_loss": 0.18911996483802795,
-        "dynamic_energy_loss": 0.017011597752571106,
-        "dynamic_residual_rms_mwth": 65.2142562866211,
-        "xenon_loss": 0.0001235250529134646,
+        "rmse": 413.28546429798376,
+        "mae": 139.5078582763672,
+        "r2": 0.8040563540880625,
+        "data_loss": 0.18911334872245789,
+        "dynamic_energy_loss": 0.017054544761776924,
+        "dynamic_residual_rms_mwth": 65.29652404785156,
+        "xenon_loss": 0.00012357073137536645,
         "radiolysis_margin": 0.0,
-        "total_loss": 0.20614391565322876
+        "total_loss": 0.20618024468421936
       },
       "Loss of Coolant Accident (LOCA)": {
-        "rmse": 465.47197149774763,
-        "mae": 182.58848571777344,
-        "r2": 0.7543589194315503,
-        "data_loss": 0.3646076023578644,
-        "dynamic_energy_loss": 0.008351719006896019,
-        "dynamic_residual_rms_mwth": 45.69386672973633,
-        "xenon_loss": 0.001565611339174211,
-        "radiolysis_margin": 2.174994707107544,
-        "total_loss": 0.3731158673763275
+        "rmse": 465.47707381781976,
+        "mae": 182.58706665039062,
+        "r2": 0.7543537981546918,
+        "data_loss": 0.36460283398628235,
+        "dynamic_energy_loss": 0.00835463497787714,
+        "dynamic_residual_rms_mwth": 45.70184326171875,
+        "xenon_loss": 0.001565385959111154,
+        "radiolysis_margin": 2.1750452518463135,
+        "total_loss": 0.3731140196323395
       },
       "Reactivity-Initiated Excursion (RIA / PHWR Zone Tilt)": {
-        "rmse": 465.3927944489472,
-        "mae": 183.88372802734375,
-        "r2": 0.7556661310690487,
-        "data_loss": 0.35476604104042053,
-        "dynamic_energy_loss": 0.006556098815053701,
-        "dynamic_residual_rms_mwth": 40.484867095947266,
-        "xenon_loss": 0.0010914639569818974,
+        "rmse": 465.39814943766163,
+        "mae": 183.8762664794922,
+        "r2": 0.7556593550601934,
+        "data_loss": 0.35477226972579956,
+        "dynamic_energy_loss": 0.006561543792486191,
+        "dynamic_residual_rms_mwth": 40.50167465209961,
+        "xenon_loss": 0.0010911824647337198,
         "radiolysis_margin": 0.0,
-        "total_loss": 0.3614312708377838
+        "total_loss": 0.3614429235458374
       },
       "Steam Generator Tube Rupture (SGTR) / Feeder Break": {
-        "rmse": 447.5552863892907,
-        "mae": 165.097412109375,
-        "r2": 0.7719766577276377,
-        "data_loss": 0.3158751130104065,
-        "dynamic_energy_loss": 0.01034584455192089,
-        "dynamic_residual_rms_mwth": 50.857261657714844,
-        "xenon_loss": 0.000822404632344842,
+        "rmse": 447.56452048838725,
+        "mae": 165.08262634277344,
+        "r2": 0.7719659265509609,
+        "data_loss": 0.3158625364303589,
+        "dynamic_energy_loss": 0.010371671058237553,
+        "dynamic_residual_rms_mwth": 50.92069625854492,
+        "xenon_loss": 0.0008221024763770401,
         "radiolysis_margin": 0.0,
-        "total_loss": 0.3263032138347626
+        "total_loss": 0.3263164460659027
       },
       "Station Blackout (SBO) & Natural Circulation": {
-        "rmse": 208.10345233801385,
-        "mae": 85.46670532226562,
-        "r2": 0.7233249082694568,
-        "data_loss": 0.2977316379547119,
-        "dynamic_energy_loss": 0.012458712793886662,
-        "dynamic_residual_rms_mwth": 55.80929946899414,
-        "xenon_loss": 0.0020907914731651545,
+        "rmse": 208.1053857123837,
+        "mae": 85.46623992919922,
+        "r2": 0.7233120330317926,
+        "data_loss": 0.29774293303489685,
+        "dynamic_energy_loss": 0.012472983449697495,
+        "dynamic_residual_rms_mwth": 55.84125518798828,
+        "xenon_loss": 0.002090536756440997,
         "radiolysis_margin": 0.0,
-        "total_loss": 0.31039944291114807
+        "total_loss": 0.3104249835014343
       }
     },
     "true_ablation": {
@@ -166,8 +166,8 @@
         "cusum_mean_lead_s": 4.92
       },
       "Station Blackout (SBO) & Natural Circulation": {
-        "ai_mean_lead_s": 24.18,
-        "ai_ci95_s": 0.9198979734731454,
+        "ai_mean_lead_s": 24.19,
+        "ai_ci95_s": 0.917939378390534,
         "ai_min_lead_s": 17.0,
         "roc_mean_lead_s": 33.47,
         "cusum_mean_lead_s": 34.85
@@ -181,7 +181,7 @@
         "sgtr_acc": 0.0,
         "sbo_acc": 0.0,
         "overall_acc": 0.0,
-        "mean_confidence": 94.53007727861404
+        "mean_confidence": 94.48171555995941
       },
       "t_10.0s": {
         "horizon_s": 10.0,
@@ -190,7 +190,7 @@
         "sgtr_acc": 0.0,
         "sbo_acc": 73.0,
         "overall_acc": 18.25,
-        "mean_confidence": 80.32932803034782
+        "mean_confidence": 80.2855983376503
       },
       "t_15.0s": {
         "horizon_s": 15.0,
@@ -199,7 +199,7 @@
         "sgtr_acc": 0.0,
         "sbo_acc": 100.0,
         "overall_acc": 25.0,
-        "mean_confidence": 99.13336634635925
+        "mean_confidence": 99.13476407527924
       },
       "t_25.0s": {
         "horizon_s": 25.0,
@@ -208,7 +208,7 @@
         "sgtr_acc": 0.0,
         "sbo_acc": 100.0,
         "overall_acc": 50.0,
-        "mean_confidence": 91.87517613172531
+        "mean_confidence": 91.90843403339386
       },
       "t_35.0s": {
         "horizon_s": 35.0,
@@ -217,7 +217,7 @@
         "sgtr_acc": 0.0,
         "sbo_acc": 100.0,
         "overall_acc": 75.0,
-        "mean_confidence": 94.67368274927139
+        "mean_confidence": 94.66253817081451
       },
       "t_45.0s": {
         "horizon_s": 45.0,
@@ -226,7 +226,7 @@
         "sgtr_acc": 100.0,
         "sbo_acc": 100.0,
         "overall_acc": 100.0,
-        "mean_confidence": 99.17016327381134
+        "mean_confidence": 99.1709366440773
       }
     },
     "false_alarm_rate": {
@@ -297,32 +297,32 @@
         {
           "rank": 1,
           "channel": "Neutron Flux (x10^13)",
-          "weight": 0.004538968671113253
+          "weight": 0.004542219452559948
         },
         {
           "rank": 2,
           "channel": "Radiation (mSv/h)",
-          "weight": 0.0042214542627334595
+          "weight": 0.004225132521241903
         },
         {
           "rank": 3,
           "channel": "Control Rod Height (%)",
-          "weight": 0.0033261922653764486
+          "weight": 0.0033279983326792717
         },
         {
           "rank": 4,
           "channel": "Containment Pressure (kPa)",
-          "weight": 0.0032231020741164684
+          "weight": 0.003225944237783551
         },
         {
           "rank": 5,
           "channel": "Steam Flow (kg/s)",
-          "weight": 0.003193264128640294
+          "weight": 0.0031951123382896185
         },
         {
           "rank": 6,
           "channel": "Core Power (MWth)",
-          "weight": 0.0026076852809637785
+          "weight": 0.0026097074151039124
         }
       ],
       "deletion_curves": {
@@ -330,29 +330,29 @@
           "k": 1,
           "top_k_acc": 100.0,
           "top_k_drop": 0.0,
-          "random_k_acc": 98.89999985694885,
-          "random_k_drop": 1.1000001430511475
+          "random_k_acc": 100.0,
+          "random_k_drop": 0.0
         },
         "k_2": {
           "k": 2,
           "top_k_acc": 100.0,
           "top_k_drop": 0.0,
-          "random_k_acc": 96.09999895095825,
-          "random_k_drop": 3.900001049041748
+          "random_k_acc": 98.49999964237213,
+          "random_k_drop": 1.5000003576278687
         },
         "k_3": {
           "k": 3,
           "top_k_acc": 100.0,
           "top_k_drop": 0.0,
-          "random_k_acc": 95.39999961853027,
-          "random_k_drop": 4.600000381469727
+          "random_k_acc": 88.09999942779541,
+          "random_k_drop": 11.90000057220459
         },
         "k_5": {
           "k": 5,
           "top_k_acc": 64.99999761581421,
           "top_k_drop": 35.00000238418579,
-          "random_k_acc": 81.79999947547913,
-          "random_k_drop": 18.200000524520874
+          "random_k_acc": 82.39999979734421,
+          "random_k_drop": 17.600000202655792
         }
       },
       "channel_dropout_robustness": {
@@ -363,23 +363,23 @@
         },
         "missing_1_channels": {
           "missing_channels": 1,
-          "accuracy": 100.0,
-          "degradation": 0.0
+          "accuracy": 97.59999990463257,
+          "degradation": 2.4000000953674316
         },
         "missing_2_channels": {
           "missing_channels": 2,
-          "accuracy": 94.79999959468842,
-          "degradation": 5.2000004053115845
+          "accuracy": 92.39999949932098,
+          "degradation": 7.600000500679016
         },
         "missing_3_channels": {
           "missing_channels": 3,
-          "accuracy": 92.99999952316284,
-          "degradation": 7.000000476837158
+          "accuracy": 88.79999935626984,
+          "degradation": 11.200000643730164
         },
         "missing_4_channels": {
           "missing_channels": 4,
-          "accuracy": 95.39999961853027,
-          "degradation": 4.600000381469727
+          "accuracy": 87.39999979734421,
+          "degradation": 12.600000202655792
         }
       }
     },
@@ -394,12 +394,12 @@
     },
     "latency_harness": {
       "iterations": 10000,
-      "p50_us": 98.4,
-      "p90_us": 111.9,
-      "p99_us": 291.31100000000026,
-      "mean_us": 105.10467,
-      "std_us": 47.59447790648722,
-      "throughput_fps": 9514.325100873253
+      "p50_us": 126.7,
+      "p90_us": 351.8,
+      "p99_us": 503.1070000000002,
+      "mean_us": 168.62194,
+      "std_us": 104.73336350292776,
+      "throughput_fps": 5930.42637274841
     },
     "scada_frame": {
       "total_bytes": 88,

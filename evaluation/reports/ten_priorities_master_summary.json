@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-09-20T18:11:06.049160+00:00",
+  "priorities_executed": 10,
+  "evaluation_protocol": "Senior Nuclear ML Peer-Review Protocol (5 Seeds, Dynamic Severity, Conditional Coverage)",
+  "advisory_scope": "Research prototype; provisional thresholds and CRITICAL advisory only.",
+  "key_metrics": {
+    "p1_in_domain_acc": 1.0,
+    "p1_in_domain_wilson_ci": [
+      0.975,
+      1.0
+    ],
+    "p2_cross_sim_pu_acc": 0.0919,
+    "p3_reconciled_multidomain_gain_pct": 75.48,
+    "p3_loato_sgtr_detection_pct": 100.0,
+    "p4_dynamic_energy_residual_mwth": "78.94 \u00b1 0.00",
+    "p5_empirical_marginal_coverage_pct": 90.0,
+    "p5_conditional_coverage_30s_pct": 41.67,
+    "p5_conditional_coverage_5s_pct": 100.0,
+    "p6_transformer_tmargin_mae_s": 1.312,
+    "p6_prajna_tmargin_mae_s": 4.717,
+    "p7_critical_fragility_finding": "Core Power drop drops RIA recall to 0.0%; Flow drop drops SBO recall to 0.0%",
+    "p10_drift_divergence_residual_mwth": 19.97
+  }
+}

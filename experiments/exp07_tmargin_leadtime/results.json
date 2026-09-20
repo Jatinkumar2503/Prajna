@@ -1,0 +1,84 @@
+{
+  "experiment": "Exp07_Tmargin_Lead_Time",
+  "accident_scenario": "Developing Loss of Coolant Accident (LOCA)",
+  "physical_trip_threshold": "T_out >= 305.0 degC (AERB safety limit)",
+  "actual_threshold_crossing_time_s": 27.0,
+  "prajna_warning_trigger_time_s": 13.0,
+  "prajna_critical_trigger_time_s": 21.0,
+  "early_warning_lead_time_seconds": 14.0,
+  "critical_action_lead_time_seconds": 6.0,
+  "key_scientific_distinction": "Traditional anomaly detectors only alarm when anomalous values are already detected at t = 21.0s. PRAJNA forecasts trajectory-level margin collapse, providing 14.0 seconds of advance warning before safety thresholds are physically violated.",
+  "sample_timeline": [
+    {
+      "time_sec": 0.0,
+      "temperature_degC": 293.4,
+      "pressure_bar": 85.0,
+      "predicted_tmargin_sec": 33.1,
+      "prajna_safety_state": "NORMAL"
+    },
+    {
+      "time_sec": 5.0,
+      "temperature_degC": 293.4,
+      "pressure_bar": 85.0,
+      "predicted_tmargin_sec": 33.1,
+      "prajna_safety_state": "NORMAL"
+    },
+    {
+      "time_sec": 10.0,
+      "temperature_degC": 293.4,
+      "pressure_bar": 85.0,
+      "predicted_tmargin_sec": 33.1,
+      "prajna_safety_state": "NORMAL"
+    },
+    {
+      "time_sec": 15.0,
+      "temperature_degC": 295.83,
+      "pressure_bar": 82.24,
+      "predicted_tmargin_sec": 26.2,
+      "prajna_safety_state": "WARNING"
+    },
+    {
+      "time_sec": 20.0,
+      "temperature_degC": 299.39,
+      "pressure_bar": 78.66,
+      "predicted_tmargin_sec": 16.0,
+      "prajna_safety_state": "WARNING"
+    },
+    {
+      "time_sec": 25.0,
+      "temperature_degC": 303.54,
+      "pressure_bar": 74.69,
+      "predicted_tmargin_sec": 4.2,
+      "prajna_safety_state": "CRITICAL"
+    },
+    {
+      "time_sec": 30.0,
+      "temperature_degC": 308.14,
+      "pressure_bar": 70.44,
+      "predicted_tmargin_sec": 0.0,
+      "prajna_safety_state": "CRITICAL"
+    },
+    {
+      "time_sec": 35.0,
+      "temperature_degC": 313.1,
+      "pressure_bar": 65.96,
+      "predicted_tmargin_sec": 0.0,
+      "prajna_safety_state": "CRITICAL"
+    },
+    {
+      "time_sec": 40.0,
+      "temperature_degC": 318.37,
+      "pressure_bar": 61.31,
+      "predicted_tmargin_sec": 0.0,
+      "prajna_safety_state": "CRITICAL"
+    },
+    {
+      "time_sec": 45.0,
+      "temperature_degC": 323.91,
+      "pressure_bar": 56.49,
+      "predicted_tmargin_sec": 0.0,
+      "prajna_safety_state": "CRITICAL"
+    }
+  ],
+  "elapsed_sec": 0.0
+}

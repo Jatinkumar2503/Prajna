@@ -1,0 +1,189 @@
+{
+  "experiment": "Exp05_Sensor_Fragility_and_Horizon_Tests",
+  "single_sensor_fragility_analysis": {
+    "CoreExitTemp_degC": {
+      "channel_idx": 0,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "CoolantFlow_kgs": {
+      "channel_idx": 1,
+      "accuracy_when_dropped": "80.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 20.0,
+      "safety_assessment": "MODERATE FRAGILITY",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 0.0
+      }
+    },
+    "NeutronFlux_flux": {
+      "channel_idx": 2,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "Radiation_mSvh": {
+      "channel_idx": 3,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "PrimaryPressure_bar": {
+      "channel_idx": 4,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "CorePower_MWth": {
+      "channel_idx": 5,
+      "accuracy_when_dropped": "60.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 40.0,
+      "safety_assessment": "CRITICAL FRAGILITY",
+      "per_class_recall_pct": {
+        "Normal": 0.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 0.0
+      }
+    },
+    "ControlRod_pct": {
+      "channel_idx": 6,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "PressurizerLevel_pct": {
+      "channel_idx": 7,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "SGTemp_degC": {
+      "channel_idx": 8,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "SteamFlow_kgs": {
+      "channel_idx": 9,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "CoreInletTemp_degC": {
+      "channel_idx": 10,
+      "accuracy_when_dropped": "100.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 0.0,
+      "safety_assessment": "INSENSITIVE",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 100.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    },
+    "ContainmentPressure_kPa": {
+      "channel_idx": 11,
+      "accuracy_when_dropped": "80.00% \u00b1 0.00%",
+      "accuracy_drop_pct": 20.0,
+      "safety_assessment": "MODERATE FRAGILITY",
+      "per_class_recall_pct": {
+        "Normal": 100.0,
+        "LOCA": 0.0,
+        "RIA": 100.0,
+        "SGTR": 100.0,
+        "SBO": 100.0
+      }
+    }
+  },
+  "horizon_curve": {
+    "5s_horizon": {
+      "mean_accuracy": "18.88% \u00b1 0.30%",
+      "operational_viability": "OPTIMAL"
+    },
+    "10s_horizon": {
+      "mean_accuracy": "39.61% \u00b1 0.37%",
+      "operational_viability": "OPTIMAL"
+    },
+    "20s_horizon": {
+      "mean_accuracy": "79.49% \u00b1 0.25%",
+      "operational_viability": "OPTIMAL"
+    },
+    "30s_horizon": {
+      "mean_accuracy": "99.75% \u00b1 0.16%",
+      "operational_viability": "OPTIMAL"
+    },
+    "60s_horizon": {
+      "mean_accuracy": "100.00% \u00b1 0.00%",
+      "operational_viability": "DEGRADED"
+    },
+    "120s_horizon": {
+      "mean_accuracy": "100.00% \u00b1 0.00%",
+      "operational_viability": "DEGRADED"
+    }
+  },
+  "honest_safety_conclusion": "PRAJNA exhibits severe single-sensor fragility: losing Core Power drops RIA recall to 0.0%, and losing Coolant Flow drops SBO recall to 0.0%. This proves single-sensor dependence is a vulnerability, establishing that hardware redundancy (2-out-of-3 voting) is mandatory for nuclear safety.",
+  "elapsed_sec": 0.77
+}

@@ -1,0 +1,276 @@
+{
+  "metadata": {
+    "timestamp": "2026-09-20T18:22:18.325324+00:00",
+    "timestamp_folder": "20260920_182218Z",
+    "exact_command": "C:\\Program Files\\Python314\\python.exe scripts/generate_results_provenance.py",
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "git": {
+      "git_hash": "abb0b598d06a578a326f7bb765f55471f938c655",
+      "git_branch": "main",
+      "is_dirty": true
+    },
+    "hardware": {
+      "cpu_processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+      "platform_system": "Windows",
+      "platform_release": "11",
+      "python_version": "3.14.6",
+      "torch_version": "2.13.0+cu126",
+      "cuda_available": true,
+      "device_count": 1,
+      "device_name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+    },
+    "dataset_hashes": {
+      "data/processed/test/nppad_cross_test.pt": "1d8b5cda460a222343f1c2b0d51724a7b6cc50281e5fb4e015a4f90576af1230",
+      "data/processed/test/phwr_test_unseen.pt": "50401f2c20a91a6109e24984749cefdf027603fbd0d68f9e56d9b1fdf882b0a3",
+      "data/processed/test/pur1_real_robustness_test.pt": "9d954d0cbd8e90105bc3e0163b553123f9b53a2fae2175ac00274934b9f6b8f1",
+      "data/processed/train/nppad_train_trajectories.pt": "90fe8f5dde0eb0ab67db8012cbd241118dad8951c022cc23d00ac2a6fe8110f3",
+      "data/processed/train/phwr_train.pt": "a8ac4e84ce8ca2c615a14697b56f64a913cca86316fe9473403d97e672c192d1",
+      "data/processed/validation/phwr_val.pt": "ce62aa697d3153e620838316315afb28e03940f444f72980db681222740784cf",
+      "data/processed/dataset_manifest.json": "a50bd67ed0dea021b1855a0252343918b9018e89b4928a5af949f84a9e6de9c8"
+    }
+  },
+  "tables": {
+    "baseline_comparison": [
+      {
+        "model": "CUSUM Change-Point Detector",
+        "parameters": 0,
+        "single_cpu_latency_ms": 0.0042,
+        "early_onset_acc_mean_pct": 82.4,
+        "early_onset_acc_std_pct": 0.8,
+        "tmargin_mae_s_mean": 14.99,
+        "tmargin_mae_s_std": 0.23,
+        "nuisance_alerts": 14
+      },
+      {
+        "model": "Logistic Regression + Ridge",
+        "parameters": 905,
+        "single_cpu_latency_ms": 0.0681,
+        "early_onset_acc_mean_pct": 100.0,
+        "early_onset_acc_std_pct": 0.0,
+        "tmargin_mae_s_mean": 2.98,
+        "tmargin_mae_s_std": 0.19,
+        "nuisance_alerts": 0
+      },
+      {
+        "model": "HistGradientBoosting Regressor",
+        "parameters": 15000,
+        "single_cpu_latency_ms": 5.969,
+        "early_onset_acc_mean_pct": 99.6,
+        "early_onset_acc_std_pct": 0.53,
+        "tmargin_mae_s_mean": 0.53,
+        "tmargin_mae_s_std": 0.32,
+        "nuisance_alerts": 0
+      },
+      {
+        "model": "GRU Forecaster",
+        "parameters": 16517,
+        "single_cpu_latency_ms": 0.3069,
+        "early_onset_acc_mean_pct": 100.0,
+        "early_onset_acc_std_pct": 0.0,
+        "tmargin_mae_s_mean": 6.26,
+        "tmargin_mae_s_std": 4.31,
+        "nuisance_alerts": 0
+      },
+      {
+        "model": "LSTM Forecaster",
+        "parameters": 26629,
+        "single_cpu_latency_ms": 0.3345,
+        "early_onset_acc_mean_pct": 100.0,
+        "early_onset_acc_std_pct": 0.0,
+        "tmargin_mae_s_mean": 4.25,
+        "tmargin_mae_s_std": 4.3,
+        "nuisance_alerts": 0
+      },
+      {
+        "model": "Temporal Transformer",
+        "parameters": 40390,
+        "single_cpu_latency_ms": 0.6608,
+        "early_onset_acc_mean_pct": 100.0,
+        "early_onset_acc_std_pct": 0.0,
+        "tmargin_mae_s_mean": 1.31,
+        "tmargin_mae_s_std": 0.48,
+        "nuisance_alerts": 0
+      },
+      {
+        "model": "PRAJNA Reflex Engine (Ours)",
+        "parameters": 24338,
+        "single_cpu_latency_ms": 0.4238,
+        "early_onset_acc_mean_pct": 100.0,
+        "early_onset_acc_std_pct": 0.0,
+        "tmargin_mae_s_mean": 4.72,
+        "tmargin_mae_s_std": 5.0,
+        "nuisance_alerts": 0
+      }
+    ],
+    "conditional_coverage": [
+      {
+        "condition_type": "Lead Time",
+        "condition": "30s before breach",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 41.67,
+        "mean_interval_width_s": 28.4
+      },
+      {
+        "condition_type": "Lead Time",
+        "condition": "20s before breach",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 100.0,
+        "mean_interval_width_s": 14.2
+      },
+      {
+        "condition_type": "Lead Time",
+        "condition": "10s before breach",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 100.0,
+        "mean_interval_width_s": 8.1
+      },
+      {
+        "condition_type": "Lead Time",
+        "condition": "5s before breach",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 100.0,
+        "mean_interval_width_s": 4.6
+      },
+      {
+        "condition_type": "Scenario",
+        "condition": "LOCA",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 100.0,
+        "mean_interval_width_s": 12.3
+      },
+      {
+        "condition_type": "Scenario",
+        "condition": "RIA",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 100.0,
+        "mean_interval_width_s": 11.8
+      },
+      {
+        "condition_type": "Scenario",
+        "condition": "SBO",
+        "target_coverage_pct": 90.0,
+        "empirical_coverage_pct": 85.83,
+        "mean_interval_width_s": 13.6
+      }
+    ],
+    "physics_residual_ablation": [
+      {
+        "model": "Model A (Pure Neural Forecaster)",
+        "physics_loss_weight": 0.0,
+        "mean_dynamic_residual_mwth": 187.95,
+        "nuisance_advisory_alerts": 2,
+        "safety_violations_pct": 4.0
+      },
+      {
+        "model": "Model B (Physics-Regularized Neural)",
+        "physics_loss_weight": 1.0,
+        "mean_dynamic_residual_mwth": 78.94,
+        "nuisance_advisory_alerts": 0,
+        "safety_violations_pct": 0.0
+      },
+      {
+        "model": "Model C (Hybrid Physics-Gated Reflex)",
+        "physics_loss_weight": 1.0,
+        "mean_dynamic_residual_mwth": 78.94,
+        "nuisance_advisory_alerts": 0,
+        "safety_violations_pct": 0.0
+      }
+    ],
+    "sensor_fragility": [
+      {
+        "sensor_dropped": "None (Full 12 Channels)",
+        "overall_acc_pct": 100.0,
+        "normal_recall_pct": 100.0,
+        "loca_recall_pct": 100.0,
+        "ria_recall_pct": 100.0,
+        "sbo_recall_pct": 100.0,
+        "drift_recall_pct": 100.0
+      },
+      {
+        "sensor_dropped": "Primary Coolant Flow",
+        "overall_acc_pct": 80.0,
+        "normal_recall_pct": 100.0,
+        "loca_recall_pct": 100.0,
+        "ria_recall_pct": 100.0,
+        "sbo_recall_pct": 0.0,
+        "drift_recall_pct": 100.0
+      },
+      {
+        "sensor_dropped": "Core Thermal Power",
+        "overall_acc_pct": 80.0,
+        "normal_recall_pct": 100.0,
+        "loca_recall_pct": 100.0,
+        "ria_recall_pct": 0.0,
+        "sbo_recall_pct": 100.0,
+        "drift_recall_pct": 100.0
+      },
+      {
+        "sensor_dropped": "Primary Header Pressure",
+        "overall_acc_pct": 80.0,
+        "normal_recall_pct": 100.0,
+        "loca_recall_pct": 0.0,
+        "ria_recall_pct": 100.0,
+        "sbo_recall_pct": 100.0,
+        "drift_recall_pct": 100.0
+      },
+      {
+        "sensor_dropped": "Core Exit Temperature",
+        "overall_acc_pct": 80.0,
+        "normal_recall_pct": 100.0,
+        "loca_recall_pct": 100.0,
+        "ria_recall_pct": 100.0,
+        "sbo_recall_pct": 100.0,
+        "drift_recall_pct": 0.0
+      }
+    ],
+    "static_heat_balance_monitor": [
+      {
+        "test_case": "Steady-State Nominal (No Fault)",
+        "applied_perturbation": "None (0.00)",
+        "primary_heat_residual_mwth": 0.0,
+        "thermal_imbalance_pct": 0.0,
+        "diagnostic_action": "Nominal Normal"
+      },
+      {
+        "test_case": "Realistic Sensor Gain Drift",
+        "applied_perturbation": "+1.5% Power Channel Drift over 24h",
+        "primary_heat_residual_mwth": 19.9702,
+        "thermal_imbalance_pct": 2.64,
+        "diagnostic_action": "Flagged Advisory Alert (t=14.2h)"
+      },
+      {
+        "test_case": "Realistic Thermocouple Step Bias",
+        "applied_perturbation": "+2.5 K Core Exit Offset",
+        "primary_heat_residual_mwth": 34.0371,
+        "thermal_imbalance_pct": 4.5,
+        "diagnostic_action": "Flagged Immediate Sensor Bias Alarm"
+      }
+    ],
+    "cross_domain_generalization": [
+      {
+        "evaluation_protocol": "Zero-Shot Transfer (PHWR-220 -> PCTRAN PWR-1000)",
+        "accuracy_pct": 9.19,
+        "std_pct": 1.83,
+        "scientific_conclusion": "Confirms fundamental physics domain gap (D2O vs H2O kinetics)"
+      },
+      {
+        "evaluation_protocol": "Supervised Transfer Learning (PCTRAN PWR-1000 Fine-Tuned)",
+        "accuracy_pct": 84.67,
+        "std_pct": 0.0,
+        "scientific_conclusion": "In-domain adaptation delta of +75.48%"
+      },
+      {
+        "evaluation_protocol": "LOATO Out-of-Distribution SGTR Detection",
+        "accuracy_pct": 100.0,
+        "std_pct": 0.0,
+        "scientific_conclusion": "Flagged as physical energy balance violation within 2.1s"
+      }
+    ]
+  }
+}

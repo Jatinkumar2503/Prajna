@@ -28,6 +28,14 @@ jobs:
         run: |
           python tests/test_pinn_pipeline.py
 
+      - name: Verify Scientific Integrity & Provenance
+        run: |
+          python scripts/lint_hardcoded_results.py scripts experiments prajna_core evaluation
+          python scripts/find_retracted_numbers.py .
+          python scripts/seal_results.py verify results/latest/results.json
+          python scripts/verify_table_provenance.py
+          python -m unittest tests/test_provenance_ci.py
+
       - name: Verify Export & Model Scales
         run: |
           python -c "from prajna_core.models.pinn_foundation import PrajnaFoundationPINN; m = PrajnaFoundationPINN(scale='test_4m'); print('4M Scale Verified:', m.get_memory_footprint()['parameters'])"

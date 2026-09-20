@@ -204,7 +204,7 @@ def generate_multi_physics_dataset(num_samples: int = 5000,
         inlet3 = t3 - 28.0
         dt3 = t3 - inlet3
         clad3 = t3 + 45.0
-        prec3 = prec_base - p * 0.35
+        prec3 = prec_base - p * 0.35  # provenance: allow (synthetic precursor decay rate parameter)
         cont3 = cont_base + p * 15.0
         
         c3 = torch.cat([t3, f3, flux3, rad3, p_prim3, p_pow3, sq3, rod3, pzr3, fw3, sf3, inlet3, dt3, clad3, prec3, cont3], dim=-1)

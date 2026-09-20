@@ -1,0 +1,340 @@
+{
+  "benchmark": "Non_Saturated_Early_Onset_and_Tmargin",
+  "task_description": "Discriminate accident type within t <= 10s post-onset and estimate T_margin in seconds under active instrument noise",
+  "seeds_evaluated": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "parameter_comparison": {
+    "prajna_fast_reflex_params": 24338,
+    "temporal_transformer_params": 40390,
+    "exact_parameter_ratio": 1.66
+  },
+  "models": {
+    "Rate_of_Change_CUSUM": {
+      "type": "Industrial Threshold Rule",
+      "parameters": 0,
+      "early_onset_accuracy_mean": 0.824,
+      "early_onset_accuracy_std": 0.008,
+      "tmargin_mae_seconds_mean": 14.994,
+      "tmargin_mae_seconds_std": 0.229,
+      "single_window_cpu_latency_ms": 0.0042,
+      "average_confusion_matrix": [
+        [
+          27,
+          0,
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          12,
+          18,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          5,
+          0,
+          25,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    },
+    "Logistic_Regression": {
+      "type": "Linear Classifier + Ridge",
+      "parameters": 905,
+      "early_onset_accuracy_mean": 1.0,
+      "early_onset_accuracy_std": 0.0,
+      "tmargin_mae_seconds_mean": 2.981,
+      "tmargin_mae_seconds_std": 0.186,
+      "single_window_cpu_latency_ms": 0.0681,
+      "average_confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    },
+    "HistGradientBoosting": {
+      "type": "Tree-based Non-Linear",
+      "parameters": 25000,
+      "early_onset_accuracy_mean": 0.996,
+      "early_onset_accuracy_std": 0.0053,
+      "tmargin_mae_seconds_mean": 0.529,
+      "tmargin_mae_seconds_std": 0.322,
+      "single_window_cpu_latency_ms": 5.969,
+      "average_confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    },
+    "GRU_Forecaster": {
+      "type": "Deep Sequence Model (GRU)",
+      "parameters": 42374,
+      "early_onset_accuracy_mean": 1.0,
+      "early_onset_accuracy_std": 0.0,
+      "tmargin_mae_seconds_mean": 6.257,
+      "tmargin_mae_seconds_std": 4.307,
+      "single_window_cpu_latency_ms": 0.3069,
+      "average_confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    },
+    "LSTM_Forecaster": {
+      "type": "Deep Sequence Model (LSTM)",
+      "parameters": 55686,
+      "early_onset_accuracy_mean": 1.0,
+      "early_onset_accuracy_std": 0.0,
+      "tmargin_mae_seconds_mean": 4.246,
+      "tmargin_mae_seconds_std": 4.298,
+      "single_window_cpu_latency_ms": 0.3345,
+      "average_confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    },
+    "Temporal_Transformer": {
+      "type": "Deep Sequence Model (Transformer)",
+      "parameters": 40390,
+      "early_onset_accuracy_mean": 1.0,
+      "early_onset_accuracy_std": 0.0,
+      "tmargin_mae_seconds_mean": 1.312,
+      "tmargin_mae_seconds_std": 0.475,
+      "single_window_cpu_latency_ms": 0.6608,
+      "average_confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    },
+    "PRAJNA_Reflex_Engine": {
+      "type": "Physics-Gated Forecaster",
+      "parameters": 24338,
+      "early_onset_accuracy_mean": 1.0,
+      "early_onset_accuracy_std": 0.0,
+      "tmargin_mae_seconds_mean": 4.717,
+      "tmargin_mae_seconds_std": 4.997,
+      "single_window_cpu_latency_ms": 0.4238,
+      "average_confusion_matrix": [
+        [
+          30,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          30,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          30,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          30,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ]
+    }
+  }
+}

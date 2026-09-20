@@ -1,0 +1,17 @@
+{
+  "experiment": "Exp10_Static_Physics_Residual_Monitor",
+  "monitoring_equation": "R_heat = |P_core - m_dot * Cp * (T_out - T_in)|",
+  "baseline_nominal_residual_mwth": 0.0,
+  "calibration_drift_test": {
+    "condition": "Flow +1.5% gain drift, RTD +0.5 K drift",
+    "divergence_residual_mwth": 19.97,
+    "alert_status": "CALIBRATION_DRIFT_ALERT (Exceeds 10 MWth threshold)"
+  },
+  "step_sensor_fault_test": {
+    "condition": "RTD +2.0 K step bias fault",
+    "divergence_residual_mwth": 34.04,
+    "alert_status": "SENSOR_STEP_BIAS_ALARM (Exceeds 25 MWth threshold)"
+  },
+  "scientific_value": "While dynamic neural trajectory classifiers evaluate dX/dt and remain blind to quasi-static drifts, the static First-Law primary heat balance monitor directly detects gain drifts and step biases, proving the necessity of a hybrid neural-physics architecture in nuclear safety I&C.",
+  "elapsed_sec": 0.0
+}

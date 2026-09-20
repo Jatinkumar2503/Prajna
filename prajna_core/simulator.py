@@ -17,9 +17,7 @@ import torch.nn as nn
 # -----------------------------------------------------------------------------
 # 1. PHYSICAL CONSTANTS & REFERENCE PLANT PARAMETERS (PHWR-like 220 MWe / 756 MWth)
 # -----------------------------------------------------------------------------
-P_NOMINAL_MWTH = 756.0              # Nominal core thermal power to coolant (MWth)
-FISSION_POWER_NOMINAL_MW = 802.0    # Total fission power (MW) for neutron flux normalization
-FLOW_NOMINAL_KG_S = 3500.0          # Core primary coolant flow (kg/s, derived from 756 MW / (4.863 * 44.4))
+FLOW_NOMINAL_KG_S = 3500.0          # Core primary coolant flow (kg/s)
 T_IN_NOMINAL_C = 249.0              # Reactor Inlet Header temperature (°C)
 T_OUT_NOMINAL_C = 293.4             # Reactor Outlet Header temperature (°C)
 DELTA_T_NOMINAL_K = 44.4            # Core temperature rise (K)
@@ -28,23 +26,41 @@ DELTA_T_NOMINAL_K = 44.4            # Core temperature rise (K)
 CP_COOLANT = 4.863                  # kJ/(kg * K)
 CP_FUEL = 0.280                     # UO2 fuel specific heat kJ/(kg * K)
 
+# Exact primary heat balance closure: P_0 = m_dot * Cp * Delta_T = 3500.0 * 4.863 * 44.4 * 1e-3 = 755.7102 MWth
+# Exactly eliminates initial energy residual: |P_0 - Q_0| = 0.0000 MWth (0.0000% error)
+P_NOMINAL_MWTH = FLOW_NOMINAL_KG_S * CP_COOLANT * DELTA_T_NOMINAL_K * 1e-3  # 755.7102 MWth
+FISSION_POWER_NOMINAL_MW = 802.0    # Total fission power (MW) for neutron flux normalization
+
 M_FUEL = 58500.0                    # Fuel inventory mass (kg)
 M_CORE_COOLANT = 12500.0            # Core channels coolant mass (kg)
 M_SG_COOLANT = 25000.0              # Steam generator coolant mass (kg)
 
 T_FUEL_NOMINAL_C = 580.0            # Mean fuel pellet temperature (°C)
 T_BAR_C_NOMINAL = (T_OUT_NOMINAL_C + T_IN_NOMINAL_C) / 2.0  # 271.2 °C
-U_FC_A = P_NOMINAL_MWTH / (T_FUEL_NOMINAL_C - T_BAR_C_NOMINAL)  # MW/K (~2.448 MW/K)
+U_FC_A = P_NOMINAL_MWTH / (T_FUEL_NOMINAL_C - T_BAR_C_NOMINAL)  # MW/K (~2.447 MW/K)
 
 # Secondary heat sink under PHWR variable boiler-pressure programme:
 # Secondary Tsat = 245.0 °C (Psat ≈ 3.65 MPa), pinch point Delta-T = 249.0 - 245.0 = 4.0 K > 0 (SG effectiveness < 1.0)
 T_SEC_NOMINAL_C = 245.0             # Secondary steam saturation temperature (°C)
 T_BAR_SG_NOMINAL = (T_OUT_NOMINAL_C + T_IN_NOMINAL_C) / 2.0  # 271.2 °C
-U_SG_A = P_NOMINAL_MWTH / (T_BAR_SG_NOMINAL - T_SEC_NOMINAL_C)  # MW/K (~28.85 MW/K)
+U_SG_A = P_NOMINAL_MWTH / (T_BAR_SG_NOMINAL - T_SEC_NOMINAL_C)  # MW/K (~28.84 MW/K)
 STEAM_FLOW_NOMINAL_KG_S = 364.0     # Nominal steam flow (kg/s, h_fg ≈ 2075 kJ/kg)
 
-# 7-Group Delayed Neutron & Photoneutron Parameters (Heavy Water Lattice)
-# Keepin 6 groups + 1 effective photoneutron group
+# -----------------------------------------------------------------------------
+# 7-Group Delayed Neutron & Photoneutron Parameters (D2O Moderated Heavy Water Lattice)
+# -----------------------------------------------------------------------------
+# Reactor Physics Parameter Specification:
+# - Groups 1..6: Standard Keepin et al. delayed neutron precursor parameters for thermal fission in U-235.
+# - Group 7: Effective photoneutron group originating from deuterium photodisintegration:
+#     2H + gamma (E_gamma >= 2.223 MeV) -> 1H + n
+#   In D2O-moderated lattices (PHWR/CANDU), high-energy fission-product gammas (e.g. from 140Ba, 140La)
+#   produce a sustained photoneutron source characterized by long half-lives (~138.6 s -> lambda_7 = 0.0050 s^-1).
+# - Prompt neutron lifetime: Lambda = 1.05e-3 s (reflecting long thermal diffusion lifetime in D2O).
+# - Effective delayed fraction: beta_eff = sum(beta_i) = 0.007502 (~750 pcm).
+# - 8x8 State Vector: [n, C_1, C_2, C_3, C_4, C_5, C_6, C_7]^T.
+# - Inhour Equation: rho = Lambda * omega + sum_{i=1}^7 [beta_i * omega / (omega + lambda_i)].
+#   For rho = +100 pcm = 0.0010 (0.133 $), the exact asymptotic positive root is:
+#     omega = 0.00623858 s^-1 (asymptotic reactor period T = 1/omega = 160.29 s).
 PROMPT_NEUTRON_LIFETIME = 1.05e-3   # seconds (PHWR natural U / D2O lattice)
 BETA_I = torch.tensor([0.000215, 0.001424, 0.001274, 0.002568, 0.000748, 0.000273, 0.001000], dtype=torch.float32)
 LAMBDA_I = torch.tensor([0.0124, 0.0305, 0.111, 0.301, 1.14, 3.01, 0.0050], dtype=torch.float32)
@@ -143,7 +159,8 @@ class PhysicalPHWRSimulator:
                            duration_seconds: float = 45.0,
                            dt: float = 0.05,
                            batch_size: int = 1,
-                           seed: Optional[int] = None) -> Dict[str, torch.Tensor]:
+                           seed: Optional[int] = None,
+                           severity: float = 1.0) -> Dict[str, torch.Tensor]:
         """
         Simulates closed-loop multi-physics ODE for a specified scenario:
         0: Steady-State Normal
@@ -151,6 +168,10 @@ class PhysicalPHWRSimulator:
         2: Reactivity-Initiated Accident (RIA / PHWR Zone Drain)
         3: Steam Generator Tube Rupture (SGTR)
         4: Station Blackout (SBO) & Natural Circulation
+        
+        Args:
+            severity: Continuous physical severity multiplier (default 1.0 nominal).
+                      Scales depressurization rates, pump coastdown inertia, or reactivity ramp.
         """
         if seed is not None:
             torch.manual_seed(seed)
@@ -184,13 +205,13 @@ class PhysicalPHWRSimulator:
                 
             elif scenario_id == 1:  # LOCA: Primary leak, voiding, positive void feedback, SCRAM at t=1.5s
                 if t_curr > 0.5:
-                    break_area = 0.012  # m^2 double-ended feeder break
-                    leak_flow = 1200.0 * (1.0 - math.exp(-(t_curr - 0.5) / 2.0))
+                    p_drop_rate = 6.5 * severity
+                    leak_flow = 1200.0 * severity * (1.0 - math.exp(-(t_curr - 0.5) / 2.0))
                     state["m_prim"] = torch.clamp(state["m_prim"] - leak_flow * dt, min=15000.0)
-                    state["p_prim"] = torch.full((batch_size, 1), max(25.0, 87.0 - (t_curr - 0.5) * 6.5), device=self.device)
-                    state["void_frac"] = torch.full((batch_size, 1), min(35.0, (t_curr - 0.5) * 1.8), device=self.device)
+                    state["p_prim"] = torch.full((batch_size, 1), max(25.0, 87.0 - (t_curr - 0.5) * p_drop_rate), device=self.device)
+                    state["void_frac"] = torch.full((batch_size, 1), min(35.0, (t_curr - 0.5) * 1.8 * severity), device=self.device)
                     state["p_cont"] = state["p_cont"] + (leak_flow * 0.008) * dt
-                    state["rad"] = state["rad"] + (0.15 * (t_curr - 0.5)) * dt
+                    state["rad"] = state["rad"] + (0.15 * (t_curr - 0.5) * severity) * dt
                     
                     if t_curr < 1.5:
                         # Positive void reactivity pulse before trip!
@@ -201,18 +222,19 @@ class PhysicalPHWRSimulator:
                         state["rod"] = torch.clamp(state["rod"] - 50.0 * dt, min=0.0)
                         
             elif scenario_id == 2:  # Reactivity Insertion (Zone Controller Drain)
-                # Uncontrolled positive ramp +1.5 mk (+150 pcm), Doppler feedback arrests excursion
-                rho_ext = torch.full((batch_size, 1), min(0.0028, t_curr * 0.00035), device=self.device)
+                # Uncontrolled positive ramp scaled by severity, Doppler feedback arrests excursion
+                ramp_rate = 0.00035 * severity
+                rho_ext = torch.full((batch_size, 1), min(0.0028 * severity, t_curr * ramp_rate), device=self.device)
                 if t_curr > 8.0:  # Manual trip at t=8s
                     rho_ext = -0.040 * torch.ones(batch_size, 1, device=self.device)
                     state["rod"] = torch.clamp(state["rod"] - 40.0 * dt, min=0.0)
                     
             elif scenario_id == 3:  # SGTR: Feeder tube rupture, secondary activity spike
                 if t_curr > 0.5:
-                    leak_sg = 45.0 * (1.0 - math.exp(-(t_curr - 0.5) / 5.0))
-                    state["p_prim"] = torch.full((batch_size, 1), max(55.0, 87.0 - (t_curr - 0.5) * 1.2), device=self.device)
-                    state["rad"] = state["rad"] + 0.12 * dt
-                    state["pzr"] = torch.clamp(state["pzr"] - 0.8 * dt, min=15.0)
+                    leak_sg = (45.0 * severity) * (1.0 - math.exp(-(t_curr - 0.5) / 5.0))
+                    state["p_prim"] = torch.full((batch_size, 1), max(55.0, 87.0 - (t_curr - 0.5) * 1.2 * severity), device=self.device)
+                    state["rad"] = state["rad"] + 0.12 * severity * dt
+                    state["pzr"] = torch.clamp(state["pzr"] - 0.8 * severity * dt, min=15.0)
                     if t_curr > 20.0:
                         rho_ext = -0.040 * torch.ones(batch_size, 1, device=self.device)
                         
@@ -221,15 +243,15 @@ class PhysicalPHWRSimulator:
                 if t_curr > 0.2:
                     rho_ext = -0.050 * torch.ones(batch_size, 1, device=self.device)
                     state["rod"] = torch.clamp(state["rod"] - 60.0 * dt, min=0.0)
-                    # Pump coastdown: exponential momentum decay to natural circulation asymptote
-                    # Coastdown time constant tau ~ 12.0s
-                    pump_flow = (FLOW_NOMINAL_KG_S - 250.0) * math.exp(-t_curr / 12.0)
+                    # Pump coastdown: exponential momentum decay scaled by severity inertia
+                    tau_pump = 12.0 / max(0.1, severity)
+                    pump_flow = (FLOW_NOMINAL_KG_S - 250.0) * math.exp(-t_curr / tau_pump)
                     # Natural circulation driving head ~ (delta_T)^(1/2) ~ Q^(1/3)
                     delta_t = torch.clamp(state["t_out"] - state["t_in"], min=0.5)
                     nat_flow = 250.0 * torch.sqrt(delta_t / DELTA_T_NOMINAL_K)
                     state["flow"] = pump_flow + nat_flow
                     # Secondary heat sink boils off
-                    state["t_sec"] = state["t_sec"] + 0.15 * dt
+                    state["t_sec"] = state["t_sec"] + 0.15 * severity * dt
 
             # 2. Total Reactivity with Dynamic Feedbacks
             delta_t_fuel = state["t_fuel"] - T_FUEL_NOMINAL_C

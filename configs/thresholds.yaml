@@ -1,0 +1,50 @@
+# PRAJNA DETERMINISTIC SAFETY THRESHOLDS
+# Formal operating limits, alarm thresholds, and safety gate criteria based on AERB & IAEA standards.
+
+thresholds:
+  core_exit_temperature:
+    channel_idx: 0
+    unit: "degC"
+    nominal: 293.4
+    normal_band: [280.0, 298.0]
+    warning_threshold: 300.0
+    trip_threshold: 305.0
+    margin_direction: "upper"
+
+  primary_system_pressure:
+    channel_idx: 4
+    unit: "bar"
+    nominal: 85.0
+    normal_band: [80.0, 87.0]
+    warning_threshold_high: 90.0
+    warning_threshold_low: 78.0
+    trip_threshold_high: 93.0
+    trip_threshold_low: 72.0
+    margin_direction: "both"
+
+  thermal_neutron_flux:
+    channel_idx: 2
+    unit: "1e13 n/cm2-s"
+    nominal: 2.25
+    normal_band: [0.0, 2.30]
+    warning_threshold: 2.40
+    trip_threshold: 2.55   # 113% over-power trip
+    margin_direction: "upper"
+
+  containment_pressure:
+    channel_idx: 11
+    unit: "kPa"
+    nominal: 101.325
+    normal_band: [100.0, 105.0]
+    warning_threshold: 110.0
+    trip_threshold: 120.0
+    margin_direction: "upper"
+
+safety_gate:
+  lead_time_seconds: 45.0
+  margin_collapse_critical_sec: 15.0
+  margin_collapse_warning_sec: 30.0
+  states:
+    0: "NORMAL"
+    1: "WARNING"
+    2: "CRITICAL_TRIP"

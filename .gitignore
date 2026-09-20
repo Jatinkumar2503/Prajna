@@ -20,3 +20,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# External datasets (large, downloaded separately)
+datasets/

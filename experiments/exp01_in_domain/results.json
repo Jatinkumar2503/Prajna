@@ -1,0 +1,91 @@
+{
+  "experiment": "Exp01_In_Domain_Evaluation",
+  "scientific_statement": "PRAJNA achieved empirical performance on the defined held-out in-domain PHWR test set (not general reactor safety proof).",
+  "evaluation_samples": 150,
+  "seeds_evaluated": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "overall_accuracy_mean": 1.0,
+  "overall_accuracy_std": 0.0,
+  "macro_f1_mean": 1.0,
+  "wilson_95_ci": [
+    0.975,
+    1.0
+  ],
+  "false_alarm_rate_mean": 0.0,
+  "missed_event_rate_mean": 0.0,
+  "average_confusion_matrix": [
+    [
+      30,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      30,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      30,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      30,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      30
+    ]
+  ],
+  "per_scenario_metrics": {
+    "Normal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 30
+    },
+    "LOCA": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 30
+    },
+    "RIA": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 30
+    },
+    "SGTR": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 30
+    },
+    "SBO": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 30
+    }
+  },
+  "elapsed_sec": 4.93
+}

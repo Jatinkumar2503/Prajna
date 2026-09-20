@@ -1,0 +1,56 @@
+# PRAJNA SCENARIO CATALOG
+# Physically justified scenario definitions informed by IAEA Safety Standards & NRC LER taxonomy.
+
+scenarios:
+  0:
+    name: "Steady-State Normal & Load Follow"
+    category: "normal_operation"
+    initial_power_mwth: 756.0
+    initial_pressure_bar: 85.0
+    flow_fraction: 1.0
+    reactivity_cents: 0.0
+    description: "Nominal full power operation with small operational power maneuvers (+/- 2%) and normal regulating rod shimming."
+
+  1:
+    name: "Loss of Coolant Accident (LOCA)"
+    category: "safety_critical"
+    initial_power_mwth: 756.0
+    break_area_fraction: 0.05
+    description: "Primary header rupture initiating depressurization, voiding, emergency core cooling injection, and rapid reactor scram."
+
+  2:
+    name: "Reactivity Initiated Accident (RIA / Zone Tilt)"
+    category: "safety_critical"
+    initial_power_mwth: 756.0
+    reactivity_ramp_cents_per_sec: 15.0
+    max_reactivity_cents: 45.0
+    description: "Uncontrolled regulating rod withdrawal or asymmetric liquid zone controller drain causing localized flux tilt."
+
+  3:
+    name: "Steam Generator Tube Rupture (SGTR)"
+    category: "safety_critical"
+    initial_power_mwth: 756.0
+    leak_rate_kg_s: 18.5
+    description: "Primary-to-secondary boundary failure allowing heavy water coolant leakage into the secondary steam circuit."
+
+  4:
+    name: "Station Blackout & Natural Circulation (SBO)"
+    category: "safety_critical"
+    initial_power_mwth: 756.0
+    pump_coastdown_tau_sec: 12.0
+    description: "Loss of offsite power and emergency diesel generator failure; main coolant pump trip transitioning to thermosiphoning."
+
+  5:
+    name: "Feedwater Flow Disturbance"
+    category: "abnormal_transient"
+    initial_power_mwth: 756.0
+    feedwater_loss_fraction: 0.25
+    description: "Partial trip of secondary feedwater pumps causing secondary heat sink degradation and primary temperature swell."
+
+  6:
+    name: "Controlled Power Ramp Down"
+    category: "normal_operation"
+    initial_power_mwth: 756.0
+    target_power_mwth: 450.0
+    ramp_rate_mwth_per_min: 30.0
+    description: "Planned grid load-following reduction via controlled liquid zone filling."
