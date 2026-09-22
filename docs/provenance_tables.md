@@ -1,7 +1,7 @@
 # PRAJNA Verified Provenance Tables
 
-**Generated:** 2026-09-22T17:28:45.134437+00:00
-**Git Commit:** `02769f184e5ea98433183a0bde6112464f3cc555` (branch: `main`)
+**Generated:** 2026-09-22T17:34:28.932729+00:00
+**Git Commit:** `672831f02b5735716497946c642e60809bf0dd06` (branch: `main`)
 **Working Tree Clean:** `True`
 **Command:** `C:\Program Files\Python314\python.exe scripts/generate_results_provenance.py`
 **Random Seeds:** `[42, 43, 44, 45, 46]`
