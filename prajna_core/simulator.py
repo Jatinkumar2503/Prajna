@@ -155,23 +155,26 @@ class PhysicalPHWRSimulator:
         }
 
     def simulate_transient(self,
-                           scenario_id: int,
+                           scenario_id: int = 0,
                            duration_seconds: float = 45.0,
                            dt: float = 0.05,
                            batch_size: int = 1,
                            seed: Optional[int] = None,
-                           severity: float = 1.0) -> Dict[str, torch.Tensor]:
+                           severity: float = 1.0,
+                           overlapping_event: Optional[str] = None) -> Dict[str, torch.Tensor]:
         """
         Simulates closed-loop multi-physics ODE for a specified scenario:
         0: Steady-State Normal
-        1: Loss of Coolant Accident (LOCA)
+        1: Loss of Coolant Accident (LOCA) - Continuous break area (0.5% SBLOCA to 100% LBLOCA)
         2: Reactivity-Initiated Accident (RIA / PHWR Zone Drain)
         3: Steam Generator Tube Rupture (SGTR)
         4: Station Blackout (SBO) & Natural Circulation
         
         Args:
-            severity: Continuous physical severity multiplier (default 1.0 nominal).
-                      Scales depressurization rates, pump coastdown inertia, or reactivity ramp.
+            severity: Continuous physical severity multiplier (0.005 to 1.0+).
+                      For LOCA: represents break area fraction (0.005 = 0.5% SBLOCA, 1.0 = 100% LBLOCA).
+            overlapping_event: Optional concurrent compound event:
+                      'sensor_drift', 'stuck_control_rod', 'grid_frequency_fluctuation'.
         """
         if seed is not None:
             torch.manual_seed(seed)
@@ -203,23 +206,30 @@ class PhysicalPHWRSimulator:
             if scenario_id == 0:  # Steady-State Normal with realistic small control oscillations
                 rho_ext = torch.full((batch_size, 1), 0.00002 * math.sin(t_curr * 0.2), device=self.device)
                 
-            elif scenario_id == 1:  # LOCA: Primary leak, voiding, positive void feedback, SCRAM at t=1.5s
+            elif scenario_id == 1:  # LOCA: Continuous break area (0.5% - 100%), voiding, trip
                 if t_curr > 0.5:
-                    p_drop_rate = 6.5 * severity
-                    leak_flow = 1200.0 * severity * (1.0 - math.exp(-(t_curr - 0.5) / 2.0))
+                    # Continuous break area fraction from 0.005 (0.5% SBLOCA) to 1.0 (100% LBLOCA)
+                    break_frac = max(0.005, min(1.5, severity))
+                    p_drop_rate = 6.5 * break_frac
+                    leak_flow = 1200.0 * break_frac * (1.0 - math.exp(-(t_curr - 0.5) / 2.0))
                     state["m_prim"] = torch.clamp(state["m_prim"] - leak_flow * dt, min=15000.0)
                     state["p_prim"] = torch.full((batch_size, 1), max(25.0, 87.0 - (t_curr - 0.5) * p_drop_rate), device=self.device)
-                    state["void_frac"] = torch.full((batch_size, 1), min(35.0, (t_curr - 0.5) * 1.8 * severity), device=self.device)
+                    state["void_frac"] = torch.full((batch_size, 1), min(35.0, (t_curr - 0.5) * 1.8 * break_frac), device=self.device)
                     state["p_cont"] = state["p_cont"] + (leak_flow * 0.008) * dt
-                    state["rad"] = state["rad"] + (0.15 * (t_curr - 0.5) * severity) * dt
+                    state["rad"] = state["rad"] + (0.15 * (t_curr - 0.5) * break_frac) * dt
                     
-                    if t_curr < 1.5:
-                        # Positive void reactivity pulse before trip!
+                    # Trip timing: for large breaks (>=0.25) fast automatic trip at t=1.5s;
+                    # for subtle small breaks, trip occurs when pressure reaches provisional trip limit (50 bar)
+                    trip_time = 1.5 if break_frac >= 0.25 else min(45.0, 0.5 + (87.0 - 50.0) / max(0.05, p_drop_rate))
+                    if t_curr < trip_time:
+                        # Positive void reactivity pulse before trip
                         rho_ext = ALPHA_VOID * state["void_frac"]
                     else:
                         # Safety Rod Bank Injection (SCRAM)
-                        rho_ext = -0.045 * torch.ones(batch_size, 1, device=self.device)
-                        state["rod"] = torch.clamp(state["rod"] - 50.0 * dt, min=0.0)
+                        scram_eff = 0.65 if overlapping_event == "stuck_control_rod" else 1.0
+                        rho_ext = -0.045 * scram_eff * torch.ones(batch_size, 1, device=self.device)
+                        rod_min = 25.0 if overlapping_event == "stuck_control_rod" else 0.0
+                        state["rod"] = torch.clamp(state["rod"] - 50.0 * dt, min=rod_min)
                         
             elif scenario_id == 2:  # Reactivity Insertion (Zone Controller Drain)
                 # Uncontrolled positive ramp scaled by severity, Doppler feedback arrests excursion
@@ -252,6 +262,10 @@ class PhysicalPHWRSimulator:
                     state["flow"] = pump_flow + nat_flow
                     # Secondary heat sink boils off
                     state["t_sec"] = state["t_sec"] + 0.15 * severity * dt
+
+            if overlapping_event == "grid_frequency_fluctuation" and scenario_id != 4:
+                # Modulate primary coolant flow (+/- 3%) due to grid frequency perturbations
+                state["flow"] = torch.full((batch_size, 1), FLOW_NOMINAL_KG_S * (1.0 + 0.03 * math.sin(t_curr * 1.5)), device=self.device)
 
             # 2. Total Reactivity with Dynamic Feedbacks
             delta_t_fuel = state["t_fuel"] - T_FUEL_NOMINAL_C
