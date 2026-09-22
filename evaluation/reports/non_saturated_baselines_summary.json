@@ -1,6 +1,6 @@
 {
   "benchmark": "Non_Saturated_Early_Onset_and_Tmargin",
-  "task_description": "Discriminate accident type within t <= 10s post-onset and estimate T_margin in seconds under active instrument noise",
+  "task_description": "Discriminate accident type within onset-aligned early window (t <= 5s post-onset) under continuous LOCA break spectrum (0.5%-100%), compound overlapping events, and sensor faults",
   "seeds_evaluated": [
     42,
     43,
@@ -17,38 +17,38 @@
     "Rate_of_Change_CUSUM": {
       "type": "Industrial Threshold Rule",
       "parameters": 0,
-      "early_onset_accuracy_mean": 0.8867,
-      "early_onset_accuracy_std": 0.0174,
-      "tmargin_mae_seconds_mean": 9.703,
-      "tmargin_mae_seconds_std": 0.184,
-      "single_window_cpu_latency_ms": 0.0118,
+      "early_onset_accuracy_mean": 0.6107,
+      "early_onset_accuracy_std": 0.0262,
+      "tmargin_mae_seconds_mean": 8.184,
+      "tmargin_mae_seconds_std": 0.171,
+      "single_window_cpu_latency_ms": 0.0045,
       "average_confusion_matrix": [
         [
-          27,
+          25,
           0,
           0,
-          3,
-          0
-        ],
-        [
-          0,
-          28,
-          2,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          30,
-          0,
-          0
-        ],
-        [
-          6,
           5,
+          0
+        ],
+        [
+          12,
+          12,
+          5,
+          1,
+          0
+        ],
+        [
+          12,
           0,
-          19,
+          17,
+          1,
+          0
+        ],
+        [
+          22,
+          0,
+          0,
+          8,
           0
         ],
         [
@@ -60,56 +60,56 @@
         ]
       ],
       "per_seed_acc": [
-        88.0,
-        91.33,
-        90.0,
-        86.67,
-        87.33
+        66.0,
+        58.67,
+        61.33,
+        59.33,
+        60.0
       ],
       "per_seed_tmargin": [
-        9.652,
-        9.892,
-        9.653,
-        9.908,
-        9.41
+        8.027,
+        8.446,
+        8.261,
+        7.969,
+        8.214
       ],
       "deterministic": true
     },
     "Logistic_Regression": {
       "type": "Linear Classifier + Ridge",
-      "parameters": 485,
-      "early_onset_accuracy_mean": 0.96,
-      "early_onset_accuracy_std": 0.0084,
-      "tmargin_mae_seconds_mean": 4.791,
-      "tmargin_mae_seconds_std": 0.264,
-      "single_window_cpu_latency_ms": 0.1539,
+      "parameters": 365,
+      "early_onset_accuracy_mean": 0.752,
+      "early_onset_accuracy_std": 0.0281,
+      "tmargin_mae_seconds_mean": 6.013,
+      "tmargin_mae_seconds_std": 0.296,
+      "single_window_cpu_latency_ms": 0.0786,
       "average_confusion_matrix": [
         [
-          29,
+          25,
           0,
+          5,
           0,
+          0
+        ],
+        [
+          3,
+          18,
+          1,
+          8,
+          0
+        ],
+        [
+          13,
+          0,
+          16,
           1,
           0
         ],
         [
-          0,
-          30,
-          0,
-          0,
-          0
-        ],
-        [
-          3,
-          0,
-          27,
-          0,
-          0
-        ],
-        [
-          3,
+          6,
           0,
           0,
-          27,
+          24,
           0
         ],
         [
@@ -121,235 +121,235 @@
         ]
       ],
       "per_seed_acc": [
-        95.33,
-        96.67,
-        94.67,
-        96.67,
-        96.67
+        80.0,
+        74.0,
+        71.33,
+        75.33,
+        75.33
       ],
       "per_seed_tmargin": [
-        4.409,
-        5.163,
-        4.845,
-        4.942,
-        4.594
+        5.832,
+        6.053,
+        6.374,
+        6.255,
+        5.55
       ]
     },
     "HistGradientBoosting": {
       "type": "Tree-based Non-Linear",
       "parameters": 25000,
-      "early_onset_accuracy_mean": 0.9907,
-      "early_onset_accuracy_std": 0.0068,
-      "tmargin_mae_seconds_mean": 1.466,
-      "tmargin_mae_seconds_std": 0.146,
-      "single_window_cpu_latency_ms": 9.4474,
-      "average_confusion_matrix": [
-        [
-          29,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          29,
-          0,
-          1,
-          0
-        ],
-        [
-          0,
-          0,
-          30,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          30,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          30
-        ]
-      ],
-      "per_seed_acc": [
-        98.67,
-        100.0,
-        98.0,
-        99.33,
-        99.33
-      ],
-      "per_seed_tmargin": [
-        1.644,
-        1.562,
-        1.318,
-        1.536,
-        1.271
-      ]
-    },
-    "GRU_Forecaster": {
-      "type": "Deep Sequence Model (GRU)",
-      "parameters": 42374,
       "early_onset_accuracy_mean": 0.78,
-      "early_onset_accuracy_std": 0.1046,
-      "tmargin_mae_seconds_mean": 2.799,
-      "tmargin_mae_seconds_std": 0.739,
-      "single_window_cpu_latency_ms": 0.5706,
+      "early_onset_accuracy_std": 0.026,
+      "tmargin_mae_seconds_mean": 3.996,
+      "tmargin_mae_seconds_std": 0.185,
+      "single_window_cpu_latency_ms": 7.0896,
       "average_confusion_matrix": [
         [
-          18,
-          0,
-          0,
-          0,
-          12
-        ],
-        [
-          0,
           30,
+          0,
           0,
           0,
           0
         ],
         [
-          10,
+          5,
+          17,
           0,
-          16,
-          0,
-          4
-        ],
-        [
-          3,
-          0,
-          0,
-          25,
-          2
-        ],
-        [
-          1,
-          0,
-          0,
-          0,
-          29
-        ]
-      ],
-      "per_seed_acc": [
-        66.67,
-        87.33,
-        88.0,
-        64.0,
-        84.0
-      ],
-      "per_seed_tmargin": [
-        3.438,
-        1.524,
-        3.053,
-        3.518,
-        2.464
-      ]
-    },
-    "LSTM_Forecaster": {
-      "type": "Deep Sequence Model (LSTM)",
-      "parameters": 55686,
-      "early_onset_accuracy_mean": 0.8387,
-      "early_onset_accuracy_std": 0.1305,
-      "tmargin_mae_seconds_mean": 5.958,
-      "tmargin_mae_seconds_std": 7.404,
-      "single_window_cpu_latency_ms": 0.5613,
-      "average_confusion_matrix": [
-        [
-          24,
-          0,
-          0,
-          0,
-          6
-        ],
-        [
-          0,
-          30,
-          0,
-          0,
+          7,
           0
         ],
         [
-          8,
+          12,
           0,
           18,
-          0,
-          4
-        ],
-        [
-          1,
-          0,
-          1,
-          26,
-          1
-        ],
-        [
-          2,
-          0,
-          0,
-          0,
-          28
-        ]
-      ],
-      "per_seed_acc": [
-        100.0,
-        62.0,
-        87.33,
-        78.0,
-        92.0
-      ],
-      "per_seed_tmargin": [
-        20.64,
-        3.592,
-        1.436,
-        3.086,
-        1.035
-      ]
-    },
-    "Temporal_Transformer": {
-      "type": "Deep Sequence Model (Transformer)",
-      "parameters": 40390,
-      "early_onset_accuracy_mean": 0.944,
-      "early_onset_accuracy_std": 0.0339,
-      "tmargin_mae_seconds_mean": 4.931,
-      "tmargin_mae_seconds_std": 7.856,
-      "single_window_cpu_latency_ms": 1.3566,
-      "average_confusion_matrix": [
-        [
-          30,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          30,
-          0,
           0,
           0
         ],
         [
           7,
           0,
+          0,
           23,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          29
+        ]
+      ],
+      "per_seed_acc": [
+        76.0,
+        75.33,
+        78.67,
+        82.67,
+        77.33
+      ],
+      "per_seed_tmargin": [
+        3.855,
+        4.113,
+        4.244,
+        4.046,
+        3.723
+      ]
+    },
+    "GRU_Forecaster": {
+      "type": "Deep Sequence Model (GRU)",
+      "parameters": 42374,
+      "early_onset_accuracy_mean": 0.5947,
+      "early_onset_accuracy_std": 0.0449,
+      "tmargin_mae_seconds_mean": 3.472,
+      "tmargin_mae_seconds_std": 0.141,
+      "single_window_cpu_latency_ms": 0.3247,
+      "average_confusion_matrix": [
+        [
+          27,
+          0,
+          1,
+          0,
+          2
+        ],
+        [
+          11,
+          13,
+          0,
+          5,
+          1
+        ],
+        [
+          21,
+          0,
+          7,
+          1,
+          1
+        ],
+        [
+          15,
+          0,
+          1,
+          12,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ],
+      "per_seed_acc": [
+        64.0,
+        56.0,
+        52.67,
+        60.67,
+        64.0
+      ],
+      "per_seed_tmargin": [
+        3.377,
+        3.346,
+        3.638,
+        3.65,
+        3.35
+      ]
+    },
+    "LSTM_Forecaster": {
+      "type": "Deep Sequence Model (LSTM)",
+      "parameters": 55686,
+      "early_onset_accuracy_mean": 0.4267,
+      "early_onset_accuracy_std": 0.1145,
+      "tmargin_mae_seconds_mean": 3.656,
+      "tmargin_mae_seconds_std": 0.459,
+      "single_window_cpu_latency_ms": 0.3433,
+      "average_confusion_matrix": [
+        [
+          11,
+          0,
+          1,
+          0,
+          18
+        ],
+        [
+          5,
+          16,
+          0,
+          2,
+          7
+        ],
+        [
+          9,
+          0,
+          3,
+          2,
+          16
+        ],
+        [
+          7,
+          6,
+          1,
+          5,
+          11
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          30
+        ]
+      ],
+      "per_seed_acc": [
+        56.0,
+        34.0,
+        33.33,
+        57.33,
+        32.67
+      ],
+      "per_seed_tmargin": [
+        3.159,
+        4.507,
+        3.667,
+        3.382,
+        3.565
+      ]
+    },
+    "Temporal_Transformer": {
+      "type": "Deep Sequence Model (Transformer)",
+      "parameters": 40390,
+      "early_onset_accuracy_mean": 0.6827,
+      "early_onset_accuracy_std": 0.073,
+      "tmargin_mae_seconds_mean": 2.989,
+      "tmargin_mae_seconds_std": 0.975,
+      "single_window_cpu_latency_ms": 0.7291,
+      "average_confusion_matrix": [
+        [
+          24,
+          1,
+          5,
           0,
           0
         ],
         [
+          8,
+          17,
           2,
+          3,
+          0
+        ],
+        [
+          15,
+          2,
+          13,
           0,
+          0
+        ],
+        [
+          9,
           0,
-          28,
+          3,
+          18,
           0
         ],
         [
@@ -361,28 +361,28 @@
         ]
       ],
       "per_seed_acc": [
-        95.33,
-        92.0,
-        94.67,
-        90.0,
-        100.0
+        54.0,
+        69.33,
+        71.33,
+        74.0,
+        72.67
       ],
       "per_seed_tmargin": [
-        1.291,
-        0.957,
-        0.94,
-        0.828,
-        20.64
+        4.78,
+        2.342,
+        2.612,
+        3.195,
+        2.019
       ]
     },
     "PRAJNA_Reflex_Engine": {
       "type": "Physics-Gated Forecaster",
       "parameters": 24338,
-      "early_onset_accuracy_mean": 0.9613,
-      "early_onset_accuracy_std": 0.0098,
-      "tmargin_mae_seconds_mean": 0.851,
-      "tmargin_mae_seconds_std": 0.241,
-      "single_window_cpu_latency_ms": 0.8623,
+      "early_onset_accuracy_mean": 0.7413,
+      "early_onset_accuracy_std": 0.0284,
+      "tmargin_mae_seconds_mean": 2.624,
+      "tmargin_mae_seconds_std": 0.506,
+      "single_window_cpu_latency_ms": 0.4258,
       "average_confusion_matrix": [
         [
           30,
@@ -392,47 +392,47 @@
           0
         ],
         [
-          0,
-          30,
-          0,
-          0,
-          0
-        ],
-        [
+          6,
+          18,
+          1,
           5,
+          0
+        ],
+        [
+          17,
           0,
-          25,
+          13,
           0,
           0
         ],
         [
+          7,
           0,
-          0,
-          0,
-          30,
+          1,
+          21,
           0
         ],
         [
+          1,
           0,
           0,
           0,
-          0,
-          30
+          29
         ]
       ],
       "per_seed_acc": [
-        97.33,
-        97.33,
-        95.33,
-        95.33,
-        95.33
+        70.67,
+        70.67,
+        76.67,
+        76.0,
+        76.67
       ],
       "per_seed_tmargin": [
-        1.319,
-        0.731,
-        0.836,
-        0.688,
-        0.679
+        3.413,
+        2.871,
+        2.374,
+        1.894,
+        2.57
       ]
     }
   }
