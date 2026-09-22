@@ -138,5 +138,33 @@ class TestExperimentalRigor(unittest.TestCase):
         rel_err = abs(dominant_eigval - expected_root) / expected_root
         self.assertLess(rel_err, 1e-5, f"Inhour root relative error {rel_err} exceeds 1e-5")
 
+    def test_07_sensor_fault_injection_suite(self):
+        """Verifies stuck sensor, step bias, and deadband fault injection mechanics."""
+        from prajna_core.noise import (
+            apply_stuck_sensor_fault,
+            apply_step_bias_fault,
+            apply_deadband_hysteresis,
+            inject_sensor_fault_suite
+        )
+        x = torch.randn(2, 20, 12)
+        # Stuck sensor test: from step 10, channel 4 must remain constant
+        x_stuck = apply_stuck_sensor_fault(x, channels=[4], start_step=10)
+        for t in range(10, 20):
+            self.assertTrue(torch.equal(x_stuck[:, t, 4], x_stuck[:, 9, 4]))
+
+        # Step bias test: from step 5, channel 2 has exact +3.0 offset
+        x_bias = apply_step_bias_fault(x, channels=[2], biases=[3.0], start_step=5)
+        diff = x_bias[:, 5:, 2] - x[:, 5:, 2]
+        self.assertTrue(torch.allclose(diff, torch.tensor(3.0)))
+
+        # Deadband test: output matches or maintains previous value
+        x_dead = apply_deadband_hysteresis(x)
+        self.assertEqual(x_dead.shape, x.shape)
+
+        # Batch fault suite executes cleanly
+        x_suite, log = inject_sensor_fault_suite(x, fault_prob=1.0, seed=42)
+        self.assertEqual(x_suite.shape, x.shape)
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -97,3 +97,106 @@ def apply_instrument_noise_suite(x: torch.Tensor,
             out[:, -5:, :] = torch.where(stuck_mask, frozen_val, out[:, -5:, :])
 
     return out
+
+
+def apply_stuck_sensor_fault(x: torch.Tensor,
+                             channels: Optional[list] = None,
+                             start_step: int = 10) -> torch.Tensor:
+    """
+    Simulates frozen/stuck-at sensor transmitter failure.
+    From start_step onward, specified channels hold their exact previous value.
+    """
+    out = x.clone()
+    batch_size, seq_len, num_channels = out.shape
+    if channels is None:
+        channels = [4]  # Primary pressure sensor by default
+    if start_step >= seq_len:
+        return out
+    
+    frozen_val = out[:, start_step - 1:start_step, :]
+    for ch in channels:
+        if ch < num_channels:
+            out[:, start_step:, ch] = frozen_val[:, 0, ch].unsqueeze(-1).expand(-1, seq_len - start_step)
+    return out
+
+
+def apply_step_bias_fault(x: torch.Tensor,
+                          channels: Optional[list] = None,
+                          biases: Optional[list] = None,
+                          start_step: int = 5) -> torch.Tensor:
+    """
+    Simulates abrupt sensor calibration step bias (e.g. electrical surge or transducer shift).
+    """
+    out = x.clone()
+    batch_size, seq_len, num_channels = out.shape
+    if channels is None:
+        channels = [4]
+    if biases is None:
+        biases = [2.5]
+    if start_step >= seq_len:
+        return out
+
+    for ch, bias in zip(channels, biases):
+        if ch < num_channels:
+            out[:, start_step:, ch] = out[:, start_step:, ch] + bias
+    return out
+
+
+def apply_deadband_hysteresis(x: torch.Tensor,
+                              thresholds: Optional[torch.Tensor] = None) -> torch.Tensor:
+    """
+    Simulates mechanical deadband / hysteresis in measurement transducers.
+    Transmitter only updates if physical change exceeds deadband threshold.
+    """
+    batch_size, seq_len, num_channels = x.shape
+    device = x.device
+    if thresholds is None:
+        thresholds = (INSTRUMENT_SIGMAS[:num_channels] * 0.8).to(device)
+    else:
+        thresholds = thresholds[:num_channels].to(device)
+
+    out = torch.zeros_like(x)
+    out[:, 0, :] = x[:, 0, :]
+    for t in range(1, seq_len):
+        delta = x[:, t, :] - out[:, t - 1, :]
+        update_mask = torch.abs(delta) >= thresholds.view(1, -1)
+        out[:, t, :] = torch.where(update_mask, x[:, t, :], out[:, t - 1, :])
+    return out
+
+
+def inject_sensor_fault_suite(x: torch.Tensor,
+                              fault_prob: float = 0.35,
+                              seed: Optional[int] = None) -> Tuple[torch.Tensor, Dict[str, list]]:
+    """
+    Randomly injects realistic sensor instrumentation faults across a batch:
+    - Stuck/frozen transducer (stuck-at fault)
+    - Abrupt step calibration bias (transducer shift)
+    - Deadband / stiction hysteresis (mechanical hysteresis)
+    """
+    if seed is not None:
+        torch.manual_seed(seed)
+    
+    out = x.clone()
+    batch_size, seq_len, num_channels = out.shape
+    fault_log: Dict[str, list] = {"stuck": [], "bias": [], "deadband": []}
+    
+    for b in range(batch_size):
+        r = float(torch.rand(1).item())
+        if r < fault_prob * 0.4:
+            ch = int(torch.randint(0, num_channels, (1,)).item())
+            step = int(torch.randint(max(1, seq_len // 4), max(2, seq_len * 3 // 4), (1,)).item())
+            out[b:b+1] = apply_stuck_sensor_fault(out[b:b+1], channels=[ch], start_step=step)
+            fault_log["stuck"].append((b, ch, step))
+        elif r < fault_prob * 0.8:
+            ch = int(torch.randint(0, num_channels, (1,)).item())
+            step = int(torch.randint(max(1, seq_len // 4), max(2, seq_len * 3 // 4), (1,)).item())
+            sigma_val = float(INSTRUMENT_SIGMAS[ch].item()) if ch < len(INSTRUMENT_SIGMAS) else 1.0
+            bias_val = float((torch.rand(1).item() * 2 - 1) * 3.0 * sigma_val)
+            out[b:b+1] = apply_step_bias_fault(out[b:b+1], channels=[ch], biases=[bias_val], start_step=step)
+            fault_log["bias"].append((b, ch, bias_val, step))
+        elif r < fault_prob:
+            out[b:b+1] = apply_deadband_hysteresis(out[b:b+1])
+            fault_log["deadband"].append(b)
+            
+    return out, fault_log
+
