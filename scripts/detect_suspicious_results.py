@@ -89,7 +89,8 @@ def main(argv: List[str] = None) -> int:
     if not args:
         print(__doc__)
         return 2
-    doc = json.load(open(args[0], encoding="utf-8"))
+    with open(args[0], encoding="utf-8") as f:
+        doc = json.load(f)
     n = len(collect_arrays(doc))
     flags = analyse(doc)
     for f in flags:

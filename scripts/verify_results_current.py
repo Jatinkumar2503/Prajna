@@ -34,7 +34,8 @@ def recorded_commit(doc: Dict[str, Any]) -> Optional[str]:
 
 
 def check(results_path: str, dirs: List[str], repo: str = ".") -> List[str]:
-    doc = json.load(open(results_path, encoding="utf-8"))
+    with open(results_path, encoding="utf-8") as f:
+        doc = json.load(f)
     commit = recorded_commit(doc)
     if not commit:
         return ["results.json does not record a git commit"]
