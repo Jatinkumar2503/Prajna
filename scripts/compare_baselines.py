@@ -33,7 +33,7 @@ sys.path.insert(0, PROJECT_ROOT)
 
 from prajna_core.simulator import PhysicalPHWRSimulator
 from prajna_core.models.fast_reflex import PrajnaFastReflex
-from prajna_core.noise import apply_instrument_noise_suite
+from prajna_core.noise import apply_instrument_noise_suite, inject_sensor_fault_suite
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 SEEDS = [42, 43, 44, 45, 46]
@@ -50,19 +50,28 @@ SCENARIO_THRESHOLDS = {
 # =============================================================================
 # 1. GENERATE NON-SATURATED BENCHMARK DATASET WITH VARIABLE PHYSICAL SEVERITY
 # =============================================================================
-def generate_onset_benchmark_data(n_runs_per_scen: int = 50, seed_base: int = 1000, vary_severity: bool = True):
+def generate_onset_benchmark_data(n_runs_per_scen: int = 50,
+                                  seed_base: int = 1000,
+                                  is_test_set: bool = False,
+                                  window_length: int = 6):
     """
-    Generates early transient onset data (t = 0 to 10s post-onset).
-    At t <= 10s, physical parameter deviations are small and subtle, preventing metric saturation.
-    Varies physical severity across runs so that breach times vary dynamically.
-    Vectorized across severity bins for fast parallel ODE evaluation.
+    Generates non-saturated benchmark dataset across physical scenarios:
+    1. Continuous LOCA break area spectrum (0.5% SBLOCA to 100% LBLOCA)
+    2. Overlapping compound events (stuck safety rod, grid frequency fluctuation)
+    3. Unseen severities held out for test set to evaluate real generalization
+    4. Onset-aligned early detection window (first 6 seconds, t <= 5s post-initiation)
     """
     sim = PhysicalPHWRSimulator(device=torch.device("cpu"))
     windows_list = []
     labels_list = []
     tmargin_list = []
 
-    sev_bins = [0.25, 0.50, 0.75, 1.00, 1.25] if vary_severity else [1.0]
+    # Unseen severities: training uses interpolation points; test evaluates subtle small breaks & unseen severities
+    if is_test_set:
+        sev_bins = [0.005, 0.03, 0.20, 0.60, 0.85]  # Includes 0.5% SBLOCA & 3% subtle breaks
+    else:
+        sev_bins = [0.10, 0.30, 0.50, 0.75, 1.00]
+
     n_per_bin = max(1, n_runs_per_scen // len(sev_bins))
 
     for scen_id in range(5):
@@ -71,13 +80,21 @@ def generate_onset_benchmark_data(n_runs_per_scen: int = 50, seed_base: int = 10
             run_seed = seed_base + scen_id * 500 + bin_idx * 50
             effective_sev = sev if scen_id > 0 else 1.0
 
+            # Compound overlapping event assignment
+            overlap = None
+            if bin_idx % 2 == 1:
+                overlap = "grid_frequency_fluctuation"
+            elif scen_id == 1 and bin_idx == 3:
+                overlap = "stuck_control_rod"
+
             res = sim.simulate_transient(
                 scenario_id=scen_id,
                 duration_seconds=45.0,
                 dt=1.0,
                 batch_size=n_per_bin,
                 seed=run_seed,
-                severity=effective_sev
+                severity=effective_sev,
+                overlapping_event=overlap
             )
             # obs: [B, 45, 12]
             obs_batch = res["obs"].numpy()
@@ -95,20 +112,20 @@ def generate_onset_benchmark_data(n_runs_per_scen: int = 50, seed_base: int = 10
                 else:
                     t_breach = 45.0
 
-                # Early onset window: first 8 seconds (t = 0 to 7s)
-                early_obs = obs[:8, :]  # [8, 12]
-                if len(early_obs) < 8:
-                    pad = np.repeat(early_obs[-1:], 8 - len(early_obs), axis=0)
+                # Onset-aligned early window: first window_length seconds (e.g. t = 0 to 5s)
+                early_obs = obs[:window_length, :]  # [6, 12]
+                if len(early_obs) < window_length:
+                    pad = np.repeat(early_obs[-1:], window_length - len(early_obs), axis=0)
                     early_obs = np.vstack([early_obs, pad])
 
-                # True margin at t = 8s
-                t_ref_8s = max(0.0, t_breach - 8.0)
+                # True margin at t = window_length seconds
+                t_ref = max(0.0, t_breach - float(window_length))
 
                 windows_list.append(early_obs)
                 labels_list.append(scen_id)
-                tmargin_list.append(t_ref_8s)
+                tmargin_list.append(t_ref)
 
-    windows = np.array(windows_list, dtype=np.float32)  # [N, 8, 12]
+    windows = np.array(windows_list, dtype=np.float32)  # [N, window_length, 12]
     labels = np.array(labels_list, dtype=np.int64)
     tmargins = np.array(tmargin_list, dtype=np.float32)
     return windows, labels, tmargins
@@ -124,18 +141,19 @@ class CUSUMRateOfChangeDetector:
         est_margins = np.full(n_samples, 35.0, dtype=np.float32)
         for i in range(n_samples):
             w = windows[i]
+            dt_span = max(1.0, float(len(w) - 1))
             # Primary Pressure (LOCA / SGTR)
             p_curr = w[-1, 4]
-            dp_dt = (w[-1, 4] - w[-4, 4]) / 3.0
+            dp_dt = (w[-1, 4] - w[0, 4]) / dt_span
             # Coolant Flow (SBO)
             f_curr = w[-1, 1]
-            df_dt = (w[-1, 1] - w[-4, 1]) / 3.0
+            df_dt = (w[-1, 1] - w[0, 1]) / dt_span
             # Core Power (RIA)
             pow_curr = w[-1, 5]
-            dpow_dt = (w[-1, 5] - w[-4, 5]) / 3.0
+            dpow_dt = (w[-1, 5] - w[0, 5]) / dt_span
 
             m_candidates = []
-            if dp_dt < -0.2:
+            if dp_dt < -0.15:
                 m_candidates.append(max(0.0, (50.0 - p_curr) / dp_dt))
             if df_dt < -10.0:
                 m_candidates.append(max(0.0, (500.0 - f_curr) / df_dt))
@@ -150,9 +168,10 @@ class CUSUMRateOfChangeDetector:
         preds = np.zeros(len(windows), dtype=int)
         for i in range(len(windows)):
             w = windows[i]
-            dp_dt = (w[-1, 4] - w[-4, 4]) / 3.0
-            df_dt = (w[-1, 1] - w[-4, 1]) / 3.0
-            dpow_dt = (w[-1, 5] - w[-4, 5]) / 3.0
+            dt_span = max(1.0, float(len(w) - 1))
+            dp_dt = (w[-1, 4] - w[0, 4]) / dt_span
+            df_dt = (w[-1, 1] - w[0, 1]) / dt_span
+            dpow_dt = (w[-1, 5] - w[0, 5]) / dt_span
             p_dev = abs(w[-1, 4] - 85.0)
             f_dev = abs(w[-1, 1] - 3500.0)
             pow_dev = abs(w[-1, 5] - 755.71)
@@ -161,11 +180,11 @@ class CUSUMRateOfChangeDetector:
                 preds[i] = 0  # Normal
             elif df_dt < -25.0:
                 preds[i] = 4  # SBO
-            elif dp_dt < -1.5:
+            elif dp_dt < -1.0:
                 preds[i] = 1  # LOCA
-            elif dpow_dt > 8.0 or pow_dev > 40.0:
+            elif dpow_dt > 6.0 or pow_dev > 35.0:
                 preds[i] = 2  # RIA
-            elif dp_dt < -0.1:
+            elif dp_dt < -0.15:
                 preds[i] = 3  # SGTR
             else:
                 preds[i] = 0
@@ -234,7 +253,7 @@ class TransformerBaseline(nn.Module):
 def run_benchmark():
     print("=" * 80)
     print("PRAJNA: RUNNING BASELINE COMPARISON SUITE (5 SEEDS, EQUALIZED BUDGET & NORMALIZATION)")
-    print("Tasks: Non-Saturated Early Onset (t <= 10s) & Continuous T_margin Estimation")
+    print("Tasks: Non-Saturated Early Onset (t <= 5s) & Continuous T_margin Estimation")
     print("=" * 80)
 
     # Standard model parameter verification
@@ -247,7 +266,7 @@ def run_benchmark():
 
     results = {
         "benchmark": "Non_Saturated_Early_Onset_and_Tmargin",
-        "task_description": "Discriminate accident type within t <= 10s post-onset and estimate T_margin in seconds under active instrument noise",
+        "task_description": "Discriminate accident type within onset-aligned early window (t <= 5s post-onset) under continuous LOCA break spectrum (0.5%-100%), compound overlapping events, and sensor faults",
         "seeds_evaluated": SEEDS,
         "parameter_comparison": {
             "prajna_fast_reflex_params": prajna_param_count,
@@ -270,13 +289,18 @@ def run_benchmark():
 
     for seed_idx, s in enumerate(SEEDS):
         print(f"\n--- SEED [{s}] ({seed_idx+1}/5) ---")
-        # Generate seed-varying simulator data with variable physical severity
-        X_train_raw, y_train, tm_train = generate_onset_benchmark_data(n_runs_per_scen=60, seed_base=1000 + s * 100, vary_severity=True)
-        X_test_raw, y_test, tm_test = generate_onset_benchmark_data(n_runs_per_scen=30, seed_base=5000 + s * 100, vary_severity=True)
+        # Generate seed-varying simulator data with variable physical severity, unseen test severities, and overlapping events
+        X_train_raw, y_train, tm_train = generate_onset_benchmark_data(n_runs_per_scen=60, seed_base=1000 + s * 100, is_test_set=False, window_length=6)
+        X_test_raw, y_test, tm_test = generate_onset_benchmark_data(n_runs_per_scen=30, seed_base=5000 + s * 100, is_test_set=True, window_length=6)
 
-        # Apply noise suite
-        X_train_t = apply_instrument_noise_suite(torch.tensor(X_train_raw), noise_scale=1.0).numpy()
-        X_test_t = apply_instrument_noise_suite(torch.tensor(X_test_raw), noise_scale=1.0).numpy()
+        # Apply noise suite and sensor fault injection (stuck transmitters, step biases, deadband)
+        X_train_t = apply_instrument_noise_suite(torch.tensor(X_train_raw), noise_scale=1.0)
+        X_train_t, _ = inject_sensor_fault_suite(X_train_t, fault_prob=0.25, seed=s)
+        X_train_t = X_train_t.numpy()
+
+        X_test_t = apply_instrument_noise_suite(torch.tensor(X_test_raw), noise_scale=1.0)
+        X_test_t, _ = inject_sensor_fault_suite(X_test_t, fault_prob=0.30, seed=s + 999)
+        X_test_t = X_test_t.numpy()
 
         # Input Normalization strictly fitted on training data: (x - mu) / sigma
         ch_mu = X_train_t.mean(axis=(0, 1), keepdims=True)  # [1, 1, 12]
