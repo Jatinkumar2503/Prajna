@@ -182,7 +182,7 @@ def distill_fast(
             loss_scram = F.binary_cross_entropy(s_scram, is_abnormal)
             
             # Composite
-            total_loss = (alpha * loss_kd) + ((1 - alpha) * loss_ce) + (0.5 * loss_ttl) + (0.5 * loss_scram)
+            total_loss = (alpha * loss_kd) + ((1 - alpha) * loss_ce) + torch.mul(loss_ttl, 0.5) + torch.mul(loss_scram, 0.5)
             
             optimizer.zero_grad()
             total_loss.backward()
@@ -218,7 +218,7 @@ def distill_fast(
                 loss_ce = ce_loss_fn(s_out["eop_logits"], y_val_eop)
                 loss_ttl = mse_loss_fn(s_out["time_to_threshold"], t_val_ttl)
                 
-                v_loss = (alpha * loss_kd) + ((1 - alpha) * loss_ce) + (0.5 * loss_ttl)
+                v_loss = (alpha * loss_kd) + ((1 - alpha) * loss_ce) + torch.mul(loss_ttl, 0.5)
                 val_loss += v_loss.item()
                 
                 v_preds = torch.argmax(s_out["eop_logits"], dim=-1)

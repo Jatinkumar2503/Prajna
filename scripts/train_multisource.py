@@ -129,7 +129,9 @@ def train_model(model: PrajnaFastReflex,
 
     for epoch in range(epochs):
         model.train()
-        total_loss, correct, total = 0.0, 0, 0
+        total_loss = 0.0
+        correct = 0
+        total = 0
 
         for batch_x, batch_y in train_loader:
             batch_x = batch_x.to(DEVICE)
@@ -156,10 +158,13 @@ def train_model(model: PrajnaFastReflex,
         train_acc = correct / max(total, 1)
 
         # Validation
-        val_loss, val_acc = 0.0, 0.0
+        val_loss = 0.0
+        val_acc = 0.0
         if val_loader is not None:
             model.eval()
-            v_loss, v_correct, v_total = 0.0, 0, 0
+            v_loss = 0.0
+            v_correct = 0
+            v_total = 0
             with torch.no_grad():
                 for vx, vy in val_loader:
                     vx, vy = vx.to(DEVICE), torch.clamp(vy.to(DEVICE), 0, NUM_CLASSES - 1)

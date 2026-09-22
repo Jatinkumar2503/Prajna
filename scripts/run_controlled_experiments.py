@@ -431,7 +431,7 @@ def run_exp06(phwr_train: Dict, phwr_test: Dict) -> Dict:
             "physics_residual_mwth": round(res_b, 4)
         },
         "model_c_full_prajna_with_tmargin_gate": {
-            "clean_accuracy": 1.0,
+            "clean_accuracy": round(acc_b_clean, 4),
             "degraded_accuracy": round(acc_b_degraded, 4),
             "deterministic_safety_gating": True
         },

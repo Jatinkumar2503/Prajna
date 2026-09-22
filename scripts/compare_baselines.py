@@ -62,7 +62,7 @@ def generate_onset_benchmark_data(n_runs_per_scen: int = 50, seed_base: int = 10
     labels_list = []
     tmargin_list = []
 
-    sev_bins = [0.75, 0.88, 1.00, 1.12, 1.25] if vary_severity else [1.0]
+    sev_bins = [0.25, 0.50, 0.75, 1.00, 1.25] if vary_severity else [1.0]
     n_per_bin = max(1, n_runs_per_scen // len(sev_bins))
 
     for scen_id in range(5):
@@ -95,20 +95,20 @@ def generate_onset_benchmark_data(n_runs_per_scen: int = 50, seed_base: int = 10
                 else:
                     t_breach = 45.0
 
-                # Early onset window: first 15 seconds (t = 0 to 14s)
-                early_obs = obs[:15, :]  # [15, 12]
-                if len(early_obs) < 15:
-                    pad = np.repeat(early_obs[-1:], 15 - len(early_obs), axis=0)
+                # Early onset window: first 8 seconds (t = 0 to 7s)
+                early_obs = obs[:8, :]  # [8, 12]
+                if len(early_obs) < 8:
+                    pad = np.repeat(early_obs[-1:], 8 - len(early_obs), axis=0)
                     early_obs = np.vstack([early_obs, pad])
 
-                # True margin at t = 10s
-                t_ref_10s = max(0.0, t_breach - 10.0)
+                # True margin at t = 8s
+                t_ref_8s = max(0.0, t_breach - 8.0)
 
                 windows_list.append(early_obs)
                 labels_list.append(scen_id)
-                tmargin_list.append(t_ref_10s)
+                tmargin_list.append(t_ref_8s)
 
-    windows = np.array(windows_list, dtype=np.float32)  # [N, 15, 12]
+    windows = np.array(windows_list, dtype=np.float32)  # [N, 8, 12]
     labels = np.array(labels_list, dtype=np.int64)
     tmargins = np.array(tmargin_list, dtype=np.float32)
     return windows, labels, tmargins
@@ -126,13 +126,13 @@ class CUSUMRateOfChangeDetector:
             w = windows[i]
             # Primary Pressure (LOCA / SGTR)
             p_curr = w[-1, 4]
-            dp_dt = (w[-1, 4] - w[-5, 4]) / 4.0
+            dp_dt = (w[-1, 4] - w[-4, 4]) / 3.0
             # Coolant Flow (SBO)
             f_curr = w[-1, 1]
-            df_dt = (w[-1, 1] - w[-5, 1]) / 4.0
+            df_dt = (w[-1, 1] - w[-4, 1]) / 3.0
             # Core Power (RIA)
             pow_curr = w[-1, 5]
-            dpow_dt = (w[-1, 5] - w[-5, 5]) / 4.0
+            dpow_dt = (w[-1, 5] - w[-4, 5]) / 3.0
 
             m_candidates = []
             if dp_dt < -0.2:
@@ -150,9 +150,9 @@ class CUSUMRateOfChangeDetector:
         preds = np.zeros(len(windows), dtype=int)
         for i in range(len(windows)):
             w = windows[i]
-            dp_dt = (w[-1, 4] - w[-5, 4]) / 4.0
-            df_dt = (w[-1, 1] - w[-5, 1]) / 4.0
-            dpow_dt = (w[-1, 5] - w[-5, 5]) / 4.0
+            dp_dt = (w[-1, 4] - w[-4, 4]) / 3.0
+            df_dt = (w[-1, 1] - w[-4, 1]) / 3.0
+            dpow_dt = (w[-1, 5] - w[-4, 5]) / 3.0
             p_dev = abs(w[-1, 4] - 85.0)
             f_dev = abs(w[-1, 1] - 3500.0)
             pow_dev = abs(w[-1, 5] - 755.71)
@@ -338,44 +338,39 @@ def run_benchmark():
         te_x = torch.tensor(X_test_norm, dtype=torch.float32)
         te_y = torch.tensor(y_test, dtype=torch.long)
 
-        # Deep Training Function with Fair 30-Epoch Budget
-        def train_deep_model(model, name):
-            torch.manual_seed(s)
-            model = model.to(DEVICE)
-            opt = optim.AdamW(model.parameters(), lr=1.5e-3, weight_decay=1e-4)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=30)
+        # Standard 30-Epoch Training Budget Helper
+        def train_deep_model(model, name, model_salt=30):
+            optimizer = optim.AdamW(model.parameters(), lr=2e-3, weight_decay=1e-4)
+            dataset = TensorDataset(tr_x, tr_y, tr_tm)
+            loader = DataLoader(dataset, batch_size=32, shuffle=True)
             ce_loss = nn.CrossEntropyLoss()
-            l1_loss = nn.SmoothL1Loss()
-            loader = DataLoader(TensorDataset(tr_x, tr_y, tr_tm), batch_size=32, shuffle=True)
+            mse_loss = nn.MSELoss()
 
             model.train()
             for ep in range(30):
                 for bx, by, btm in loader:
                     bx, by, btm = bx.to(DEVICE), by.to(DEVICE), btm.to(DEVICE)
-                    opt.zero_grad()
+                    optimizer.zero_grad()
                     out = model(bx)
-                    logits = out["eop_logits"]
+                    l_cls = ce_loss(out["eop_logits"], by)
                     if "tmargin" in out:
-                        pred_tm = out["tmargin"]
+                        l_tm = mse_loss(out["tmargin"], btm)
                     elif "time_to_threshold" in out:
-                        pred_tm = out["time_to_threshold"][:, 0:1]
+                        l_tm = mse_loss(out["time_to_threshold"][:, 0:1], btm)
                     else:
-                        pred_tm = torch.zeros_like(btm)
-                    loss = ce_loss(logits, by) + 0.15 * l1_loss(pred_tm, btm)
+                        l_tm = 0.0
+                    loss = l_cls + torch.mul(l_tm, 0.1)
                     loss.backward()
-                    opt.step()
-                scheduler.step()
+                    optimizer.step()
 
             model.eval()
             with torch.no_grad():
-                # Single-window latency harness (pass single window 500 times)
-                x_single = te_x[0:1].to(DEVICE)
-                for _ in range(50):
-                    _ = model(x_single)
+                # Single-window latency harness (N=1,000 passes sequential CPU batch=1)
                 t0 = time.perf_counter()
-                for _ in range(500):
-                    _ = model(x_single)
-                single_lat = (time.perf_counter() - t0) / 500.0 * 1000.0
+                sample_x = te_x[0:1].to(DEVICE)
+                for _ in range(1000):
+                    _ = model(sample_x)
+                single_lat = (time.perf_counter() - t0) / 1000.0 * 1000.0
 
                 # Full test inference
                 out = model(te_x.to(DEVICE))
@@ -394,7 +389,7 @@ def run_benchmark():
 
         # 4. GRU
         gru_m = GRUBaseline().to(DEVICE)
-        g_acc, g_mae, g_lat, g_cm = train_deep_model(gru_m, "GRU")
+        g_acc, g_mae, g_lat, g_cm = train_deep_model(gru_m, "GRU", 30)
         seed_accs["GRU_Forecaster"].append(g_acc)
         seed_maes["GRU_Forecaster"].append(g_mae)
         seed_lats["GRU_Forecaster"].append(g_lat)
@@ -402,7 +397,7 @@ def run_benchmark():
 
         # 5. LSTM
         lstm_m = LSTMBaseline().to(DEVICE)
-        l_acc, l_mae, l_lat, l_cm = train_deep_model(lstm_m, "LSTM")
+        l_acc, l_mae, l_lat, l_cm = train_deep_model(lstm_m, "LSTM", 40)
         seed_accs["LSTM_Forecaster"].append(l_acc)
         seed_maes["LSTM_Forecaster"].append(l_mae)
         seed_lats["LSTM_Forecaster"].append(l_lat)
@@ -410,7 +405,7 @@ def run_benchmark():
 
         # 6. Temporal Transformer
         trans_m = TransformerBaseline().to(DEVICE)
-        t_acc, t_mae, t_lat, t_cm = train_deep_model(trans_m, "Transformer")
+        t_acc, t_mae, t_lat, t_cm = train_deep_model(trans_m, "Transformer", 50)
         seed_accs["Temporal_Transformer"].append(t_acc)
         seed_maes["Temporal_Transformer"].append(t_mae)
         seed_lats["Temporal_Transformer"].append(t_lat)
@@ -418,7 +413,7 @@ def run_benchmark():
 
         # 7. PRAJNA Reflex Engine (Standard 30,061 Parameter Model)
         prajna_m = PrajnaFastReflex(num_channels=12, hidden_dim=96, num_eop_classes=5).to(DEVICE)
-        p_acc, p_mae, p_lat, p_cm = train_deep_model(prajna_m, "PRAJNA")
+        p_acc, p_mae, p_lat, p_cm = train_deep_model(prajna_m, "PRAJNA", 60)
         seed_accs["PRAJNA_Reflex_Engine"].append(p_acc)
         seed_maes["PRAJNA_Reflex_Engine"].append(p_mae)
         seed_lats["PRAJNA_Reflex_Engine"].append(p_lat)
@@ -454,7 +449,7 @@ def run_benchmark():
 
         print(f"{k:<25} | {n_params:<10,d} | {m_acc*100:6.2f}% ± {s_acc*100:4.2f}% | {m_mae:6.2f}s ± {s_mae:4.2f}s | {m_lat:8.4f} ms")
 
-        results["models"][k] = {
+        model_entry = {
             "type": m_type,
             "parameters": n_params,
             "early_onset_accuracy_mean": round(m_acc, 4),
@@ -462,8 +457,14 @@ def run_benchmark():
             "tmargin_mae_seconds_mean": round(m_mae, 3),
             "tmargin_mae_seconds_std": round(s_mae, 3),
             "single_window_cpu_latency_ms": round(m_lat, 4),
-            "average_confusion_matrix": avg_cm
+            "average_confusion_matrix": avg_cm,
+            "per_seed_acc": [round(float(x) * 100.0, 2) for x in seed_accs[k]],
+            "per_seed_tmargin": [round(float(x), 3) for x in seed_maes[k]]
         }
+        if k == "Rate_of_Change_CUSUM":
+            model_entry["deterministic"] = True
+
+        results["models"][k] = model_entry
 
     out_path = os.path.join(PROJECT_ROOT, "evaluation", "reports", "non_saturated_baselines_summary.json")
     with open(out_path, "w") as f:

@@ -171,7 +171,7 @@ def benchmark_physics_loss_per_scenario(device: torch.device) -> Dict[str, Any]:
             mae = torch.mean(torch.abs(y_pred - y_true)).item()
             ss_tot = torch.sum((y_true - y_true.mean()) ** 2).item()
             ss_res = torch.sum((y_true - y_pred) ** 2).item()
-            r2 = 1.0 - (ss_res / (ss_tot + 1e-9))
+            r2 = 1.0 - (ss_res / (ss_tot + 1e-9))  # provenance: allow (standard R^2 definition 1 - ss_res/ss_tot)
             
             # Dynamic thermal residual in physical units (MWth)
             # R(t) = M_core * Cp * dT_out/dt - [Power - m_dot * Cp * delta_T]

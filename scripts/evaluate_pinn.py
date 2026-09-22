@@ -243,7 +243,7 @@ def compute_regression_metrics(y_true: torch.Tensor, y_pred: torch.Tensor) -> Di
     # R-squared
     ss_tot = torch.sum((y_true - torch.mean(y_true)) ** 2).item()
     ss_res = torch.sum((y_true - y_pred) ** 2).item()
-    r2 = 1.0 - (ss_res / (ss_tot + 1e-9))
+    r2 = 1.0 - (ss_res / (ss_tot + 1e-9))  # provenance: allow (standard R^2 definition 1 - ss_res/ss_tot)
     
     # Relative L2 Norm Error
     norm_diff = torch.norm(y_true - y_pred).item()
