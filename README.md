@@ -144,13 +144,13 @@ Evaluated across 5 independent seeds with standardized input normalization and s
 <!-- PROVENANCE_TABLE_START:baseline_comparison -->
 | Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) | $T_{\text{margin}}$ MAE (s) | Nuisance Alerts |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **CUSUM Change-Point Detector** | 0 | 0.0118 | 88.67 ± 1.94% | 9.70 ± 0.21 s | 14 |
-| **Logistic Regression + Ridge** | 485 | 0.1539 | 96.00 ± 0.94% | 4.79 ± 0.30 s | 0 |
-| **HistGradientBoosting Regressor** | 25000 | 9.4474 | 99.07 ± 0.76% | 1.47 ± 0.16 s | 0 |
-| **GRU Forecaster** | 42374 | 0.5706 | 78.00 ± 11.70% | 2.80 ± 0.83 s | 0 |
-| **LSTM Forecaster** | 55686 | 0.5613 | 83.87 ± 14.59% | 5.96 ± 8.28 s | 0 |
-| **Temporal Transformer** | 40390 | 1.3566 | 94.40 ± 3.79% | 4.93 ± 8.78 s | 0 |
-| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.8623 | 96.13 ± 1.10% | 0.85 ± 0.27 s | 0 |
+| **CUSUM Change-Point Detector** | 0 | 0.0045 | 61.07 ± 2.93% | 8.18 ± 0.19 s | 14 |
+| **Logistic Regression + Ridge** | 365 | 0.0786 | 75.20 ± 3.14% | 6.01 ± 0.33 s | 0 |
+| **HistGradientBoosting Regressor** | 25000 | 7.0896 | 78.00 ± 2.91% | 4.00 ± 0.21 s | 0 |
+| **GRU Forecaster** | 42374 | 0.3247 | 59.47 ± 5.02% | 3.47 ± 0.16 s | 0 |
+| **LSTM Forecaster** | 55686 | 0.3433 | 42.67 ± 12.80% | 3.66 ± 0.51 s | 0 |
+| **Temporal Transformer** | 40390 | 0.7291 | 68.27 ± 8.16% | 2.99 ± 1.09 s | 0 |
+| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.4258 | 74.14 ± 3.18% | 2.62 ± 0.57 s | 0 |
 <!-- PROVENANCE_TABLE_END:baseline_comparison -->
 
 ### 5.2 Conformal $T_{\text{margin}}$ Coverage & Lead Time Slicing

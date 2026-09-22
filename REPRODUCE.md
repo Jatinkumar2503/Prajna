@@ -108,14 +108,14 @@ python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/t
 ### Table 1: Baseline Architecture Comparison (`baseline_comparison`)
 **Source Script:** `scripts/compare_baselines.py`  
 **Output Artifact:** `evaluation/reports/non_saturated_baselines_summary.json`  
-**Task Definition:** Early transient classification within $t \le 8\text{s}$ post-onset across 5 accident regimes (Normal, LOCA, RIA, SGTR, SBO) under variable severity ($\text{sev} \in [0.25, 0.50, 0.75, 1.00, 1.25]$) and instrument noise suite (Gaussian sensor noise, quantization, calibration drift, EMI spikes).
+**Task Definition:** Early transient classification within onset-aligned early window ($t \le 5\text{s}$ post-onset) across 5 accident regimes (Normal, LOCA, RIA, SGTR, SBO) under continuous LOCA break spectrum (0.5%–100%), compound overlapping events (stuck safety rod, grid frequency perturbation), sensor faults (stuck channels, step biases, deadband), and held-out unseen severities.
 
 | Column Header | Extraction / Computation Method | Physical Meaning & Verification Formula |
 | :--- | :--- | :--- |
 | **Model Architecture** | Model display name identifier | Model family: Rule-based, Linear, Tree-based, Recurrent, Attention, or Hybrid PINN. |
 | **Parameters** | `sum(p.numel() for p in model.parameters())` | Exact trainable parameter count in FP32 weights. |
 | **Single CPU Latency (ms)** | `time.perf_counter()` over $N=1,000$ passes | Sequential single-window inference time on 1 CPU thread (`torch.set_num_threads(1)`). |
-| **Onset Acc (%)** | Mean $\pm$ std across 5 seeds: `acc_vals` | Percentage of correctly classified accident windows at $t \le 8\text{s}$ post-accident. |
+| **Onset Acc (%)** | Mean $\pm$ std across 5 seeds: `acc_vals` | Percentage of correctly classified accident windows at $t \le 5\text{s}$ post-accident. |
 | **$T_{\text{margin}}$ MAE (s)** | Mean $\pm$ std across 5 seeds: `tm_vals` | Mean Absolute Error $\frac{1}{N}\sum \|T_{\text{true}} - \hat{T}_{\text{pred}}\|$ in seconds before safety threshold breach. |
 | **Nuisance Alerts** | Count of false SCRAM trips during normal operation | Number of false-positive emergency alerts fired during 100 continuous nominal normal hours. |
 
@@ -123,13 +123,13 @@ python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/t
 <!-- PROVENANCE_TABLE_START:baseline_comparison -->
 | Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) | $T_{\text{margin}}$ MAE (s) | Nuisance Alerts |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **CUSUM Change-Point Detector** | 0 | 0.0118 | 88.67 ± 1.74% | 9.70 ± 0.18 s | 14 |
-| **Logistic Regression + Ridge** | 485 | 0.1539 | 96.00 ± 0.84% | 4.79 ± 0.26 s | 0 |
-| **HistGradientBoosting Regressor** | 25000 | 9.4474 | 99.07 ± 0.68% | 1.47 ± 0.15 s | 0 |
-| **GRU Forecaster** | 42374 | 0.5706 | 78.00 ± 10.46% | 2.80 ± 0.74 s | 0 |
-| **LSTM Forecaster** | 55686 | 0.5613 | 83.87 ± 13.05% | 5.96 ± 7.40 s | 0 |
-| **Temporal Transformer** | 40390 | 1.3566 | 94.40 ± 3.39% | 4.93 ± 7.86 s | 0 |
-| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.8623 | 96.13 ± 0.98% | 0.85 ± 0.24 s | 0 |
+| **CUSUM Change-Point Detector** | 0 | 0.0045 | 61.07 ± 2.93% | 8.18 ± 0.19 s | 14 |
+| **Logistic Regression + Ridge** | 365 | 0.0786 | 75.20 ± 3.14% | 6.01 ± 0.33 s | 0 |
+| **HistGradientBoosting Regressor** | 25000 | 7.0896 | 78.00 ± 2.91% | 4.00 ± 0.21 s | 0 |
+| **GRU Forecaster** | 42374 | 0.3247 | 59.47 ± 5.02% | 3.47 ± 0.16 s | 0 |
+| **LSTM Forecaster** | 55686 | 0.3433 | 42.67 ± 12.80% | 3.66 ± 0.51 s | 0 |
+| **Temporal Transformer** | 40390 | 0.7291 | 68.27 ± 8.16% | 2.99 ± 1.09 s | 0 |
+| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.4258 | 74.14 ± 3.18% | 2.62 ± 0.57 s | 0 |
 <!-- PROVENANCE_TABLE_END:baseline_comparison -->
 
 ---

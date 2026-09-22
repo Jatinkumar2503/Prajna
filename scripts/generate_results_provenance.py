@@ -435,12 +435,11 @@ def render_markdown_table(table_id: str, rows: List[Dict[str, Any]]) -> str:
 
     return ""
 
-def inject_tables_into_readme(tables: Dict[str, List[Dict[str, Any]]]):
-    readme_path = WORKSPACE_ROOT / "README.md"
-    if not readme_path.exists():
+def inject_tables_into_markdown(target_path: Path, tables: Dict[str, List[Dict[str, Any]]]):
+    if not target_path.exists():
         return
 
-    with open(readme_path, "r", encoding="utf-8") as f:
+    with open(target_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     for table_id, rows in tables.items():
@@ -453,7 +452,7 @@ def inject_tables_into_readme(tables: Dict[str, List[Dict[str, Any]]]):
             post = content.split(end_tag)[1]
             content = f"{pre}{start_tag}\n{rendered}\n{end_tag}{post}"
 
-    with open(readme_path, "w", encoding="utf-8") as f:
+    with open(target_path, "w", encoding="utf-8") as f:
         f.write(content)
 
 def main():
@@ -517,8 +516,9 @@ def main():
             f.write(f"<!-- PROVENANCE_TABLE_END:{table_id} -->\n\n")
 
     print(f"[+] Exported standalone verified markdown tables to: {provenance_md}")
-    inject_tables_into_readme(doc["tables"])
-    print("[+] Synchronized tables into README.md with provenance tags.")
+    inject_tables_into_markdown(WORKSPACE_ROOT / "README.md", doc["tables"])
+    inject_tables_into_markdown(WORKSPACE_ROOT / "REPRODUCE.md", doc["tables"])
+    print("[+] Synchronized tables into README.md and REPRODUCE.md with provenance tags.")
 
 if __name__ == "__main__":
     main()

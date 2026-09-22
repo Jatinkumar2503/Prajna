@@ -87,6 +87,7 @@ def verify_provenance_file(target_file: Path, provenance_json_path: Path) -> boo
 def main():
     provenance_json = WORKSPACE_ROOT / "results" / "latest" / "results.json"
     readme_path = WORKSPACE_ROOT / "README.md"
+    reproduce_path = WORKSPACE_ROOT / "REPRODUCE.md"
     provenance_md = WORKSPACE_ROOT / "docs" / "provenance_tables.md"
 
     success_docs = verify_provenance_file(provenance_md, provenance_json)
@@ -99,7 +100,17 @@ def main():
     else:
         success_readme = True
 
-    if success_docs and success_readme:
+    if reproduce_path.exists():
+        with open(reproduce_path, "r", encoding="utf-8") as f:
+            reproduce_has_tags = "<!-- PROVENANCE_TABLE_START:" in f.read()
+        if reproduce_has_tags:
+            success_reproduce = verify_provenance_file(reproduce_path, provenance_json)
+        else:
+            success_reproduce = True
+    else:
+        success_reproduce = True
+
+    if success_docs and success_readme and success_reproduce:
         print("\n[PROVENANCE CI PASS] Every table verified byte-for-byte against results.json.")
         sys.exit(0)
     else:

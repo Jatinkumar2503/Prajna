@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "timestamp": "2026-09-22T17:48:58.574499+00:00",
-    "timestamp_folder": "20260922_174858Z",
+    "timestamp": "2026-09-22T17:47:32.287594+00:00",
+    "timestamp_folder": "20260922_174732Z",
     "exact_command": "C:\\Program Files\\Python314\\python.exe scripts/generate_results_provenance.py",
     "seeds": [
       42,
@@ -13,7 +13,7 @@
     "git": {
       "git_hash": "7f9c9f41323da9f4e7f3eaba786b911b8ae891d5",
       "git_branch": "main",
-      "is_dirty": true
+      "is_dirty": false
     },
     "hardware": {
       "cpu_processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
@@ -48,11 +48,6 @@
       "checkpoints/prajna_pinn_test_4m_best.pt": "8a751156c8f3bc11c911f6c72ee9199f4f238456ba2ca8214ae754a7c84d5479",
       "checkpoints/prajna_reflex_12ch_noisy.pt": "b271dc41973adceed39facbd835deebb311d81ed6f257df224a66d1e13f4e5ba",
       "checkpoints/prajna_reflex_25k_best.pt": "bfd1eb07b1faedc4431578e1a62f3bd35e3e5e3a567ddd1edf5f5549b6e5f6f1"
-    },
-    "seal": {
-      "algorithm": "sha256",
-      "canonical_sha256": "b6a0c26c2ff075dffe8f6b8d129d6d3a0af9d6d309f3d9c07695dcf82772aee4",
-      "sealed_at": "2026-09-22T17:49:06.245099+00:00"
     }
   },
   "tables": {
