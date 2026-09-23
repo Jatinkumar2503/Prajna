@@ -53,11 +53,6 @@
       "checkpoints/prajna_pinn_test_4m_best.pt": "8a751156c8f3bc11c911f6c72ee9199f4f238456ba2ca8214ae754a7c84d5479",
       "checkpoints/prajna_reflex_12ch_noisy.pt": "b271dc41973adceed39facbd835deebb311d81ed6f257df224a66d1e13f4e5ba",
       "checkpoints/prajna_reflex_25k_best.pt": "bfd1eb07b1faedc4431578e1a62f3bd35e3e5e3a567ddd1edf5f5549b6e5f6f1"
-    },
-    "seal": {
-      "algorithm": "sha256",
-      "canonical_sha256": "9363d7f87f6f1064a7b6af5431be209e4d844433ec0e4ae44772258d0cd86fef",
-      "sealed_at": "2026-09-23T13:25:32.729311+00:00"
     }
   },
   "tables": {
