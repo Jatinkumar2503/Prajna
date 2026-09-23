@@ -41,8 +41,8 @@ pip install torch numpy scipy scikit-learn pyyaml matplotlib
 The benchmark suite follows a strict scientific workflow:
 $$\text{Commit Code} \longrightarrow \text{Execute Experiments} \longrightarrow \text{Cryptographically Seal Results} \longrightarrow \text{Commit Provenance}$$
 
-### Step 1: Run Non-Saturated Baseline Suite
-Evaluates all 7 model architectures across 5 seeds (`[42, 43, 44, 45, 46]`) under non-saturated early onset ($t \le 8\text{s}$) with variable physical fault severity and sensor noise:
+### Step 1: Run Fair Non-Saturated Baseline Suite with Statistics
+Evaluates all 7 model architectures with equalized tuning budgets across 10 seeds (`[42, 43, 44, 45, 46, 47, 48, 49, 50, 51]`) under onset-aligned detection ($t \le 5\text{s}$) with continuous LOCA break spectrum (0.5%–100%), compound overlapping events, sensor faults, non-parametric percentile bootstrap confidence intervals ($B=1,000$), and paired Wilcoxon signed-rank significance tests:
 ```bash
 python scripts/compare_baselines.py
 ```
@@ -98,7 +98,7 @@ python scripts/find_retracted_numbers.py .
 python scripts/verify_table_provenance.py
 
 # Gate 7: Automated Unit Test Suite
-python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/test_experimental_rigor.py tests/test_physics_residual.py
+python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/test_experimental_rigor.py tests/test_physics_residual.py tests/test_statistics.py
 ```
 
 ---
