@@ -34,6 +34,7 @@ sys.path.insert(0, PROJECT_ROOT)
 from prajna_core.simulator import PhysicalPHWRSimulator
 from prajna_core.models.fast_reflex import PrajnaFastReflex
 from prajna_core.noise import apply_instrument_noise_suite, inject_sensor_fault_suite
+from prajna_core.statistics import bootstrap_ci, paired_significance_test
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 SEEDS = [42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
@@ -445,12 +446,12 @@ def run_benchmark():
 
         print(f"  PRAJNA: Acc={p_acc*100:.2f}%, T_margin MAE={p_mae:.2f}s | Trans: Acc={t_acc*100:.2f}%, MAE={t_mae:.2f}s | HGB: Acc={seed_accs['HistGradientBoosting'][-1]*100:.2f}%, MAE={seed_maes['HistGradientBoosting'][-1]:.2f}s")
 
-    # Aggregate 5-seed statistics
-    print("\n" + "=" * 80)
-    print("FINAL 5-SEED EMPIRICAL BENCHMARK SUMMARY (MEAN ± STD)")
-    print("=" * 80)
-    print(f"{'Model Name':<25} | {'Parameters':<10} | {'Onset Acc (%)':<18} | {'T_margin MAE (s)':<18} | {'Single CPU Lat (ms)':<18}")
-    print("-" * 95)
+    # Aggregate 10-seed statistics with Empirical Bootstrap CIs and Paired Hypothesis Tests
+    print("\n" + "=" * 105)
+    print("FINAL 10-SEED EMPIRICAL BENCHMARK SUMMARY (MEAN ± 95% BOOTSTRAP CI & PAIRED WILCOXON TESTS)")
+    print("=" * 105)
+    print(f"{'Model Name':<23} | {'Parameters':<10} | {'Onset Acc (%) [95% CI]':<26} | {'T_margin MAE [95% CI]':<24} | {'Wilcoxon vs PRAJNA':<16}")
+    print("-" * 105)
 
     type_map = {
         "Rate_of_Change_CUSUM": ("Industrial Threshold Rule", 0),
@@ -462,6 +463,10 @@ def run_benchmark():
         "PRAJNA_Reflex_Engine": ("Physics-Gated Forecaster", prajna_param_count)
     }
 
+    # First compute bootstrap CIs for all models
+    prajna_accs = np.array(seed_accs["PRAJNA_Reflex_Engine"]) * 100.0
+    prajna_maes = np.array(seed_maes["PRAJNA_Reflex_Engine"])
+
     for k in model_keys:
         m_type, n_params = type_map[k]
         m_acc = float(np.mean(seed_accs[k]))
@@ -471,24 +476,56 @@ def run_benchmark():
         m_lat = float(np.mean(seed_lats[k]))
         avg_cm = np.round(np.mean(seed_cms[k], axis=0)).astype(int).tolist()
 
-        print(f"{k:<25} | {n_params:<10,d} | {m_acc*100:6.2f}% ± {s_acc*100:4.2f}% | {m_mae:6.2f}s ± {s_mae:4.2f}s | {m_lat:8.4f} ms")
+        # Non-parametric empirical bootstrap 95% confidence intervals (B=1,000)
+        _, acc_ci_low, acc_ci_high = bootstrap_ci(np.array(seed_accs[k]) * 100.0, n_bootstraps=1000, ci=0.95, seed=100 + len(k))
+        _, tm_ci_low, tm_ci_high = bootstrap_ci(np.array(seed_maes[k]), n_bootstraps=1000, ci=0.95, seed=200 + len(k))
+
+        # Paired Wilcoxon signed-rank test against PRAJNA
+        if k != "PRAJNA_Reflex_Engine":
+            k_accs = np.array(seed_accs[k]) * 100.0
+            k_maes = np.array(seed_maes[k])
+            test_acc = paired_significance_test(prajna_accs, k_accs, test_type="wilcoxon")
+            test_tm = paired_significance_test(prajna_maes, k_maes, test_type="wilcoxon")
+            wilcoxon_summary = f"p={test_acc['p_value']:.4f} (d={test_acc['effect_size_cohens_d']:.2f})"
+        else:
+            test_acc = {"summary": "Reference Architecture", "p_value": 1.0, "statistic": 0.0, "significant": False}
+            test_tm = {"summary": "Reference Architecture", "p_value": 1.0, "statistic": 0.0, "significant": False}
+            wilcoxon_summary = "Reference (Ours)"
+
+        acc_str = f"{m_acc*100:5.2f}% [{acc_ci_low:5.2f}, {acc_ci_high:5.2f}]"
+        mae_str = f"{m_mae:5.2f}s [{tm_ci_low:5.2f}, {tm_ci_high:5.2f}]"
+        print(f"{k:<23} | {n_params:<10,d} | {acc_str:<26} | {mae_str:<24} | {wilcoxon_summary:<16}")
 
         model_entry = {
             "type": m_type,
             "parameters": n_params,
             "early_onset_accuracy_mean": round(m_acc, 4),
             "early_onset_accuracy_std": round(s_acc, 4),
+            "early_onset_accuracy_ci95": [round(acc_ci_low, 2), round(acc_ci_high, 2)],
             "tmargin_mae_seconds_mean": round(m_mae, 3),
             "tmargin_mae_seconds_std": round(s_mae, 3),
+            "tmargin_mae_seconds_ci95": [round(tm_ci_low, 3), round(tm_ci_high, 3)],
             "single_window_cpu_latency_ms": round(m_lat, 4),
             "average_confusion_matrix": avg_cm,
             "per_seed_acc": [round(float(x) * 100.0, 2) for x in seed_accs[k]],
-            "per_seed_tmargin": [round(float(x), 3) for x in seed_maes[k]]
+            "per_seed_tmargin": [round(float(x), 3) for x in seed_maes[k]],
+            "paired_test_vs_prajna": {
+                "onset_accuracy": test_acc,
+                "tmargin_mae": test_tm
+            }
         }
         if k == "Rate_of_Change_CUSUM":
             model_entry["deterministic"] = True
 
         results["models"][k] = model_entry
+
+    results["statistical_methodology"] = {
+        "confidence_interval": "Non-parametric empirical percentile bootstrap (B=1,000 resamples, 95% CI)",
+        "hypothesis_test": "Paired Wilcoxon signed-rank test (two-sided, alpha=0.05)",
+        "effect_size": "Cohen's d for paired observations",
+        "n_seeds": len(SEEDS),
+        "seeds": SEEDS
+    }
 
     out_path = os.path.join(PROJECT_ROOT, "evaluation", "reports", "non_saturated_baselines_summary.json")
     with open(out_path, "w") as f:
