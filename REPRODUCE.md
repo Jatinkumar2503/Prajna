@@ -134,20 +134,20 @@ python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/t
 
 ---
 
-### Table 2: Calibrated Prediction Interval Coverage (`conditional_coverage`)
-**Source Script:** `scripts/reproduce_all_10_priorities.py` (Priority 7, lines 525–630)  
+### Table 2: Mondrian Calibrated Prediction Interval Coverage (`conditional_coverage`)
+**Source Script:** `scripts/calibrate_mondrian_conformal.py` (also callable via `scripts/reproduce_all_10_priorities.py`)  
 **Output Artifact:** `experiments/exp07_tmargin/results.json`  
-**Task Definition:** Empirical evaluation of 90% conformal prediction intervals $[\hat{T}_{\text{lower}}, \hat{T}_{\text{upper}}]$ for time-to-breach ($T_{\text{margin}}$), conditioned on lead time before breach and accident type.
+**Task Definition:** Empirical evaluation of 90% Mondrian conformal prediction intervals $[\hat{T}_{\text{lower}}, \hat{T}_{\text{upper}}]$ for time-to-breach ($T_{\text{margin}}$), conditioned on lead time before breach and accident type across held-out trajectories with zero data leakage.
 
-| Row / Slice | Target Cov (%) | Empirical Cov (%) | Interval Width (s) | Lineage & Physical Mechanism |
-| :--- | :---: | :---: | :---: | :--- |
-| **30s before breach** | 90.0% | **41.67%** | 44.9 s | **Far-Horizon Uncertainty:** At $t=30\text{s}$ before breach, parameter excursions are near normal noise levels; linear interval approximation under-covers. |
-| **20s before breach** | 90.0% | **100.00%** | 30.0 s | Parameter derivative trends become distinct, interval collapses around physical trajectory. |
-| **10s before breach** | 90.0% | **100.00%** | 24.6 s | Highly confident interval; true breach time falls within bounds in 100% of tested windows. |
-| **5s before breach** | 90.0% | **100.00%** | 31.9 s | Immediate pre-trip condition; tight physical bounds. |
-| **LOCA Scenario** | 90.0% | **100.00%** | 37.3 s | Primary pressure depressurization curve is monotonic, yielding high coverage ($n=139$). |
-| **RIA Scenario** | 90.0% | **100.00%** | 31.2 s | Prompt reactivity excursion is rapid and easily bounded ($n=120$). |
-| **SBO Scenario** | 90.0% | **85.83%** | 29.1 s | Pump coastdown exhibits non-linear thermal inertia, causing minor under-coverage ($n=621$). |
+| Row / Slice | Target Cov (%) | Empirical Cov (%) | Interval Width (s) | Sample Count ($n$) | Lineage & Physical Mechanism |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **30s before breach** | 90.0% | **95.73%** | 47.4 s | $n=117$ | **Resolved Under-Coverage:** Mondrian group quantile adapts to early variance, eliminating former 41.67% collapse. |
+| **20s before breach** | 90.0% | **90.20%** | 29.4 s | $n=153$ | Transition zone; interval tightens as derivative trends stabilize. |
+| **10s before breach** | 90.0% | **88.81%** | 20.4 s | $n=143$ | Pre-trip regime; narrow confidence bounds. |
+| **5s before breach** | 90.0% | **91.64%** | 17.2 s | $n=335$ | Immediate pre-trip condition; tightest physical bounds. |
+| **LOCA Scenario** | 90.0% | **90.26%** | 29.4 s | $n=154$ | Primary depressurization curve accurately calibrated under group quantile. |
+| **RIA Scenario** | 90.0% | **91.86%** | 25.8 s | $n=86$ | Prompt overpower trajectory bounded within target window. |
+| **SBO Scenario** | 90.0% | **89.60%** | 25.1 s | $n=548$ | Coastdown thermal dynamics calibrated within 85%–95% target. |
 
 ---
 

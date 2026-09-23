@@ -217,7 +217,7 @@ def load_verified_experiment_tables() -> Dict[str, List[Dict[str, Any]]]:
             "empirical_coverage_pct": round(emp_cov, 2),
             "mean_interval_width_s": round(mean_w, 1),
             "n": s_count,
-            "command": "python scripts/reproduce_all_10_priorities.py"
+            "command": "python scripts/calibrate_mondrian_conformal.py"
         })
     scen_map = tmargin_data.get("conditional_coverage_by_scenario", {})
     for scen_k, scen_info in scen_map.items():
@@ -231,7 +231,7 @@ def load_verified_experiment_tables() -> Dict[str, List[Dict[str, Any]]]:
             "empirical_coverage_pct": round(emp_cov, 2),
             "mean_interval_width_s": round(mean_w, 1),
             "n": s_count,
-            "command": "python scripts/reproduce_all_10_priorities.py"
+            "command": "python scripts/calibrate_mondrian_conformal.py"
         })
 
     # 3. Clean Physics Loss Ablation from Exp06 (Step 6)
@@ -402,13 +402,13 @@ def render_markdown_table(table_id: str, rows: List[Dict[str, Any]]) -> str:
 
     elif table_id == "conditional_coverage":
         header = (
-            "| Condition Type | Condition Slice | Nominal Target (%) | Empirical Coverage (%) | Mean Interval Width (s) |\n"
-            "| :--- | :--- | :---: | :---: | :---: |\n"
+            "| Condition Type | Condition Slice | Nominal Target (%) | Empirical Coverage (%) | Mean Interval Width (s) | Sample Count (n) |\n"
+            "| :--- | :--- | :---: | :---: | :---: | :---: |\n"
         )
         body = []
         for r in rows:
             body.append(
-                f"| {r['condition_type']} | **{r['condition']}** | {r['target_coverage_pct']:.1f}% | **{r['empirical_coverage_pct']:.2f}%** | {r['mean_interval_width_s']:.1f} s |"
+                f"| {r['condition_type']} | **{r['condition']}** | {r['target_coverage_pct']:.1f}% | **{r['empirical_coverage_pct']:.2f}%** | {r['mean_interval_width_s']:.1f} s | {r['n']} |"
             )
         return header + "\n".join(body)
 

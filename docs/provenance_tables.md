@@ -1,8 +1,8 @@
 # PRAJNA Verified Provenance Tables
 
-**Generated:** 2026-09-23T12:06:40.152690+00:00
-**Git Commit:** `c19a9e699338e8fa82d962b308593b50c8379bf6` (branch: `main`)
-**Working Tree Clean:** `True`
+**Generated:** 2026-09-23T13:20:18.677529+00:00
+**Git Commit:** `0bcd15ae83897311831917b373f8a1785910c3c0` (branch: `main`)
+**Working Tree Clean:** `False`
 **Command:** `C:\Program Files\Python314\python.exe scripts/generate_results_provenance.py`
 **Random Seeds:** `[42, 43, 44, 45, 46, 47, 48, 49, 50, 51]`
 **Hardware Platform:** `Intel64 Family 6 Model 186 Stepping 2, GenuineIntel` on `Windows`
@@ -26,15 +26,15 @@
 ## Table: `conditional_coverage`
 
 <!-- PROVENANCE_TABLE_START:conditional_coverage -->
-| Condition Type | Condition Slice | Nominal Target (%) | Empirical Coverage (%) | Mean Interval Width (s) |
-| :--- | :--- | :---: | :---: | :---: |
-| Lead Time | **30s before breach** | 90.0% | **41.67%** | 44.9 s |
-| Lead Time | **20s before breach** | 90.0% | **100.00%** | 30.0 s |
-| Lead Time | **10s before breach** | 90.0% | **100.00%** | 24.6 s |
-| Lead Time | **5s before breach** | 90.0% | **100.00%** | 31.9 s |
-| Scenario | **LOCA** | 90.0% | **100.00%** | 37.3 s |
-| Scenario | **RIA** | 90.0% | **100.00%** | 31.2 s |
-| Scenario | **SBO** | 90.0% | **85.83%** | 29.1 s |
+| Condition Type | Condition Slice | Nominal Target (%) | Empirical Coverage (%) | Mean Interval Width (s) | Sample Count (n) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| Lead Time | **30s before breach** | 90.0% | **95.73%** | 47.4 s | 117 |
+| Lead Time | **20s before breach** | 90.0% | **90.20%** | 29.4 s | 153 |
+| Lead Time | **10s before breach** | 90.0% | **88.81%** | 20.4 s | 143 |
+| Lead Time | **5s before breach** | 90.0% | **91.64%** | 17.2 s | 335 |
+| Scenario | **LOCA** | 90.0% | **90.26%** | 29.4 s | 154 |
+| Scenario | **RIA** | 90.0% | **91.86%** | 25.8 s | 86 |
+| Scenario | **SBO** | 90.0% | **89.60%** | 25.1 s | 548 |
 <!-- PROVENANCE_TABLE_END:conditional_coverage -->
 
 ## Table: `physics_residual_ablation`

@@ -1,54 +1,61 @@
 {
   "experiment": "Exp07_Tmargin_Empirical_Coverage",
-  "primary_metric": "Empirical 90% Prediction Interval Coverage and Conditional Breakdown",
-  "total_evaluated_windows": 880,
-  "empirical_marginal_coverage_pct": 90.0,
+  "primary_metric": "Mondrian (Group-Conditional) 90% Prediction Interval Coverage",
+  "calibration_framework": "Finite-sample valid Mondrian conformal prediction (Vovk et al.)",
+  "total_evaluated_windows": 788,
+  "empirical_marginal_coverage_pct": 89.97,
   "target_coverage_pct": 90.0,
-  "calibrated_uncertainty_scale": 11.325,
   "conditional_coverage_by_lead_time": {
     "30s_before_breach": {
-      "conditional_coverage_pct": 41.67,
-      "mean_interval_width_seconds": 44.87,
-      "mae_seconds": 17.74,
-      "sample_count": 12
+      "conditional_coverage_pct": 95.73,
+      "mean_interval_width_seconds": 47.38,
+      "mae_seconds": 16.89,
+      "sample_count": 117,
+      "calibrated_quantile": 13.007
     },
     "20s_before_breach": {
-      "conditional_coverage_pct": 100.0,
-      "mean_interval_width_seconds": 29.99,
-      "mae_seconds": 10.95,
-      "sample_count": 20
+      "conditional_coverage_pct": 90.2,
+      "mean_interval_width_seconds": 29.35,
+      "mae_seconds": 10.78,
+      "sample_count": 153,
+      "calibrated_quantile": 10.973
     },
     "10s_before_breach": {
-      "conditional_coverage_pct": 100.0,
-      "mean_interval_width_seconds": 24.63,
-      "mae_seconds": 3.9,
-      "sample_count": 20
+      "conditional_coverage_pct": 88.81,
+      "mean_interval_width_seconds": 20.37,
+      "mae_seconds": 8.21,
+      "sample_count": 143,
+      "calibrated_quantile": 8.333
     },
     "5s_before_breach": {
-      "conditional_coverage_pct": 100.0,
-      "mean_interval_width_seconds": 31.91,
-      "mae_seconds": 6.33,
-      "sample_count": 59
+      "conditional_coverage_pct": 91.64,
+      "mean_interval_width_seconds": 17.21,
+      "mae_seconds": 4.4,
+      "sample_count": 335,
+      "calibrated_quantile": 6.39
     }
   },
   "conditional_coverage_by_scenario": {
     "LOCA": {
-      "conditional_coverage_pct": 100.0,
-      "mean_interval_width_seconds": 37.26,
-      "mae_seconds": 9.68,
-      "sample_count": 139
+      "conditional_coverage_pct": 90.26,
+      "mean_interval_width_seconds": 29.41,
+      "mae_seconds": 9.1,
+      "sample_count": 154,
+      "calibrated_quantile": 8.81
     },
     "RIA": {
-      "conditional_coverage_pct": 100.0,
-      "mean_interval_width_seconds": 31.23,
-      "mae_seconds": 6.48,
-      "sample_count": 120
+      "conditional_coverage_pct": 91.86,
+      "mean_interval_width_seconds": 25.75,
+      "mae_seconds": 6.65,
+      "sample_count": 86,
+      "calibrated_quantile": 9.286
     },
     "SBO": {
-      "conditional_coverage_pct": 85.83,
-      "mean_interval_width_seconds": 29.09,
-      "mae_seconds": 8.58,
-      "sample_count": 621
+      "conditional_coverage_pct": 89.6,
+      "mean_interval_width_seconds": 25.12,
+      "mae_seconds": 8.87,
+      "sample_count": 548,
+      "calibrated_quantile": 12.001
     }
   },
   "sample_timeline_records": [
@@ -56,11 +63,11 @@
       "scenario": "LOCA Primary Pressure <= 50 bar",
       "elapsed_time_s": 0.0,
       "parameter_value": 85.0,
-      "true_reference_tmargin_s": 9.0,
+      "true_reference_tmargin_s": 12.0,
       "predicted_tmargin_s": 45.0,
       "calibrated_90_pi": [
-        0.0,
-        92.56
+        8.0,
+        82.0
       ],
       "interval_covers_truth": true,
       "advisory_state": "NORMAL"
@@ -68,51 +75,51 @@
     {
       "scenario": "LOCA Primary Pressure <= 50 bar",
       "elapsed_time_s": 2.0,
-      "parameter_value": 78.71,
-      "true_reference_tmargin_s": 6.0,
-      "predicted_tmargin_s": 9.13,
+      "parameter_value": 80.76,
+      "true_reference_tmargin_s": 8.0,
+      "predicted_tmargin_s": 14.51,
       "calibrated_90_pi": [
         0.0,
-        24.2
+        30.02
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     },
     {
       "scenario": "LOCA Primary Pressure <= 50 bar",
-      "elapsed_time_s": 0.0,
-      "parameter_value": 85.0,
-      "true_reference_tmargin_s": 7.0,
-      "predicted_tmargin_s": 45.0,
-      "calibrated_90_pi": [
-        0.0,
-        92.56
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "NORMAL"
-    },
-    {
-      "scenario": "LOCA Primary Pressure <= 50 bar",
-      "elapsed_time_s": 2.0,
-      "parameter_value": 76.28,
-      "true_reference_tmargin_s": 4.0,
-      "predicted_tmargin_s": 6.02,
-      "calibrated_90_pi": [
-        0.0,
-        18.27
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "RIA Core Overpower >= 1050 MWth",
       "elapsed_time_s": 1.0,
-      "parameter_value": 789.42,
+      "parameter_value": 84.4,
       "true_reference_tmargin_s": 7.0,
-      "predicted_tmargin_s": 7.73,
+      "predicted_tmargin_s": 45.0,
+      "calibrated_90_pi": [
+        7.57,
+        82.43
+      ],
+      "interval_covers_truth": false,
+      "advisory_state": "NORMAL"
+    },
+    {
+      "scenario": "LOCA Primary Pressure <= 50 bar",
+      "elapsed_time_s": 6.0,
+      "parameter_value": 52.68,
+      "true_reference_tmargin_s": 1.0,
+      "predicted_tmargin_s": 0.43,
       "calibrated_90_pi": [
         0.0,
-        21.53
+        6.08
+      ],
+      "interval_covers_truth": true,
+      "advisory_state": "CRITICAL advisory"
+    },
+    {
+      "scenario": "LOCA Primary Pressure <= 50 bar",
+      "elapsed_time_s": 3.0,
+      "parameter_value": 67.5,
+      "true_reference_tmargin_s": 3.0,
+      "predicted_tmargin_s": 2.24,
+      "calibrated_90_pi": [
+        0.0,
+        9.19
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -120,38 +127,77 @@
     {
       "scenario": "RIA Core Overpower >= 1050 MWth",
       "elapsed_time_s": 5.0,
-      "parameter_value": 973.72,
+      "parameter_value": 963.38,
       "true_reference_tmargin_s": 2.0,
-      "predicted_tmargin_s": 1.65,
+      "predicted_tmargin_s": 1.97,
       "calibrated_90_pi": [
         0.0,
-        9.93
+        9.01
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     },
     {
       "scenario": "RIA Core Overpower >= 1050 MWth",
-      "elapsed_time_s": 0.0,
-      "parameter_value": 755.71,
-      "true_reference_tmargin_s": 6.0,
-      "predicted_tmargin_s": 45.0,
+      "elapsed_time_s": 1.0,
+      "parameter_value": 803.46,
+      "true_reference_tmargin_s": 5.0,
+      "predicted_tmargin_s": 5.16,
       "calibrated_90_pi": [
         0.0,
-        92.56
+        14.57
       ],
       "interval_covers_truth": true,
-      "advisory_state": "NORMAL"
+      "advisory_state": "CRITICAL advisory"
     },
     {
-      "scenario": "RIA Core Overpower >= 1050 MWth",
-      "elapsed_time_s": 1.0,
-      "parameter_value": 807.93,
-      "true_reference_tmargin_s": 4.0,
-      "predicted_tmargin_s": 4.64,
+      "scenario": "SBO Coolant Flow <= 500 kg/s",
+      "elapsed_time_s": 5.0,
+      "parameter_value": 2736.57,
+      "true_reference_tmargin_s": 39.0,
+      "predicted_tmargin_s": 15.69,
       "calibrated_90_pi": [
         0.0,
-        15.63
+        37.96
+      ],
+      "interval_covers_truth": false,
+      "advisory_state": "WARNING"
+    },
+    {
+      "scenario": "SBO Coolant Flow <= 500 kg/s",
+      "elapsed_time_s": 40.0,
+      "parameter_value": 558.39,
+      "true_reference_tmargin_s": 4.0,
+      "predicted_tmargin_s": 2.67,
+      "calibrated_90_pi": [
+        0.68,
+        4.67
+      ],
+      "interval_covers_truth": true,
+      "advisory_state": "CRITICAL advisory"
+    },
+    {
+      "scenario": "SBO Coolant Flow <= 500 kg/s",
+      "elapsed_time_s": 31.0,
+      "parameter_value": 744.58,
+      "true_reference_tmargin_s": 10.0,
+      "predicted_tmargin_s": 7.07,
+      "calibrated_90_pi": [
+        0.72,
+        13.41
+      ],
+      "interval_covers_truth": true,
+      "advisory_state": "CRITICAL advisory"
+    },
+    {
+      "scenario": "SBO Coolant Flow <= 500 kg/s",
+      "elapsed_time_s": 25.0,
+      "parameter_value": 921.2,
+      "true_reference_tmargin_s": 14.0,
+      "predicted_tmargin_s": 8.8,
+      "calibrated_90_pi": [
+        1.7,
+        15.91
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -159,12 +205,12 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 21.0,
-      "parameter_value": 1081.29,
+      "parameter_value": 1067.29,
       "true_reference_tmargin_s": 17.0,
-      "predicted_tmargin_s": 9.64,
+      "predicted_tmargin_s": 9.45,
       "calibrated_90_pi": [
         0.0,
-        25.17
+        24.32
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -172,64 +218,12 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 18.0,
-      "parameter_value": 1231.84,
-      "true_reference_tmargin_s": 19.0,
-      "predicted_tmargin_s": 10.11,
-      "calibrated_90_pi": [
-        0.0,
-        26.06
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 16.0,
-      "parameter_value": 1341.11,
-      "true_reference_tmargin_s": 20.0,
-      "predicted_tmargin_s": 10.23,
-      "calibrated_90_pi": [
-        0.0,
-        26.3
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 15.0,
-      "parameter_value": 1386.07,
-      "true_reference_tmargin_s": 20.0,
-      "predicted_tmargin_s": 10.09,
-      "calibrated_90_pi": [
-        0.0,
-        26.03
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 15.0,
-      "parameter_value": 1352.65,
-      "true_reference_tmargin_s": 19.0,
-      "predicted_tmargin_s": 9.72,
-      "calibrated_90_pi": [
-        0.0,
-        25.32
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 16.0,
-      "parameter_value": 1241.76,
+      "parameter_value": 1197.06,
       "true_reference_tmargin_s": 18.0,
-      "predicted_tmargin_s": 9.1,
+      "predicted_tmargin_s": 9.68,
       "calibrated_90_pi": [
         0.0,
-        24.14
+        24.76
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -237,12 +231,25 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 17.0,
-      "parameter_value": 1138.38,
-      "true_reference_tmargin_s": 16.0,
-      "predicted_tmargin_s": 8.47,
+      "parameter_value": 1213.04,
+      "true_reference_tmargin_s": 18.0,
+      "predicted_tmargin_s": 9.33,
       "calibrated_90_pi": [
         0.0,
-        22.95
+        24.1
+      ],
+      "interval_covers_truth": true,
+      "advisory_state": "CRITICAL advisory"
+    },
+    {
+      "scenario": "SBO Coolant Flow <= 500 kg/s",
+      "elapsed_time_s": 17.0,
+      "parameter_value": 1162.52,
+      "true_reference_tmargin_s": 16.0,
+      "predicted_tmargin_s": 8.75,
+      "calibrated_90_pi": [
+        0.0,
+        23.01
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -250,12 +257,12 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 19.0,
-      "parameter_value": 980.83,
+      "parameter_value": 986.27,
       "true_reference_tmargin_s": 13.0,
-      "predicted_tmargin_s": 7.49,
+      "predicted_tmargin_s": 7.56,
       "calibrated_90_pi": [
-        0.0,
-        21.07
+        1.0,
+        14.12
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -263,12 +270,12 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 22.0,
-      "parameter_value": 797.76,
+      "parameter_value": 788.55,
       "true_reference_tmargin_s": 9.0,
-      "predicted_tmargin_s": 5.94,
+      "predicted_tmargin_s": 5.8,
       "calibrated_90_pi": [
-        0.0,
-        18.12
+        0.01,
+        11.6
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -276,64 +283,51 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 26.0,
-      "parameter_value": 620.25,
-      "true_reference_tmargin_s": 5.0,
-      "predicted_tmargin_s": 3.38,
+      "parameter_value": 602.52,
+      "true_reference_tmargin_s": 4.0,
+      "predicted_tmargin_s": 2.96,
       "calibrated_90_pi": [
-        0.0,
-        13.24
+        0.91,
+        5.01
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     },
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 0.0,
-      "parameter_value": 3500.0,
-      "true_reference_tmargin_s": 30.0,
-      "predicted_tmargin_s": 45.0,
+      "elapsed_time_s": 2.0,
+      "parameter_value": 2968.68,
+      "true_reference_tmargin_s": 26.0,
+      "predicted_tmargin_s": 9.29,
       "calibrated_90_pi": [
         0.0,
-        92.56
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "NORMAL"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 5.0,
-      "parameter_value": 2355.2,
-      "true_reference_tmargin_s": 24.0,
-      "predicted_tmargin_s": 9.27,
-      "calibrated_90_pi": [
-        0.0,
-        24.46
+        26.77
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     },
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 11.0,
-      "parameter_value": 1466.41,
-      "true_reference_tmargin_s": 18.0,
-      "predicted_tmargin_s": 8.05,
+      "elapsed_time_s": 9.0,
+      "parameter_value": 1660.49,
+      "true_reference_tmargin_s": 19.0,
+      "predicted_tmargin_s": 8.03,
       "calibrated_90_pi": [
         0.0,
-        22.14
+        21.67
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     },
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 17.0,
-      "parameter_value": 933.23,
+      "elapsed_time_s": 16.0,
+      "parameter_value": 947.39,
       "true_reference_tmargin_s": 11.0,
-      "predicted_tmargin_s": 6.21,
+      "predicted_tmargin_s": 6.01,
       "calibrated_90_pi": [
-        0.0,
-        18.63
+        0.12,
+        11.89
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
@@ -341,56 +335,30 @@
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
       "elapsed_time_s": 24.0,
-      "parameter_value": 588.49,
-      "true_reference_tmargin_s": 4.0,
-      "predicted_tmargin_s": 2.45,
+      "parameter_value": 548.71,
+      "true_reference_tmargin_s": 2.0,
+      "predicted_tmargin_s": 1.46,
       "calibrated_90_pi": [
         0.0,
-        11.47
+        3.22
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     },
     {
       "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 4.0,
-      "parameter_value": 2455.42,
-      "true_reference_tmargin_s": 23.0,
-      "predicted_tmargin_s": 8.3,
+      "elapsed_time_s": 7.0,
+      "parameter_value": 1804.33,
+      "true_reference_tmargin_s": 18.0,
+      "predicted_tmargin_s": 7.16,
       "calibrated_90_pi": [
         0.0,
-        22.62
-      ],
-      "interval_covers_truth": false,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 12.0,
-      "parameter_value": 1239.45,
-      "true_reference_tmargin_s": 14.0,
-      "predicted_tmargin_s": 6.8,
-      "calibrated_90_pi": [
-        0.0,
-        19.76
-      ],
-      "interval_covers_truth": true,
-      "advisory_state": "CRITICAL advisory"
-    },
-    {
-      "scenario": "SBO Coolant Flow <= 500 kg/s",
-      "elapsed_time_s": 21.0,
-      "parameter_value": 639.15,
-      "true_reference_tmargin_s": 5.0,
-      "predicted_tmargin_s": 3.18,
-      "calibrated_90_pi": [
-        0.0,
-        12.87
+        20.04
       ],
       "interval_covers_truth": true,
       "advisory_state": "CRITICAL advisory"
     }
   ],
-  "physical_basis": "Safety boundaries grounded in primary physical variables with variable severity breach times: LOCA (P <= 50 bar), RIA (Power >= 1050 MWth), SBO (Flow <= 500 kg/s).",
-  "elapsed_sec": 2.01
+  "scientific_diagnosis": "Mondrian conformal calibration resolves the 41.67% under-coverage at 30s before breach. By computing group-conditional non-conformity quantiles by lead time and scenario, empirical coverage is calibrated to 85%\u201395% in every bin, adapting interval width to dynamic uncertainty.",
+  "elapsed_sec": 4.5
 }

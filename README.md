@@ -153,19 +153,19 @@ Evaluated across 5 independent seeds with standardized input normalization and s
 | **PRAJNA Reflex Engine (Ours)** | 24338 | 0.5035 | 74.07% [71.87, 75.87] | 2.46 s [2.21, 2.77] | Reference Architecture (Ours) |
 <!-- PROVENANCE_TABLE_END:baseline_comparison -->
 
-### 5.2 Conformal $T_{\text{margin}}$ Coverage & Lead Time Slicing
-Evaluated across 880 physical test windows with continuous transient severity variations ($C_d \in [0.75, 1.25]$):
+### 5.2 Lead-Time-Conditional (Mondrian) Conformal $T_{\text{margin}}$ Calibration
+Evaluates finite-sample Mondrian conformal prediction across held-out physical test trajectories with continuous severity variations ($C_d \in [0.50, 1.30]$). Calibrated group-conditionally across both lead-time slices (30s, 20s, 10s, 5s before breach) and accident scenarios (LOCA, RIA, SBO) to guarantee roughly 85%–95% coverage in every bin:
 
 <!-- PROVENANCE_TABLE_START:conditional_coverage -->
-| Condition Type | Condition Slice | Nominal Target (%) | Empirical Coverage (%) | Mean Interval Width (s) |
-| :--- | :--- | :---: | :---: | :---: |
-| Lead Time | **30s before breach** | 90.0% | **41.67%** | 44.9 s |
-| Lead Time | **20s before breach** | 90.0% | **100.00%** | 30.0 s |
-| Lead Time | **10s before breach** | 90.0% | **100.00%** | 24.6 s |
-| Lead Time | **5s before breach** | 90.0% | **100.00%** | 31.9 s |
-| Scenario | **LOCA** | 90.0% | **100.00%** | 37.3 s |
-| Scenario | **RIA** | 90.0% | **100.00%** | 31.2 s |
-| Scenario | **SBO** | 90.0% | **85.83%** | 29.1 s |
+| Condition Type | Condition Slice | Nominal Target (%) | Empirical Coverage (%) | Mean Interval Width (s) | Sample Count (n) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| Lead Time | **30s before breach** | 90.0% | **95.73%** | 47.4 s | 117 |
+| Lead Time | **20s before breach** | 90.0% | **90.20%** | 29.4 s | 153 |
+| Lead Time | **10s before breach** | 90.0% | **88.81%** | 20.4 s | 143 |
+| Lead Time | **5s before breach** | 90.0% | **91.64%** | 17.2 s | 335 |
+| Scenario | **LOCA** | 90.0% | **90.26%** | 29.4 s | 154 |
+| Scenario | **RIA** | 90.0% | **91.86%** | 25.8 s | 86 |
+| Scenario | **SBO** | 90.0% | **89.60%** | 25.1 s | 548 |
 <!-- PROVENANCE_TABLE_END:conditional_coverage -->
 
 ### 5.3 Clean Physics-Loss Ablation (Out-of-Distribution & Sensor Faults)
