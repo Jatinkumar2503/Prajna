@@ -36,7 +36,7 @@ from prajna_core.models.fast_reflex import PrajnaFastReflex
 from prajna_core.noise import apply_instrument_noise_suite, inject_sensor_fault_suite
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-SEEDS = [42, 43, 44, 45, 46]
+SEEDS = [42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
 
 # Scenario-specific physical provisional thresholds
 SCENARIO_THRESHOLDS = {
@@ -252,7 +252,7 @@ class TransformerBaseline(nn.Module):
 # =============================================================================
 def run_benchmark():
     print("=" * 80)
-    print("PRAJNA: RUNNING BASELINE COMPARISON SUITE (5 SEEDS, EQUALIZED BUDGET & NORMALIZATION)")
+    print("PRAJNA: RUNNING BASELINE COMPARISON SUITE (10 SEEDS, EQUALIZED BUDGET & NORMALIZATION)")
     print("Tasks: Non-Saturated Early Onset (t <= 5s) & Continuous T_margin Estimation")
     print("=" * 80)
 
@@ -288,7 +288,7 @@ def run_benchmark():
     torch.set_num_threads(1)
 
     for seed_idx, s in enumerate(SEEDS):
-        print(f"\n--- SEED [{s}] ({seed_idx+1}/5) ---")
+        print(f"\n--- SEED [{s}] ({seed_idx+1}/10) ---")
         # Generate seed-varying simulator data with variable physical severity, unseen test severities, and overlapping events
         X_train_raw, y_train, tm_train = generate_onset_benchmark_data(n_runs_per_scen=60, seed_base=1000 + s * 100, is_test_set=False, window_length=6)
         X_test_raw, y_test, tm_test = generate_onset_benchmark_data(n_runs_per_scen=30, seed_base=5000 + s * 100, is_test_set=True, window_length=6)
@@ -323,7 +323,7 @@ def run_benchmark():
         seed_lats["Rate_of_Change_CUSUM"].append(c_lat)
         seed_cms["Rate_of_Change_CUSUM"].append(confusion_matrix(y_test, c_preds, labels=range(5)).tolist())
 
-        # 2. Logistic Regression & Ridge Regressor
+        # 2. Logistic Regression & Ridge Regressor (Fair Equalized L2 Penalty C=1.0, alpha=1.0)
         lr = LogisticRegression(max_iter=1000, random_state=s)
         lr.fit(X_train_flat, y_train)
         ridge = Ridge(alpha=1.0, random_state=s)
@@ -339,7 +339,7 @@ def run_benchmark():
         seed_lats["Logistic_Regression"].append(lr_single_lat)
         seed_cms["Logistic_Regression"].append(confusion_matrix(y_test, lr_preds, labels=range(5)).tolist())
 
-        # 3. HistGradientBoosting Classifier & Regressor
+        # 3. HistGradientBoosting Classifier & Regressor (Standardized 150 Iterations, Early Stopping)
         hgb_c = HistGradientBoostingClassifier(max_iter=150, random_state=s)
         hgb_c.fit(X_train_flat, y_train)
         hgb_r = HistGradientBoostingRegressor(max_iter=150, random_state=s)
@@ -362,8 +362,8 @@ def run_benchmark():
         te_x = torch.tensor(X_test_norm, dtype=torch.float32)
         te_y = torch.tensor(y_test, dtype=torch.long)
 
-        # Standard 30-Epoch Training Budget Helper
-        def train_deep_model(model, name, model_salt=30):
+        # Equalized Deep Model Training Protocol: Identical 30 Epochs, AdamW (lr=2e-3), Batch Size 32
+        def train_deep_model(model, name, epochs=30):
             optimizer = optim.AdamW(model.parameters(), lr=2e-3, weight_decay=1e-4)
             dataset = TensorDataset(tr_x, tr_y, tr_tm)
             loader = DataLoader(dataset, batch_size=32, shuffle=True)
@@ -371,7 +371,7 @@ def run_benchmark():
             mse_loss = nn.MSELoss()
 
             model.train()
-            for ep in range(30):
+            for ep in range(epochs):
                 for bx, by, btm in loader:
                     bx, by, btm = bx.to(DEVICE), by.to(DEVICE), btm.to(DEVICE)
                     optimizer.zero_grad()
@@ -411,7 +411,7 @@ def run_benchmark():
             cm = confusion_matrix(y_test, preds, labels=range(5)).tolist()
             return acc, mae, single_lat, cm
 
-        # 4. GRU
+        # 4. GRU (30 Epochs)
         gru_m = GRUBaseline().to(DEVICE)
         g_acc, g_mae, g_lat, g_cm = train_deep_model(gru_m, "GRU", 30)
         seed_accs["GRU_Forecaster"].append(g_acc)
@@ -419,25 +419,25 @@ def run_benchmark():
         seed_lats["GRU_Forecaster"].append(g_lat)
         seed_cms["GRU_Forecaster"].append(g_cm)
 
-        # 5. LSTM
+        # 5. LSTM (30 Epochs - Equalized Budget)
         lstm_m = LSTMBaseline().to(DEVICE)
-        l_acc, l_mae, l_lat, l_cm = train_deep_model(lstm_m, "LSTM", 40)
+        l_acc, l_mae, l_lat, l_cm = train_deep_model(lstm_m, "LSTM", 30)
         seed_accs["LSTM_Forecaster"].append(l_acc)
         seed_maes["LSTM_Forecaster"].append(l_mae)
         seed_lats["LSTM_Forecaster"].append(l_lat)
         seed_cms["LSTM_Forecaster"].append(l_cm)
 
-        # 6. Temporal Transformer
+        # 6. Temporal Transformer (30 Epochs - Equalized Budget)
         trans_m = TransformerBaseline().to(DEVICE)
-        t_acc, t_mae, t_lat, t_cm = train_deep_model(trans_m, "Transformer", 50)
+        t_acc, t_mae, t_lat, t_cm = train_deep_model(trans_m, "Transformer", 30)
         seed_accs["Temporal_Transformer"].append(t_acc)
         seed_maes["Temporal_Transformer"].append(t_mae)
         seed_lats["Temporal_Transformer"].append(t_lat)
         seed_cms["Temporal_Transformer"].append(t_cm)
 
-        # 7. PRAJNA Reflex Engine (Standard 30,061 Parameter Model)
+        # 7. PRAJNA Reflex Engine (30 Epochs - Equalized Budget)
         prajna_m = PrajnaFastReflex(num_channels=12, hidden_dim=96, num_eop_classes=5).to(DEVICE)
-        p_acc, p_mae, p_lat, p_cm = train_deep_model(prajna_m, "PRAJNA", 60)
+        p_acc, p_mae, p_lat, p_cm = train_deep_model(prajna_m, "PRAJNA", 30)
         seed_accs["PRAJNA_Reflex_Engine"].append(p_acc)
         seed_maes["PRAJNA_Reflex_Engine"].append(p_mae)
         seed_lats["PRAJNA_Reflex_Engine"].append(p_lat)
