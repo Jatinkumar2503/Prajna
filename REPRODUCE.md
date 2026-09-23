@@ -115,21 +115,21 @@ python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/t
 | **Model Architecture** | Model display name identifier | Model family: Rule-based, Linear, Tree-based, Recurrent, Attention, or Hybrid PINN. |
 | **Parameters** | `sum(p.numel() for p in model.parameters())` | Exact trainable parameter count in FP32 weights. |
 | **Single CPU Latency (ms)** | `time.perf_counter()` over $N=1,000$ passes | Sequential single-window inference time on 1 CPU thread (`torch.set_num_threads(1)`). |
-| **Onset Acc (%)** | Mean $\pm$ std across 5 seeds: `acc_vals` | Percentage of correctly classified accident windows at $t \le 5\text{s}$ post-accident. |
-| **$T_{\text{margin}}$ MAE (s)** | Mean $\pm$ std across 5 seeds: `tm_vals` | Mean Absolute Error $\frac{1}{N}\sum \|T_{\text{true}} - \hat{T}_{\text{pred}}\|$ in seconds before safety threshold breach. |
-| **Nuisance Alerts** | Count of false SCRAM trips during normal operation | Number of false-positive emergency alerts fired during 100 continuous nominal normal hours. |
+| **Onset Acc (%) [95% CI]** | Mean and empirical bootstrap 95% CI across 10 seeds: `acc_vals` ($B=1,000$) | Percentage of correctly classified accident windows at $t \le 5\text{s}$ post-accident with non-parametric bootstrap bounds. |
+| **$T_{\text{margin}}$ MAE (s) [95% CI]** | Mean and empirical bootstrap 95% CI across 10 seeds: `tm_vals` ($B=1,000$) | Mean Absolute Error $\frac{1}{N}\sum \|T_{\text{true}} - \hat{T}_{\text{pred}}\|$ in seconds before safety threshold breach with non-parametric bootstrap bounds. |
+| **Stated Test vs PRAJNA** | Paired Wilcoxon signed-rank test across 10 matched simulator seeds | Non-parametric paired hypothesis test ($p$-value and Cohen's $d$ effect size) testing statistical significance against PRAJNA. |
 
 #### Empirical Baseline Comparison Table (from `results/latest/results.json`):
 <!-- PROVENANCE_TABLE_START:baseline_comparison -->
-| Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) | $T_{\text{margin}}$ MAE (s) | Nuisance Alerts |
+| Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) [95% CI] | $T_{\text{margin}}$ MAE (s) [95% CI] | Stated Test vs PRAJNA |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **CUSUM Change-Point Detector** | 0 | 0.0045 | 61.07 ± 2.93% | 8.18 ± 0.19 s | 14 |
-| **Logistic Regression + Ridge** | 365 | 0.0786 | 75.20 ± 3.14% | 6.01 ± 0.33 s | 0 |
-| **HistGradientBoosting Regressor** | 25000 | 7.0896 | 78.00 ± 2.91% | 4.00 ± 0.21 s | 0 |
-| **GRU Forecaster** | 42374 | 0.3247 | 59.47 ± 5.02% | 3.47 ± 0.16 s | 0 |
-| **LSTM Forecaster** | 55686 | 0.3433 | 42.67 ± 12.80% | 3.66 ± 0.51 s | 0 |
-| **Temporal Transformer** | 40390 | 0.7291 | 68.27 ± 8.16% | 2.99 ± 1.09 s | 0 |
-| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.4258 | 74.14 ± 3.18% | 2.62 ± 0.57 s | 0 |
+| **CUSUM Change-Point Detector** | 0 | 0.0070 | 60.93% [59.46, 62.53] | 8.13 s [7.99, 8.26] | Wilcoxon signed-rank p=0.0019 (d=-13.84) |
+| **Logistic Regression + Ridge** | 365 | 0.0956 | 75.73% [74.07, 77.47] | 5.86 s [5.71, 6.04] | Wilcoxon signed-rank p=0.0019 (d=-5.90) |
+| **HistGradientBoosting Regressor** | 25000 | 10.9704 | 78.93% [77.60, 80.40] | 3.93 s [3.80, 4.04] | Wilcoxon signed-rank p=0.0019 (d=-2.74) |
+| **GRU Forecaster** | 42374 | 0.3852 | 55.00% [50.40, 59.47] | 3.45 s [3.25, 3.64] | Wilcoxon signed-rank p=0.0039 (d=-1.66) |
+| **LSTM Forecaster** | 55686 | 0.3970 | 43.87% [36.20, 53.53] | 6.50 s [3.58, 12.04] | Wilcoxon signed-rank p=0.0039 (d=-0.46) |
+| **Temporal Transformer** | 40390 | 0.8010 | 68.60% [63.80, 72.00] | 2.74 s [2.36, 3.27] | Wilcoxon signed-rank p=0.4316 (d=-0.38) |
+| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.5035 | 74.07% [71.87, 75.87] | 2.46 s [2.21, 2.77] | Reference Architecture (Ours) |
 <!-- PROVENANCE_TABLE_END:baseline_comparison -->
 
 ---

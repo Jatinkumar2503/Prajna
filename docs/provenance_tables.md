@@ -1,10 +1,10 @@
 # PRAJNA Verified Provenance Tables
 
-**Generated:** 2026-09-22T17:49:25.805690+00:00
-**Git Commit:** `0986d665500eb1cfe527e78cb35e3d6420be65c8` (branch: `main`)
+**Generated:** 2026-09-23T11:32:37.002752+00:00
+**Git Commit:** `1d9125daebb01a1fd4e6f64ed3bfd73013c1accb` (branch: `main`)
 **Working Tree Clean:** `True`
 **Command:** `C:\Program Files\Python314\python.exe scripts/generate_results_provenance.py`
-**Random Seeds:** `[42, 43, 44, 45, 46]`
+**Random Seeds:** `[42, 43, 44, 45, 46, 47, 48, 49, 50, 51]`
 **Hardware Platform:** `Intel64 Family 6 Model 186 Stepping 2, GenuineIntel` on `Windows`
 
 ---
@@ -12,15 +12,15 @@
 ## Table: `baseline_comparison`
 
 <!-- PROVENANCE_TABLE_START:baseline_comparison -->
-| Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) | $T_{\text{margin}}$ MAE (s) | Nuisance Alerts |
+| Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) [95% CI] | $T_{\text{margin}}$ MAE (s) [95% CI] | Stated Test vs PRAJNA |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **CUSUM Change-Point Detector** | 0 | 0.0045 | 61.07 ± 2.93% | 8.18 ± 0.19 s | 14 |
-| **Logistic Regression + Ridge** | 365 | 0.0786 | 75.20 ± 3.14% | 6.01 ± 0.33 s | 0 |
-| **HistGradientBoosting Regressor** | 25000 | 7.0896 | 78.00 ± 2.91% | 4.00 ± 0.21 s | 0 |
-| **GRU Forecaster** | 42374 | 0.3247 | 59.47 ± 5.02% | 3.47 ± 0.16 s | 0 |
-| **LSTM Forecaster** | 55686 | 0.3433 | 42.67 ± 12.80% | 3.66 ± 0.51 s | 0 |
-| **Temporal Transformer** | 40390 | 0.7291 | 68.27 ± 8.16% | 2.99 ± 1.09 s | 0 |
-| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.4258 | 74.14 ± 3.18% | 2.62 ± 0.57 s | 0 |
+| **CUSUM Change-Point Detector** | 0 | 0.0070 | 60.93% [59.46, 62.53] | 8.13 s [7.99, 8.26] | Wilcoxon signed-rank p=0.0019 (d=-13.84) |
+| **Logistic Regression + Ridge** | 365 | 0.0956 | 75.73% [74.07, 77.47] | 5.86 s [5.71, 6.04] | Wilcoxon signed-rank p=0.0019 (d=-5.90) |
+| **HistGradientBoosting Regressor** | 25000 | 10.9704 | 78.93% [77.60, 80.40] | 3.93 s [3.80, 4.04] | Wilcoxon signed-rank p=0.0019 (d=-2.74) |
+| **GRU Forecaster** | 42374 | 0.3852 | 55.00% [50.40, 59.47] | 3.45 s [3.25, 3.64] | Wilcoxon signed-rank p=0.0039 (d=-1.66) |
+| **LSTM Forecaster** | 55686 | 0.3970 | 43.87% [36.20, 53.53] | 6.50 s [3.58, 12.04] | Wilcoxon signed-rank p=0.0039 (d=-0.46) |
+| **Temporal Transformer** | 40390 | 0.8010 | 68.60% [63.80, 72.00] | 2.74 s [2.36, 3.27] | Wilcoxon signed-rank p=0.4316 (d=-0.38) |
+| **PRAJNA Reflex Engine (Ours)** | 24338 | 0.5035 | 74.07% [71.87, 75.87] | 2.46 s [2.21, 2.77] | Reference Architecture (Ours) |
 <!-- PROVENANCE_TABLE_END:baseline_comparison -->
 
 ## Table: `conditional_coverage`
