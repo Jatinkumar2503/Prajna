@@ -6,7 +6,12 @@
     43,
     44,
     45,
-    46
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
   ],
   "parameter_comparison": {
     "prajna_fast_reflex_params": 24338,
@@ -17,11 +22,19 @@
     "Rate_of_Change_CUSUM": {
       "type": "Industrial Threshold Rule",
       "parameters": 0,
-      "early_onset_accuracy_mean": 0.6107,
-      "early_onset_accuracy_std": 0.0262,
-      "tmargin_mae_seconds_mean": 8.184,
-      "tmargin_mae_seconds_std": 0.171,
-      "single_window_cpu_latency_ms": 0.0045,
+      "early_onset_accuracy_mean": 0.6093,
+      "early_onset_accuracy_std": 0.0231,
+      "early_onset_accuracy_ci95": [
+        59.46,
+        62.53
+      ],
+      "tmargin_mae_seconds_mean": 8.128,
+      "tmargin_mae_seconds_std": 0.217,
+      "tmargin_mae_seconds_ci95": [
+        7.993,
+        8.261
+      ],
+      "single_window_cpu_latency_ms": 0.007,
       "average_confusion_matrix": [
         [
           25,
@@ -33,22 +46,22 @@
         [
           12,
           12,
-          5,
-          1,
+          6,
+          0,
           0
         ],
         [
           12,
           0,
           17,
-          1,
+          2,
           0
         ],
         [
-          22,
+          21,
           0,
           0,
-          8,
+          9,
           0
         ],
         [
@@ -64,45 +77,93 @@
         58.67,
         61.33,
         59.33,
-        60.0
+        60.0,
+        61.33,
+        57.33,
+        61.33,
+        60.67,
+        63.33
       ],
       "per_seed_tmargin": [
         8.027,
         8.446,
         8.261,
         7.969,
-        8.214
+        8.214,
+        8.077,
+        8.51,
+        7.773,
+        7.959,
+        8.044
       ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": 3.519,
+          "mean_difference": 13.1333,
+          "diff_ci_95": [
+            10.73,
+            15.1333
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": -13.835,
+          "mean_difference": -5.6642,
+          "diff_ci_95": [
+            -5.8639,
+            -5.361
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        }
+      },
       "deterministic": true
     },
     "Logistic_Regression": {
       "type": "Linear Classifier + Ridge",
       "parameters": 365,
-      "early_onset_accuracy_mean": 0.752,
-      "early_onset_accuracy_std": 0.0281,
-      "tmargin_mae_seconds_mean": 6.013,
-      "tmargin_mae_seconds_std": 0.296,
-      "single_window_cpu_latency_ms": 0.0786,
+      "early_onset_accuracy_mean": 0.7573,
+      "early_onset_accuracy_std": 0.0275,
+      "early_onset_accuracy_ci95": [
+        74.07,
+        77.47
+      ],
+      "tmargin_mae_seconds_mean": 5.856,
+      "tmargin_mae_seconds_std": 0.275,
+      "tmargin_mae_seconds_ci95": [
+        5.706,
+        6.041
+      ],
+      "single_window_cpu_latency_ms": 0.0956,
       "average_confusion_matrix": [
         [
-          25,
+          26,
           0,
-          5,
+          4,
           0,
           0
         ],
         [
-          3,
+          4,
           18,
           1,
-          8,
+          7,
           0
         ],
         [
           13,
           0,
-          16,
-          1,
+          17,
+          0,
           0
         ],
         [
@@ -125,24 +186,72 @@
         74.0,
         71.33,
         75.33,
-        75.33
+        75.33,
+        73.33,
+        75.33,
+        79.33,
+        74.0,
+        79.33
       ],
       "per_seed_tmargin": [
         5.832,
         6.053,
         6.374,
         6.255,
-        5.55
-      ]
+        5.55,
+        5.869,
+        5.703,
+        5.52,
+        5.623,
+        5.782
+      ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 19.0,
+          "p_value": 0.41602,
+          "significant": false,
+          "effect_size_cohens_d": -0.344,
+          "mean_difference": -1.6667,
+          "diff_ci_95": [
+            -4.6683,
+            1.0
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.4160 (Not significant)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": -5.898,
+          "mean_difference": -3.3922,
+          "diff_ci_95": [
+            -3.7395,
+            -3.0293
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        }
+      }
     },
     "HistGradientBoosting": {
       "type": "Tree-based Non-Linear",
       "parameters": 25000,
-      "early_onset_accuracy_mean": 0.78,
-      "early_onset_accuracy_std": 0.026,
-      "tmargin_mae_seconds_mean": 3.996,
-      "tmargin_mae_seconds_std": 0.185,
-      "single_window_cpu_latency_ms": 7.0896,
+      "early_onset_accuracy_mean": 0.7893,
+      "early_onset_accuracy_std": 0.0233,
+      "early_onset_accuracy_ci95": [
+        77.6,
+        80.4
+      ],
+      "tmargin_mae_seconds_mean": 3.926,
+      "tmargin_mae_seconds_std": 0.202,
+      "tmargin_mae_seconds_ci95": [
+        3.802,
+        4.043
+      ],
+      "single_window_cpu_latency_ms": 10.9704,
       "average_confusion_matrix": [
         [
           30,
@@ -166,10 +275,10 @@
           0
         ],
         [
-          7,
+          6,
           0,
           0,
-          23,
+          24,
           0
         ],
         [
@@ -185,59 +294,107 @@
         75.33,
         78.67,
         82.67,
-        77.33
+        77.33,
+        79.33,
+        79.33,
+        78.0,
+        80.0,
+        82.67
       ],
       "per_seed_tmargin": [
         3.855,
         4.113,
         4.244,
         4.046,
-        3.723
-      ]
+        3.723,
+        4.066,
+        3.772,
+        3.53,
+        3.891,
+        4.018
+      ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": -1.533,
+          "mean_difference": -4.8667,
+          "diff_ci_95": [
+            -6.935,
+            -3.2
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": -2.738,
+          "mean_difference": -1.4618,
+          "diff_ci_95": [
+            -1.7665,
+            -1.1019
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        }
+      }
     },
     "GRU_Forecaster": {
       "type": "Deep Sequence Model (GRU)",
       "parameters": 42374,
-      "early_onset_accuracy_mean": 0.5947,
-      "early_onset_accuracy_std": 0.0449,
-      "tmargin_mae_seconds_mean": 3.472,
-      "tmargin_mae_seconds_std": 0.141,
-      "single_window_cpu_latency_ms": 0.3247,
+      "early_onset_accuracy_mean": 0.55,
+      "early_onset_accuracy_std": 0.0762,
+      "early_onset_accuracy_ci95": [
+        50.4,
+        59.47
+      ],
+      "tmargin_mae_seconds_mean": 3.445,
+      "tmargin_mae_seconds_std": 0.324,
+      "tmargin_mae_seconds_ci95": [
+        3.248,
+        3.638
+      ],
+      "single_window_cpu_latency_ms": 0.3852,
       "average_confusion_matrix": [
         [
-          27,
+          24,
           0,
           1,
           0,
-          2
+          5
         ],
         [
-          11,
+          9,
           13,
           0,
           5,
-          1
+          2
         ],
         [
-          21,
+          18,
           0,
-          7,
+          8,
           1,
-          1
+          3
         ],
         [
-          15,
+          13,
           0,
-          1,
+          2,
           12,
-          1
+          3
         ],
         [
+          4,
           0,
           0,
           0,
-          0,
-          30
+          26
         ]
       ],
       "per_seed_acc": [
@@ -245,59 +402,107 @@
         56.0,
         52.67,
         60.67,
-        64.0
+        64.0,
+        42.0,
+        55.33,
+        47.33,
+        62.67,
+        45.33
       ],
       "per_seed_tmargin": [
         3.377,
         3.346,
         3.638,
         3.65,
-        3.35
-      ]
+        3.35,
+        3.729,
+        3.805,
+        2.938,
+        2.837,
+        3.781
+      ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": 2.147,
+          "mean_difference": 19.0667,
+          "diff_ci_95": [
+            13.7317,
+            24.6683
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 1.0,
+          "p_value": 0.00391,
+          "significant": true,
+          "effect_size_cohens_d": -1.658,
+          "mean_difference": -0.9812,
+          "diff_ci_95": [
+            -1.3148,
+            -0.5851
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0039 (Statistically significant at alpha=0.05)"
+        }
+      }
     },
     "LSTM_Forecaster": {
       "type": "Deep Sequence Model (LSTM)",
       "parameters": 55686,
-      "early_onset_accuracy_mean": 0.4267,
-      "early_onset_accuracy_std": 0.1145,
-      "tmargin_mae_seconds_mean": 3.656,
-      "tmargin_mae_seconds_std": 0.459,
-      "single_window_cpu_latency_ms": 0.3433,
+      "early_onset_accuracy_mean": 0.4387,
+      "early_onset_accuracy_std": 0.1402,
+      "early_onset_accuracy_ci95": [
+        36.2,
+        53.53
+      ],
+      "tmargin_mae_seconds_mean": 6.502,
+      "tmargin_mae_seconds_std": 8.228,
+      "tmargin_mae_seconds_ci95": [
+        3.582,
+        12.041
+      ],
+      "single_window_cpu_latency_ms": 0.397,
       "average_confusion_matrix": [
+        [
+          14,
+          0,
+          0,
+          0,
+          15
+        ],
+        [
+          6,
+          16,
+          0,
+          3,
+          6
+        ],
         [
           11,
           0,
-          1,
-          0,
-          18
-        ],
-        [
-          5,
-          16,
-          0,
+          4,
           2,
-          7
+          12
         ],
         [
-          9,
-          0,
-          3,
-          2,
-          16
-        ],
-        [
-          7,
+          8,
           6,
-          1,
-          5,
-          11
+          0,
+          7,
+          9
         ],
         [
+          6,
           0,
           0,
           0,
-          0,
-          30
+          24
         ]
       ],
       "per_seed_acc": [
@@ -305,51 +510,207 @@
         34.0,
         33.33,
         57.33,
-        32.67
+        32.67,
+        33.33,
+        38.67,
+        42.0,
+        76.67,
+        34.67
       ],
       "per_seed_tmargin": [
         3.159,
         4.507,
         3.667,
         3.382,
-        3.565
-      ]
+        3.565,
+        3.644,
+        4.291,
+        3.811,
+        31.16,
+        3.831
+      ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": 2.074,
+          "mean_difference": 30.2,
+          "diff_ci_95": [
+            21.4633,
+            38.7333
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 1.0,
+          "p_value": 0.00391,
+          "significant": true,
+          "effect_size_cohens_d": -0.462,
+          "mean_difference": -4.0377,
+          "diff_ci_95": [
+            -9.6253,
+            -0.9714
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0039 (Statistically significant at alpha=0.05)"
+        }
+      }
     },
     "Temporal_Transformer": {
       "type": "Deep Sequence Model (Transformer)",
       "parameters": 40390,
-      "early_onset_accuracy_mean": 0.6827,
-      "early_onset_accuracy_std": 0.073,
-      "tmargin_mae_seconds_mean": 2.989,
-      "tmargin_mae_seconds_std": 0.975,
-      "single_window_cpu_latency_ms": 0.7291,
+      "early_onset_accuracy_mean": 0.686,
+      "early_onset_accuracy_std": 0.0649,
+      "early_onset_accuracy_ci95": [
+        63.8,
+        72.0
+      ],
+      "tmargin_mae_seconds_mean": 2.74,
+      "tmargin_mae_seconds_std": 0.759,
+      "tmargin_mae_seconds_ci95": [
+        2.363,
+        3.271
+      ],
+      "single_window_cpu_latency_ms": 0.801,
       "average_confusion_matrix": [
         [
-          24,
-          1,
-          5,
+          26,
+          0,
+          3,
           0,
           0
         ],
         [
           8,
           17,
-          2,
           3,
+          2,
           0
         ],
         [
           15,
-          2,
-          13,
+          1,
+          14,
           0,
           0
         ],
         [
-          9,
+          8,
+          0,
+          4,
+          18,
+          0
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          28
+        ]
+      ],
+      "per_seed_acc": [
+        54.0,
+        69.33,
+        71.33,
+        74.0,
+        72.67,
+        70.67,
+        70.67,
+        72.0,
+        58.0,
+        73.33
+      ],
+      "per_seed_tmargin": [
+        4.78,
+        2.342,
+        2.612,
+        3.195,
+        2.019,
+        2.75,
+        2.287,
+        2.847,
+        2.109,
+        2.458
+      ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 5.0,
+          "p_value": 0.01758,
+          "significant": true,
+          "effect_size_cohens_d": 0.778,
+          "mean_difference": 5.4667,
+          "diff_ci_95": [
+            1.7317,
+            10.2
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0176 (Statistically significant at alpha=0.05)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 19.0,
+          "p_value": 0.43164,
+          "significant": false,
+          "effect_size_cohens_d": -0.376,
+          "mean_difference": -0.2757,
+          "diff_ci_95": [
+            -0.6874,
+            0.1243
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.4316 (Not significant)"
+        }
+      }
+    },
+    "PRAJNA_Reflex_Engine": {
+      "type": "Physics-Gated Forecaster",
+      "parameters": 24338,
+      "early_onset_accuracy_mean": 0.7407,
+      "early_onset_accuracy_std": 0.0318,
+      "early_onset_accuracy_ci95": [
+        71.87,
+        75.87
+      ],
+      "tmargin_mae_seconds_mean": 2.464,
+      "tmargin_mae_seconds_std": 0.446,
+      "tmargin_mae_seconds_ci95": [
+        2.21,
+        2.766
+      ],
+      "single_window_cpu_latency_ms": 0.5035,
+      "average_confusion_matrix": [
+        [
+          27,
           0,
           3,
+          0,
+          0
+        ],
+        [
+          6,
           18,
+          2,
+          4,
+          0
+        ],
+        [
+          15,
+          0,
+          15,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          2,
+          22,
           0
         ],
         [
@@ -361,79 +722,61 @@
         ]
       ],
       "per_seed_acc": [
-        54.0,
-        69.33,
-        71.33,
-        74.0,
-        72.67
-      ],
-      "per_seed_tmargin": [
-        4.78,
-        2.342,
-        2.612,
-        3.195,
-        2.019
-      ]
-    },
-    "PRAJNA_Reflex_Engine": {
-      "type": "Physics-Gated Forecaster",
-      "parameters": 24338,
-      "early_onset_accuracy_mean": 0.7413,
-      "early_onset_accuracy_std": 0.0284,
-      "tmargin_mae_seconds_mean": 2.624,
-      "tmargin_mae_seconds_std": 0.506,
-      "single_window_cpu_latency_ms": 0.4258,
-      "average_confusion_matrix": [
-        [
-          30,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          6,
-          18,
-          1,
-          5,
-          0
-        ],
-        [
-          17,
-          0,
-          13,
-          0,
-          0
-        ],
-        [
-          7,
-          0,
-          1,
-          21,
-          0
-        ],
-        [
-          1,
-          0,
-          0,
-          0,
-          29
-        ]
-      ],
-      "per_seed_acc": [
         70.67,
         70.67,
         76.67,
         76.0,
-        76.67
+        76.67,
+        74.67,
+        67.33,
+        74.67,
+        77.33,
+        76.0
       ],
       "per_seed_tmargin": [
         3.413,
         2.871,
         2.374,
         1.894,
-        2.57
-      ]
+        2.57,
+        2.27,
+        2.848,
+        2.085,
+        2.332,
+        1.982
+      ],
+      "paired_test_vs_prajna": {
+        "onset_accuracy": {
+          "summary": "Reference Architecture",
+          "p_value": 1.0,
+          "statistic": 0.0,
+          "significant": false
+        },
+        "tmargin_mae": {
+          "summary": "Reference Architecture",
+          "p_value": 1.0,
+          "statistic": 0.0,
+          "significant": false
+        }
+      }
     }
+  },
+  "statistical_methodology": {
+    "confidence_interval": "Non-parametric empirical percentile bootstrap (B=1,000 resamples, 95% CI)",
+    "hypothesis_test": "Paired Wilcoxon signed-rank test (two-sided, alpha=0.05)",
+    "effect_size": "Cohen's d for paired observations",
+    "n_seeds": 10,
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ]
   }
 }
