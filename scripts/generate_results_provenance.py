@@ -164,20 +164,34 @@ def load_verified_experiment_tables() -> Dict[str, List[Dict[str, Any]]]:
         std_acc = _calc_std(acc_vals)
         mean_tm = _calc_mean(tm_vals)
         std_tm = _calc_std(tm_vals)
+        acc_ci = m_data.get("early_onset_accuracy_ci95", calc_ci95(mean_acc, std_acc, n_seeds))
+        tm_ci = m_data.get("tmargin_mae_seconds_ci95", calc_ci95(mean_tm, std_tm, n_seeds))
+
+        # Stated paired hypothesis test vs PRAJNA
+        paired_info = m_data.get("paired_test_vs_prajna", {})
+        if raw_k != "PRAJNA_Reflex_Engine" and "tmargin_mae" in paired_info:
+            tm_p = paired_info["tmargin_mae"].get("p_value", 1.0)
+            tm_d = paired_info["tmargin_mae"].get("effect_size_cohens_d", 0.0)
+            paired_str = f"Wilcoxon signed-rank p={tm_p:.4f} (d={tm_d:.2f})"
+        else:
+            paired_str = "Reference Architecture (Ours)"
+
         row_entry = {
             "model": disp_name,
             "parameters": int(m_data.get("parameters", 0)),
             "single_cpu_latency_ms": round(float(m_data.get("single_window_cpu_latency_ms", 0.0)), 4),
             "early_onset_acc_mean_pct": round(mean_acc, 2),
             "early_onset_acc_std_pct": round(std_acc, 2),
+            "acc_bootstrap_ci95": acc_ci,
             "tmargin_mae_s_mean": round(mean_tm, 2),
             "tmargin_mae_s_std": round(std_tm, 2),
-            "nuisance_alerts": 14 if raw_k == "Rate_of_Change_CUSUM" else 0,
+            "tmargin_bootstrap_ci95": tm_ci,
+            "paired_test_summary": paired_str,
             "per_seed_acc": acc_vals,
             "per_seed_tmargin": tm_vals,
             "n": n_seeds,
-            "acc_95_ci": calc_ci95(mean_acc, std_acc, n_seeds),
-            "tmargin_95_ci": calc_ci95(mean_tm, std_tm, n_seeds),
+            "acc_95_ci": acc_ci,
+            "tmargin_95_ci": tm_ci,
             "command": "python scripts/compare_baselines.py"
         }
         if m_data.get("deterministic"):
@@ -361,15 +375,18 @@ def load_verified_experiment_tables() -> Dict[str, List[Dict[str, Any]]]:
 def render_markdown_table(table_id: str, rows: List[Dict[str, Any]]) -> str:
     if table_id == "baseline_comparison":
         header = (
-            "| Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) | $T_{\\text{margin}}$ MAE (s) | Nuisance Alerts |\n"
+            "| Model Architecture | Parameters | Single CPU Latency (ms) | Onset Acc (%) [95% CI] | $T_{\\text{margin}}$ MAE (s) [95% CI] | Stated Test vs PRAJNA |\n"
             "| :--- | :---: | :---: | :---: | :---: | :---: |\n"
         )
         body = []
         for r in rows:
-            acc_str = f"{r['early_onset_acc_mean_pct']:.2f} ± {r['early_onset_acc_std_pct']:.2f}%"
-            tmargin_str = f"{r['tmargin_mae_s_mean']:.2f} ± {r['tmargin_mae_s_std']:.2f} s"
+            acc_ci = r.get("acc_bootstrap_ci95", r.get("acc_95_ci", [0.0, 0.0]))
+            tm_ci = r.get("tmargin_bootstrap_ci95", r.get("tmargin_95_ci", [0.0, 0.0]))
+            acc_str = f"{r['early_onset_acc_mean_pct']:.2f}% [{acc_ci[0]:.2f}, {acc_ci[1]:.2f}]"
+            tmargin_str = f"{r['tmargin_mae_s_mean']:.2f} s [{tm_ci[0]:.2f}, {tm_ci[1]:.2f}]"
+            test_str = r.get("paired_test_summary", "Reference (Ours)")
             body.append(
-                f"| **{r['model']}** | {r['parameters']} | {r['single_cpu_latency_ms']:.4f} | {acc_str} | {tmargin_str} | {r['nuisance_alerts']} |"
+                f"| **{r['model']}** | {r['parameters']} | {r['single_cpu_latency_ms']:.4f} | {acc_str} | {tmargin_str} | {test_str} |"
             )
         return header + "\n".join(body)
 
@@ -457,7 +474,7 @@ def inject_tables_into_markdown(target_path: Path, tables: Dict[str, List[Dict[s
 
 def main():
     exact_cmd = " ".join([sys.executable] + sys.argv)
-    seeds = [42, 43, 44, 45, 46]
+    seeds = [42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
     timestamp_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     timestamp_folder = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%SZ")
 
