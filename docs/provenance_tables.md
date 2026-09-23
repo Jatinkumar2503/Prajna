@@ -1,8 +1,8 @@
 # PRAJNA Verified Provenance Tables
 
-**Generated:** 2026-09-23T11:34:11.212207+00:00
-**Git Commit:** `a63ff06e22368b3af7e9a4449bfe9a2a7108ba03` (branch: `main`)
-**Working Tree Clean:** `True`
+**Generated:** 2026-09-23T12:02:41.654355+00:00
+**Git Commit:** `a081e2274253edfaa034ae8194b484f0a61e2c15` (branch: `main`)
+**Working Tree Clean:** `False`
 **Command:** `C:\Program Files\Python314\python.exe scripts/generate_results_provenance.py`
 **Random Seeds:** `[42, 43, 44, 45, 46, 47, 48, 49, 50, 51]`
 **Hardware Platform:** `Intel64 Family 6 Model 186 Stepping 2, GenuineIntel` on `Windows`
@@ -40,11 +40,12 @@
 ## Table: `physics_residual_ablation`
 
 <!-- PROVENANCE_TABLE_START:physics_residual_ablation -->
-| Model Architecture | Physics Loss Weight | Dynamic Residual Error (MWth) | Nuisance Advisory Alerts | Safety Limit Violations (%) |
+| Model Architecture | Regularization Formulation | OOD Onset Acc (%) [95% CI] | OOD T_margin MAE (s) [95% CI] | Wilcoxon vs λ_phys=0.0 |
 | :--- | :---: | :---: | :---: | :---: |
-| **Model A (Pure Neural Forecaster)** | 0.0 | **187.95** | 0 | 4.0% |
-| **Model B (Physics-Regularized Neural)** | 1.0 | **78.94** | 0 | 0.0% |
-| **Model C (Hybrid Physics-Gated Reflex)** | 1.0 | **78.94** | 0 | 0.0% |
+| **Pure Data-Driven Baseline** | λ_phys = 0.0 (Unconstrained) | **75.60%** [74.20, 77.07] | 2.27s [1.91, 2.77] | Reference (Ours) |
+| **Balanced Physics Regularizer** | λ_phys = 0.1 (Dynamic Energy) | **76.67%** [75.13, 78.20] | 3.10s [2.81, 3.44] | p=0.3438 (d=0.32) |
+| **Strong Physics Regularizer** | λ_phys = 1.0 (Dynamic Energy) | **76.80%** [75.80, 77.73] | 7.12s [6.98, 7.25] | p=0.1562 (d=0.53) |
+| **Matched Non-Physics Regularizer** | Tuned L2 + Smoothness | **75.73%** [74.06, 77.47] | 2.24s [1.86, 2.70] | p=1.0000 (d=0.14) |
 <!-- PROVENANCE_TABLE_END:physics_residual_ablation -->
 
 ## Table: `sensor_fragility`

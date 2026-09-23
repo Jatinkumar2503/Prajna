@@ -168,16 +168,21 @@ Evaluated across 880 physical test windows with continuous transient severity va
 | Scenario | **SBO** | 90.0% | **85.83%** | 29.1 s |
 <!-- PROVENANCE_TABLE_END:conditional_coverage -->
 
-### 5.3 Dynamic First-Law Thermal Residual Ablation
-Evaluating whether physical conservation loss regularizes neural predictions toward the First Law:
+### 5.3 Clean Physics-Loss Ablation (Out-of-Distribution & Sensor Faults)
+Evaluates identical `PrajnaFastReflex` architectures (24,338 parameters) across $\lambda_{\text{phys}} \in \{0.0, 0.1, 1.0\}$ versus a capacity-matched non-physics regularizer ($L_2$ weight decay + representation smoothness). Models are **not** evaluated on the training residual; instead, they are stress-tested on held-out **out-of-distribution (OOD) severities** (0.5% SBLOCA to 120% severe break), overlapping compound events, 25% sensor channel faults (stuck transmitters, step biases, deadband), and active instrument noise across 10 random seeds (`SEEDS = [42..51]`):
 
 <!-- PROVENANCE_TABLE_START:physics_residual_ablation -->
-| Model Architecture | Physics Loss Weight | Dynamic Residual Error (MWth) | Nuisance Advisory Alerts | Safety Limit Violations (%) |
+| Model Architecture | Regularization Formulation | OOD Onset Acc (%) [95% CI] | OOD T_margin MAE (s) [95% CI] | Wilcoxon vs λ_phys=0.0 |
 | :--- | :---: | :---: | :---: | :---: |
-| **Model A (Pure Neural Forecaster)** | 0.0 | **187.95** | 0 | 4.0% |
-| **Model B (Physics-Regularized Neural)** | 1.0 | **78.94** | 0 | 0.0% |
-| **Model C (Hybrid Physics-Gated Reflex)** | 1.0 | **78.94** | 0 | 0.0% |
+| **Pure Data-Driven Baseline** | λ_phys = 0.0 (Unconstrained) | **75.60%** [74.20, 77.07] | 2.27s [1.91, 2.77] | Reference (Ours) |
+| **Balanced Physics Regularizer** | λ_phys = 0.1 (Dynamic Energy) | **76.67%** [75.13, 78.20] | 3.10s [2.81, 3.44] | p=0.3438 (d=0.32) |
+| **Strong Physics Regularizer** | λ_phys = 1.0 (Dynamic Energy) | **76.80%** [75.80, 77.73] | 7.12s [6.98, 7.25] | p=0.1562 (d=0.53) |
+| **Matched Non-Physics Regularizer** | Tuned L2 + Smoothness | **75.73%** [74.06, 77.47] | 2.24s [1.86, 2.70] | p=1.0000 (d=0.14) |
 <!-- PROVENANCE_TABLE_END:physics_residual_ablation -->
+
+> [!NOTE]
+> **Honest Scientific Finding (Null Result on Sensor Fault Generalization):**
+> Under severe sensor faults and extreme OOD severities, balanced physics regularization ($\lambda_{\text{phys}} = 0.1$) yields a marginal, non-statistically significant gain in early onset accuracy (+1.07%, $p=0.3438$), but increases continuous margin estimation error (3.10s vs 2.27s, $p=0.0098$, $d=+1.24$). Strong physics regularization ($\lambda_{\text{phys}} = 1.0$) further increases margin error to 7.12s. The capacity-matched non-physics regularizer achieves equivalent onset accuracy (75.73%, $p=1.0000$) and lower margin MAE (2.24s) without margin distortion. This demonstrates that First-Law loss regularizers alone do not substitute for physical sensor redundancy under severe instrument faults.
 
 ### 5.4 Sensor Channel Dropout & Algorithmic Fragility
 Demonstrating per-class recall vulnerability to individual sensor channel dropouts:

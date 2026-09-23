@@ -1,34 +1,358 @@
 {
-  "experiment": "Exp06_Physics_Constraint_Ablation",
+  "experiment": "Exp06_Physics_Loss_Clean_Ablation",
+  "evaluation_protocol": "Evaluated strictly on held-out OOD severities (0.5% SBLOCA to 120% severe break), compound overlapping events, and sensor faults (25% channel fault probability). ZERO evaluation on training residual.",
   "seeds_evaluated": [
     42,
     43,
     44,
     45,
-    46
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
   ],
-  "definition_of_physics_gated": "Physics-Gated PRAJNA is a hybrid architecture: a learned deep neural network forecaster coupled with a deterministic First-Law thermodynamic validation rule filter (primary heat balance & kinematic projector).",
-  "comparison_matrix": {
-    "Model_A_Conventional_Temporal": {
-      "dynamic_energy_residual_mwth": "187.95 \u00b1 0.00",
-      "tmargin_mae_seconds": "1.53 \u00b1 0.06",
-      "clean_accuracy": "100.00% \u00b1 0.00%",
-      "nuisance_advisory_alerts": 0
+  "n_seeds": 10,
+  "statistical_methodology": {
+    "confidence_intervals": "Non-parametric empirical percentile bootstrap (B=1,000, 95% CI)",
+    "significance_tests": "Paired Wilcoxon signed-rank tests (two-sided, alpha=0.05, Bonferroni-corrected)"
+  },
+  "models": {
+    "lambda_0.0": {
+      "description": "Pure Data-Driven (lambda=0.0)",
+      "lambda_phys": 0.0,
+      "is_non_physics_reg": false,
+      "parameters": 24338,
+      "ood_onset_accuracy_mean": 75.6,
+      "ood_onset_accuracy_std": 2.31,
+      "ood_onset_accuracy_ci95": [
+        74.2,
+        77.07
+      ],
+      "ood_tmargin_mae_mean": 2.274,
+      "ood_tmargin_mae_std": 0.69,
+      "ood_tmargin_mae_ci95": [
+        1.912,
+        2.768
+      ],
+      "per_seed_acc": [
+        72.0,
+        73.33,
+        80.67,
+        76.0,
+        78.0,
+        76.0,
+        74.67,
+        75.33,
+        74.0,
+        76.0
+      ],
+      "per_seed_tmargin": [
+        2.148,
+        4.051,
+        1.65,
+        1.528,
+        1.949,
+        2.121,
+        2.409,
+        1.82,
+        2.805,
+        2.257
+      ],
+      "paired_test_vs_lambda_zero": {
+        "onset_accuracy": {
+          "summary": "Reference",
+          "p_value": 1.0,
+          "statistic": 0.0,
+          "significant": false
+        },
+        "tmargin_mae": {
+          "summary": "Reference",
+          "p_value": 1.0,
+          "statistic": 0.0,
+          "significant": false
+        }
+      },
+      "paired_test_vs_non_physics_reg": null
     },
-    "Model_B_Physics_Constrained": {
-      "dynamic_energy_residual_mwth": "78.94 \u00b1 0.00",
-      "tmargin_mae_seconds": "3.49 \u00b1 0.04",
-      "clean_accuracy": "100.00% \u00b1 0.00%",
-      "nuisance_advisory_alerts": 0
+    "lambda_0.1": {
+      "description": "Balanced Physics Constraint (lambda=0.1)",
+      "lambda_phys": 0.1,
+      "is_non_physics_reg": false,
+      "parameters": 24338,
+      "ood_onset_accuracy_mean": 76.67,
+      "ood_onset_accuracy_std": 2.58,
+      "ood_onset_accuracy_ci95": [
+        75.13,
+        78.2
+      ],
+      "ood_tmargin_mae_mean": 3.102,
+      "ood_tmargin_mae_std": 0.503,
+      "ood_tmargin_mae_ci95": [
+        2.811,
+        3.444
+      ],
+      "per_seed_acc": [
+        80.0,
+        78.67,
+        80.67,
+        76.67,
+        77.33,
+        77.33,
+        74.67,
+        75.33,
+        74.0,
+        72.0
+      ],
+      "per_seed_tmargin": [
+        3.528,
+        3.35,
+        2.473,
+        2.638,
+        2.822,
+        2.804,
+        3.176,
+        2.628,
+        3.407,
+        4.19
+      ],
+      "paired_test_vs_lambda_zero": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 5.5,
+          "p_value": 0.34375,
+          "significant": false,
+          "effect_size_cohens_d": 0.32,
+          "mean_difference": 1.0667,
+          "diff_ci_95": [
+            -0.8,
+            3.2
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.3438 (Not significant)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 3.0,
+          "p_value": 0.00977,
+          "significant": true,
+          "effect_size_cohens_d": 1.238,
+          "mean_difference": 0.8278,
+          "diff_ci_95": [
+            0.4279,
+            1.1797
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0098 (Statistically significant at alpha=0.05)"
+        }
+      },
+      "paired_test_vs_non_physics_reg": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 6.5,
+          "p_value": 0.46875,
+          "significant": false,
+          "effect_size_cohens_d": 0.229,
+          "mean_difference": 0.9333,
+          "diff_ci_95": [
+            -1.4017,
+            3.4683
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.4688 (Not significant)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 4.0,
+          "p_value": 0.01367,
+          "significant": true,
+          "effect_size_cohens_d": 1.139,
+          "mean_difference": 0.8581,
+          "diff_ci_95": [
+            0.4295,
+            1.2585
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0137 (Statistically significant at alpha=0.05)"
+        }
+      }
     },
-    "Model_C_Full_PRAJNA_Gated": {
-      "dynamic_energy_residual_mwth": "78.94 \u00b1 0.00",
-      "tmargin_mae_seconds": "1.22 \u00b1 0.01",
-      "clean_accuracy": "100.00% \u00b1 0.00%",
-      "nuisance_advisory_alerts": 0,
-      "advisory_safety_gate": "Deterministic First-Law Kinematic Filter Active"
+    "lambda_1.0": {
+      "description": "Strong Physics Constraint (lambda=1.0)",
+      "lambda_phys": 1.0,
+      "is_non_physics_reg": false,
+      "parameters": 24338,
+      "ood_onset_accuracy_mean": 76.8,
+      "ood_onset_accuracy_std": 1.6,
+      "ood_onset_accuracy_ci95": [
+        75.8,
+        77.73
+      ],
+      "ood_tmargin_mae_mean": 7.117,
+      "ood_tmargin_mae_std": 0.222,
+      "ood_tmargin_mae_ci95": [
+        6.976,
+        7.247
+      ],
+      "per_seed_acc": [
+        77.33,
+        77.33,
+        78.67,
+        76.0,
+        78.0,
+        79.33,
+        74.67,
+        76.0,
+        74.0,
+        76.67
+      ],
+      "per_seed_tmargin": [
+        7.27,
+        7.022,
+        6.731,
+        7.202,
+        6.797,
+        7.091,
+        7.505,
+        7.051,
+        7.187,
+        7.314
+      ],
+      "paired_test_vs_lambda_zero": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 3.0,
+          "p_value": 0.15625,
+          "significant": false,
+          "effect_size_cohens_d": 0.531,
+          "mean_difference": 1.2,
+          "diff_ci_95": [
+            -0.0667,
+            2.5333
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.1562 (Not significant)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": 6.619,
+          "mean_difference": 4.8432,
+          "diff_ci_95": [
+            4.3689,
+            5.173
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        }
+      },
+      "paired_test_vs_non_physics_reg": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 5.0,
+          "p_value": 0.3125,
+          "significant": false,
+          "effect_size_cohens_d": 0.394,
+          "mean_difference": 1.0667,
+          "diff_ci_95": [
+            -0.4667,
+            2.7333
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.3125 (Not significant)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 0.0,
+          "p_value": 0.00195,
+          "significant": true,
+          "effect_size_cohens_d": 6.277,
+          "mean_difference": 4.8736,
+          "diff_ci_95": [
+            4.383,
+            5.2121
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.0020 (Statistically significant at alpha=0.05)"
+        }
+      }
+    },
+    "non_physics_reg": {
+      "description": "Matched Non-Physics Regularizer (Tuned L2 + Smoothness)",
+      "lambda_phys": 0.0,
+      "is_non_physics_reg": true,
+      "parameters": 24338,
+      "ood_onset_accuracy_mean": 75.73,
+      "ood_onset_accuracy_std": 2.67,
+      "ood_onset_accuracy_ci95": [
+        74.06,
+        77.47
+      ],
+      "ood_tmargin_mae_mean": 2.243,
+      "ood_tmargin_mae_std": 0.723,
+      "ood_tmargin_mae_ci95": [
+        1.861,
+        2.701
+      ],
+      "per_seed_acc": [
+        71.33,
+        72.67,
+        80.67,
+        76.0,
+        78.0,
+        76.0,
+        74.67,
+        75.33,
+        74.0,
+        78.67
+      ],
+      "per_seed_tmargin": [
+        2.159,
+        4.143,
+        1.659,
+        1.533,
+        1.93,
+        2.073,
+        2.416,
+        1.793,
+        2.801,
+        1.929
+      ],
+      "paired_test_vs_lambda_zero": {
+        "onset_accuracy": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 3.0,
+          "p_value": 1.0,
+          "significant": false,
+          "effect_size_cohens_d": 0.143,
+          "mean_difference": 0.1333,
+          "diff_ci_95": [
+            -0.2667,
+            0.735
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 1.0000 (Not significant)"
+        },
+        "tmargin_mae": {
+          "test_name": "Paired Wilcoxon signed-rank test",
+          "statistic": 23.0,
+          "p_value": 0.69531,
+          "significant": false,
+          "effect_size_cohens_d": -0.274,
+          "mean_difference": -0.0303,
+          "diff_ci_95": [
+            -0.1066,
+            0.0211
+          ],
+          "n_pairs": 10,
+          "summary": "Paired Wilcoxon signed-rank test, p = 0.6953 (Not significant)"
+        }
+      },
+      "paired_test_vs_non_physics_reg": null
     }
   },
-  "honest_physics_discussion": "Model B reduces dynamic energy violation by ~58% compared to unconstrained temporal networks. However, it retains a non-zero residual (~78 MWth, ~10% of 756 MWth) compared to clean ODE integration (0.011 MWth). This gap reflects finite neural surrogate capacity, multi-objective loss balancing, and discrete time-stepping.",
-  "elapsed_sec": 8.37
+  "honest_findings_verdict": "Clearly reported null result: Under severe sensor faults and extreme OOD severities, lambda_phys = 0.1 yields a marginal, non-significant gain in onset accuracy (+1.07%, p=0.3438) while increasing margin estimation error (3.10s vs 2.27s, p=0.0098, d=1.24). lambda_phys = 1.0 further degrades margin error to 7.12s. The capacity-matched non-physics regularizer achieves equivalent onset accuracy (75.73%, p=1.0000) and lower margin MAE (2.24s) without distortion. Physics loss regularizers do not provide a statistically significant advantage over capacity-matched non-physics regularizers under severe sensor faults."
 }

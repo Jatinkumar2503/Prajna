@@ -234,28 +234,38 @@ def load_verified_experiment_tables() -> Dict[str, List[Dict[str, Any]]]:
             "command": "python scripts/reproduce_all_10_priorities.py"
         })
 
-    # 3. Physics residual ablation from Exp06
+    # 3. Clean Physics Loss Ablation from Exp06 (Step 6)
     phys_path = WORKSPACE_ROOT / "experiments" / "exp06_physics_ablation" / "results.json"
     with open(phys_path, "r", encoding="utf-8") as f:
         phys_data = json.load(f)
-    cmp_mat = phys_data.get("comparison_matrix", {})
+    p_models = phys_data.get("models", {})
     physics_residual_rows = []
-    model_meta = [
-        ("Model_A_Conventional_Temporal", "Model A (Pure Neural Forecaster)", 0.0, 2, 4.0),
-        ("Model_B_Physics_Constrained", "Model B (Physics-Regularized Neural)", 1.0, 0, 0.0),
-        ("Model_C_Full_PRAJNA_Gated", "Model C (Hybrid Physics-Gated Reflex)", 1.0, 0, 0.0),
+    meta = [
+        ("lambda_0.0", "Pure Data-Driven Baseline", "λ_phys = 0.0 (Unconstrained)"),
+        ("lambda_0.1", "Balanced Physics Regularizer", "λ_phys = 0.1 (Dynamic Energy)"),
+        ("lambda_1.0", "Strong Physics Regularizer", "λ_phys = 1.0 (Dynamic Energy)"),
+        ("non_physics_reg", "Matched Non-Physics Regularizer", "Tuned L2 + Smoothness"),
     ]
-    for mk, m_label, loss_w, alerts, viols in model_meta:
-        m_dict = cmp_mat.get(mk, {})
-        res_val = float(str(m_dict.get("dynamic_energy_residual_mwth", "0.0")).split()[0])
-        n_alerts = int(m_dict.get("nuisance_advisory_alerts", alerts))
+    for mk, m_label, reg_label in meta:
+        m = p_models.get(mk, {})
+        acc_ci = m.get("ood_onset_accuracy_ci95", [0.0, 0.0])
+        mae_ci = m.get("ood_tmargin_mae_ci95", [0.0, 0.0])
+        p_test = m.get("paired_test_vs_lambda_zero", {}).get("onset_accuracy", {})
+        p_val = p_test.get("p_value", 1.0)
+        eff_d = p_test.get("effect_size_cohens_d", 0.0)
+        wilcoxon_str = f"p={p_val:.4f} (d={eff_d:.2f})" if mk != "lambda_0.0" else "Reference (Ours)"
+
         physics_residual_rows.append({
             "model": m_label,
-            "physics_loss_weight": round(float(loss_w), 1),
-            "mean_dynamic_residual_mwth": round(res_val, 2),
-            "nuisance_advisory_alerts": n_alerts,
-            "safety_violations_pct": round(float(viols), 1),
-            "command": "python scripts/reproduce_all_10_priorities.py"
+            "regularizer": reg_label,
+            "ood_onset_accuracy_pct": round(float(m.get("ood_onset_accuracy_mean", 0.0)), 2),
+            "ood_onset_acc_ci95": acc_ci,
+            "ood_tmargin_mae_s": round(float(m.get("ood_tmargin_mae_mean", 0.0)), 3),
+            "ood_tmargin_mae_ci95": mae_ci,
+            "wilcoxon_vs_zero": wilcoxon_str,
+            "per_seed_acc": m.get("per_seed_acc", []),
+            "per_seed_tmargin": m.get("per_seed_tmargin", []),
+            "command": "python scripts/ablate_physics_loss.py"
         })
 
     # 4. Sensor fragility analysis from Exp05
@@ -404,13 +414,15 @@ def render_markdown_table(table_id: str, rows: List[Dict[str, Any]]) -> str:
 
     elif table_id == "physics_residual_ablation":
         header = (
-            "| Model Architecture | Physics Loss Weight | Dynamic Residual Error (MWth) | Nuisance Advisory Alerts | Safety Limit Violations (%) |\n"
+            "| Model Architecture | Regularization Formulation | OOD Onset Acc (%) [95% CI] | OOD T_margin MAE (s) [95% CI] | Wilcoxon vs λ_phys=0.0 |\n"
             "| :--- | :---: | :---: | :---: | :---: |\n"
         )
         body = []
         for r in rows:
+            acc_str = f"**{r['ood_onset_accuracy_pct']:.2f}%** [{r['ood_onset_acc_ci95'][0]:.2f}, {r['ood_onset_acc_ci95'][1]:.2f}]"
+            mae_str = f"{r['ood_tmargin_mae_s']:.2f}s [{r['ood_tmargin_mae_ci95'][0]:.2f}, {r['ood_tmargin_mae_ci95'][1]:.2f}]"
             body.append(
-                f"| **{r['model']}** | {r['physics_loss_weight']:.1f} | **{r['mean_dynamic_residual_mwth']:.2f}** | {r['nuisance_advisory_alerts']} | {r['safety_violations_pct']:.1f}% |"
+                f"| **{r['model']}** | {r['regularizer']} | {acc_str} | {mae_str} | {r['wilcoxon_vs_zero']} |"
             )
         return header + "\n".join(body)
 

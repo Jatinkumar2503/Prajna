@@ -151,19 +151,21 @@ python -m unittest tests/test_provenance_ci.py tests/test_step2_tools.py tests/t
 
 ---
 
-### Table 3: First-Law Physics Constraint Ablation (`physics_residual_ablation`)
-**Source Script:** `scripts/reproduce_all_10_priorities.py` (Priority 6, lines 440–520)  
+### Table 3: Clean Physics Constraint Ablation (`physics_residual_ablation`)
+**Source Script:** `scripts/ablate_physics_loss.py`  
 **Output Artifact:** `experiments/exp06_physics_ablation/results.json`  
-**Task Definition:** Evaluates the impact of physics-informed loss $\mathcal{L}_{\text{phys}} = \frac{1}{N}\sum \|P_{\text{core}} - \dot{m}C_p(T_{\text{out}} - T_{\text{in}}) - C_{\text{core}}\frac{dT}{dt}\|^2$ on dynamic energy conservation.
+**Task Definition:** Evaluates identical `PrajnaFastReflex` architectures (24,338 parameters) across $\lambda_{\text{phys}} \in \{0.0, 0.1, 1.0\}$ versus a capacity-matched non-physics regularizer. Crucially, evaluation is performed **strictly on held-out Out-Of-Distribution (OOD) severities** (0.5% SBLOCA to 120% severe break), overlapping compound events, 25% sensor channel faults (stuck sensors, step biases, deadband), and active instrument noise across 10 random seeds (`SEEDS = [42..51]`), with **zero evaluation on the training residual**.
 
-| Model Architecture | Physics Weight $\lambda$ | Dynamic Residual (MWth) | Safety Violations (%) | Physical Significance |
-| :--- | :---: | :---: | :---: | :--- |
-| **Model A (Pure Neural)** | 0.0 | **187.95 MWth** | 4.0% | Unconstrained neural networks drift off physical energy manifolds during fast transients. |
-| **Model B (PINN Regularized)** | 1.0 | **78.94 MWth** | 0.0% | **58% Reduction in Dynamic Energy Violation.** Physics loss forces predictions toward First-Law manifold. |
-| **Model C (Hybrid Reflex)** | 1.0 | **78.94 MWth** | 0.0% | Hybrid architecture combines learned forecaster with a deterministic First-Law kinematic filter. |
+| Model Architecture | Regularization Formulation | OOD Onset Acc (%) [95% CI] | OOD T_margin MAE (s) [95% CI] | Wilcoxon vs λ_phys=0.0 |
+| :--- | :---: | :---: | :---: | :---: |
+| **Pure Data-Driven Baseline** | λ_phys = 0.0 (Unconstrained) | **75.60%** [74.20, 77.07] | 2.27s [1.91, 2.77] | Reference (Ours) |
+| **Balanced Physics Regularizer** | λ_phys = 0.1 (Dynamic Energy) | **76.67%** [75.13, 78.20] | 3.10s [2.81, 3.44] | p=0.3438 (d=0.32) |
+| **Strong Physics Regularizer** | λ_phys = 1.0 (Dynamic Energy) | **76.80%** [75.80, 77.73] | 7.12s [6.98, 7.25] | p=0.1562 (d=0.53) |
+| **Matched Non-Physics Regularizer** | Tuned L2 + Smoothness | **75.73%** [74.06, 77.47] | 2.24s [1.86, 2.70] | p=1.0000 (d=0.14) |
 
 > [!NOTE]
-> **Honest Physics Discussion:** While Model B/C reduces dynamic energy residual by 58% compared to unconstrained temporal networks, it retains a non-zero residual (~78 MWth, ~10% of 756 MWth) compared to clean ODE integration (0.011 MWth). This gap reflects finite neural surrogate capacity, multi-objective loss balancing, and discrete 1.0s time-stepping.
+> **Honest Scientific Finding (Null Result on Sensor Fault Generalization):**
+> Under severe sensor faults and extreme OOD severities, balanced physics regularization ($\lambda_{\text{phys}} = 0.1$) yields a marginal, non-statistically significant gain in early onset accuracy (+1.07%, $p=0.3438$), but increases continuous margin estimation error (3.10s vs 2.27s, $p=0.0098$, $d=+1.24$). Strong physics regularization ($\lambda_{\text{phys}} = 1.0$) further increases margin error to 7.12s. The capacity-matched non-physics regularizer achieves equivalent onset accuracy (75.73%, $p=1.0000$) and lower margin MAE (2.24s) without margin distortion. This demonstrates that First-Law loss regularizers alone do not substitute for physical sensor redundancy under severe instrument faults.
 
 ---
 
